@@ -6,7 +6,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import unquote
 
 # ==========================================
-# PHONG WEB V10 - NGUYEN VAN PHONG
+# PHONG WEB V11 - NGUYEN VAN PHONG
 # ==========================================
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -90,14 +90,14 @@ header {
 
 main {
     width: min(1100px, 92%);
-    margin: 35px auto;
+    margin: 30px auto;
 }
 
-/* HERO */
+/* WELCOME IMAGE */
 
 .hero {
     text-align: center;
-    padding: 45px 15px;
+    padding: 25px 15px;
 
     background: var(--glass);
     border: 1px solid #9c7aff66;
@@ -106,18 +106,55 @@ main {
     backdrop-filter: blur(10px);
 }
 
-.hero h1 {
-    font-size: clamp(28px, 7vw, 48px);
-    margin-bottom: 14px;
-
-    background: linear-gradient(90deg, #43d9ff, #c28aff);
-    -webkit-background-clip: text;
-    color: transparent;
+.hero-logo {
+    width: 100%;
+    max-width: 280px;
+    height: auto;
+    object-fit: contain;
+    border-radius: 18px;
+    display: block;
+    margin: 0 auto;
+    filter: drop-shadow(0 0 15px #42caff66);
 }
 
-.hero p {
-    color: #ded9ff;
-    line-height: 1.7;
+/* CLOUD PRICE */
+
+.cloud-price {
+    margin-top: 22px;
+    padding: 22px 16px;
+    text-align: center;
+
+    background: rgba(15, 13, 48, 0.85);
+    border: 1px solid #42caff88;
+    border-radius: 20px;
+    box-shadow: 0 0 20px #42caff22;
+    backdrop-filter: blur(10px);
+}
+
+.cloud-price h2 {
+    color: #65dcff;
+    font-size: clamp(19px, 4vw, 25px);
+    line-height: 1.4;
+    margin-bottom: 18px;
+}
+
+.price-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+
+    padding: 13px;
+    margin: 8px 0;
+    border-radius: 10px;
+
+    background: rgba(80, 100, 200, 0.18);
+    color: white;
+}
+
+.price-item strong {
+    color: #63e1ff;
+    white-space: nowrap;
 }
 
 /* SECTION */
@@ -307,7 +344,20 @@ footer {
     }
 
     .hero {
-        padding: 35px 14px;
+        padding: 20px 12px;
+    }
+
+    .hero-logo {
+        max-width: 230px;
+    }
+
+    .cloud-price {
+        padding: 18px 12px;
+    }
+
+    .price-item {
+        font-size: 14px;
+        padding: 12px 10px;
     }
 
 }
@@ -336,16 +386,43 @@ footer {
 
 <main>
 
-    <!-- WELCOME -->
+    <!-- WELCOME IMAGE -->
 
     <section class="hero">
 
-        <h1>WELCOME TO PHONG WEB</h1>
+        <img
+            src="/logo.png"
+            class="hero-logo"
+            alt="Nguyễn Văn Phong"
+        >
 
-        <p>
-            Chào mừng bạn đến với website của Nguyễn Văn Phong.<br>
-            Khám phá Gaming, Python và công nghệ tại đây!
-        </p>
+    </section>
+
+    <!-- CLOUD PRICE -->
+
+    <section class="cloud-price">
+
+        <h2>☁️ GIÁ THUÊ CLOUD NGUYỄN VĂN PHONG</h2>
+
+        <div class="price-item">
+            <span>12 Giờ</span>
+            <strong>2.000 Đồng</strong>
+        </div>
+
+        <div class="price-item">
+            <span>1 Ngày</span>
+            <strong>4.000 Đồng</strong>
+        </div>
+
+        <div class="price-item">
+            <span>7 Ngày</span>
+            <strong>25.000 Đồng</strong>
+        </div>
+
+        <div class="price-item">
+            <span>30 Ngày</span>
+            <strong>100.000 Đồng</strong>
+        </div>
 
     </section>
 
@@ -501,7 +578,7 @@ footer {
 
 <footer>
 
-    © 2026 Nguyễn Văn Phong Website | PHONG WEB V10
+    © 2026 Nguyễn Văn Phong Website | PHONG WEB V11
 
 </footer>
 
@@ -954,8 +1031,9 @@ if __name__ == "__main__":
     )
 
     print("======================================")
-    print(" PHONG WEB V10")
+    print(" PHONG WEB V11")
     print(" NGUYEN VAN PHONG WEBSITE")
+    print(" CLOUD PRICE SECTION ENABLED")
     print(" MEDIAFIRE LINK ENABLED")
     print(" MINI MUSIC PLAYER")
     print(" PORT:", PORT)
@@ -967,7 +1045,7 @@ if __name__ == "__main__":
 
     except KeyboardInterrupt:
 
-        print("Dang dung PHONG WEB V10...")
+        print("Dang dung PHONG WEB V11...")
 
     finally:
 
