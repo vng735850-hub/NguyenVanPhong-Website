@@ -6,13 +6,16 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import unquote
 
 # ==========================================
-# PHONG WEB V9
-# NGUYEN VAN PHONG WEBSITE
-# MINI CIRCLE MUSIC PLAYER
+# PHONG WEB V10 - NGUYEN VAN PHONG
 # ==========================================
 
 BASE_DIR = Path(__file__).resolve().parent
 PORT = int(os.environ.get("PORT", 5000))
+
+MEDIAFIRE_LINK = (
+    "https://www.mediafire.com/file/"
+    "yen60lu05hfnng4/DINH_VI_BT.zip/file"
+)
 
 HTML = r"""<!DOCTYPE html>
 <html lang="vi">
@@ -210,9 +213,7 @@ main {
     margin-bottom: 10px;
 }
 
-/* ======================================
-   MINI CIRCLE MUSIC PLAYER
-====================================== */
+/* MINI MUSIC PLAYER */
 
 .music-box {
     width: 100%;
@@ -226,7 +227,6 @@ main {
     background: transparent;
     border: none;
     box-shadow: none;
-    backdrop-filter: none;
 }
 
 .music-controls {
@@ -234,8 +234,6 @@ main {
     justify-content: center;
     align-items: center;
 }
-
-/* ONLY ONE CIRCLE BUTTON */
 
 #mainMusicButton {
     width: 46px;
@@ -272,8 +270,6 @@ main {
 #mainMusicButton:active {
     transform: scale(.90);
 }
-
-/* LOOP ON */
 
 #mainMusicButton.loop-active {
     border-color: #42ffbd;
@@ -418,6 +414,8 @@ footer {
 
         </article>
 
+        <!-- LOCATION CARD -->
+
         <article class="card">
 
             <div class="emoji">📍</div>
@@ -425,14 +423,14 @@ footer {
             <h3>ĐỊNH VỊ XANH TÍM OB55</h3>
 
             <p>
-                Mở mục Định Vị Xanh Tím OB55.
+                Truy cập trang tải Định Vị Xanh Tím OB55.
             </p>
 
             <button
                 class="action"
                 onclick="showPanel('location')"
             >
-                Mở mục
+                Mở Mục
             </button>
 
         </article>
@@ -474,10 +472,7 @@ footer {
 
 </main>
 
-<!-- =====================================
-     MINI MUSIC PLAYER
-     NẰM SÁT CUỐI WEBSITE
-===================================== -->
+<!-- MINI MUSIC PLAYER -->
 
 <section class="music-box">
 
@@ -506,14 +501,21 @@ footer {
 
 <footer>
 
-    © 2026 Nguyễn Văn Phong Website | PHONG WEB V9
+    © 2026 Nguyễn Văn Phong Website | PHONG WEB V10
 
 </footer>
 
 <script>
 
 // ==========================================
-// PHONG WEB V9 - MUSIC SYSTEM
+// MEDIAFIRE LINK
+// ==========================================
+
+const MEDIAFIRE_LINK =
+    "https://www.mediafire.com/file/yen60lu05hfnng4/DINH_VI_BT.zip/file";
+
+// ==========================================
+// MUSIC SYSTEM
 // ==========================================
 
 const audio = document.getElementById("audio");
@@ -522,35 +524,21 @@ const mainMusicButton =
     document.getElementById("mainMusicButton");
 
 let loopEnabled = false;
-
 let clickTimer = null;
-
 let holdTimer = null;
-
 let holdTriggered = false;
 
 const CLICK_DELAY = 280;
-
 const HOLD_DELAY = 800;
 
-// ==========================================
 // UPDATE BUTTON
-// ==========================================
 
 function updateButton() {
 
     if (audio.paused) {
-
-        // MUSIC OFF
-
         mainMusicButton.textContent = "▶";
-
     } else {
-
-        // MUSIC ON
-
         mainMusicButton.textContent = "Ⅱ";
-
     }
 
     mainMusicButton.classList.toggle(
@@ -560,9 +548,7 @@ function updateButton() {
 
 }
 
-// ==========================================
 // PLAY MUSIC
-// ==========================================
 
 function playMusic() {
 
@@ -576,27 +562,19 @@ function playMusic() {
 
 }
 
-// ==========================================
 // PLAY / PAUSE
-// ==========================================
 
 function toggleMusic() {
 
     if (audio.paused) {
-
         playMusic();
-
     } else {
-
         audio.pause();
-
     }
 
 }
 
-// ==========================================
 // LOOP MUSIC
-// ==========================================
 
 function toggleLoop() {
 
@@ -608,9 +586,7 @@ function toggleLoop() {
 
 }
 
-// ==========================================
 // STOP MUSIC
-// ==========================================
 
 function stopMusic() {
 
@@ -626,13 +602,7 @@ function stopMusic() {
 
 }
 
-// ==========================================
-// ONE BUTTON CONTROL
-// ==========================================
-
-// Nhấn 1 lần: Phát / Tạm dừng
-// Nhấn 2 lần: Bật / Tắt lặp
-// Nhấn giữ: Dừng nhạc
+// BUTTON CONTROL
 
 mainMusicButton.addEventListener(
     "pointerdown",
@@ -727,14 +697,10 @@ mainMusicButton.addEventListener(
     }
 );
 
-// ==========================================
 // AUDIO EVENTS
-// ==========================================
 
 audio.addEventListener("play", updateButton);
-
 audio.addEventListener("pause", updateButton);
-
 audio.addEventListener("ended", updateButton);
 
 // ==========================================
@@ -770,15 +736,6 @@ const panels = {
 
     },
 
-    location: {
-
-        title: "📍 ĐỊNH VỊ XANH TÍM OB55",
-
-        content:
-        "Bạn đã mở mục ĐỊNH VỊ XANH TÍM OB55. Hãy bổ sung đường dẫn hoặc nội dung dịch vụ của bạn tại đây khi có."
-
-    },
-
     setting: {
 
         title: "⚙️ SETTING",
@@ -790,11 +747,20 @@ const panels = {
 
 };
 
-// ==========================================
 // SHOW PANEL
-// ==========================================
 
 function showPanel(name) {
+
+    // ĐỊNH VỊ XANH TÍM OB55
+    // CHUYỂN THẲNG ĐẾN MEDIAFIRE
+
+    if (name === "location") {
+
+        window.location.href = MEDIAFIRE_LINK;
+
+        return;
+
+    }
 
     const item = panels[name];
 
@@ -819,9 +785,7 @@ function showPanel(name) {
 
 }
 
-// ==========================================
 // CLOSE PANEL
-// ==========================================
 
 function closePanel() {
 
@@ -830,9 +794,7 @@ function closePanel() {
 
 }
 
-// ==========================================
 // INITIALIZE
-// ==========================================
 
 audio.volume = 0.8;
 
@@ -886,14 +848,12 @@ class Website(BaseHTTPRequestHandler):
 
             return
 
-        # ALLOWED FILES
+        # STATIC FILES
 
         allowed_files = {
 
             "/logo.png": "logo.png",
-
             "/background.jpg": "background.jpg",
-
             "/music.mp3": "music.mp3",
 
         }
@@ -925,15 +885,12 @@ class Website(BaseHTTPRequestHandler):
         )[0]
 
         if filename.endswith(".mp3"):
-
             content_type = "audio/mpeg"
 
         elif filename.endswith(".png"):
-
             content_type = "image/png"
 
         elif filename.endswith(".jpg"):
-
             content_type = "image/jpeg"
 
         try:
@@ -997,10 +954,11 @@ if __name__ == "__main__":
     )
 
     print("======================================")
-    print(" PHONG WEB V9")
-    print(" MINI CIRCLE MUSIC PLAYER")
+    print(" PHONG WEB V10")
     print(" NGUYEN VAN PHONG WEBSITE")
-    print(" Port:", PORT)
+    print(" MEDIAFIRE LINK ENABLED")
+    print(" MINI MUSIC PLAYER")
+    print(" PORT:", PORT)
     print("======================================")
 
     try:
@@ -1009,7 +967,7 @@ if __name__ == "__main__":
 
     except KeyboardInterrupt:
 
-        print("Dang dung PHONG WEB V9...")
+        print("Dang dung PHONG WEB V10...")
 
     finally:
 
