@@ -6,8 +6,9 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import unquote
 
 # ==========================================
-# PHONG WEB V7 - LOOP MUSIC EDITION
-# Nguyen Van Phong Website
+# PHONG WEB V8
+# NGUYEN VAN PHONG WEBSITE
+# MINI MUSIC PLAYER EDITION
 # ==========================================
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -19,6 +20,7 @@ HTML = r"""<!DOCTYPE html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#171044">
+
 <title>Nguyễn Văn Phong WebSite🔊</title>
 
 <style>
@@ -38,8 +40,13 @@ body {
     min-height: 100vh;
     color: white;
     font-family: Arial, sans-serif;
+
     background:
-        linear-gradient(135deg, rgba(10,8,40,.80), rgba(35,12,75,.72)),
+        linear-gradient(
+            135deg,
+            rgba(10,8,40,.80),
+            rgba(35,12,75,.72)
+        ),
         url("/background.jpg") center/cover fixed no-repeat;
 }
 
@@ -48,6 +55,7 @@ header {
     align-items: center;
     gap: 14px;
     padding: 16px 6%;
+
     background: rgba(9, 8, 35, .82);
     border-bottom: 1px solid rgba(100,190,255,.35);
     box-shadow: 0 5px 25px #0006;
@@ -65,6 +73,7 @@ header {
 .brand {
     font-size: clamp(17px, 4vw, 25px);
     font-weight: bold;
+
     background: linear-gradient(90deg, #55ddff, #c28aff);
     -webkit-background-clip: text;
     color: transparent;
@@ -78,6 +87,7 @@ main {
 .hero {
     text-align: center;
     padding: 45px 15px;
+
     background: var(--glass);
     border: 1px solid #9c7aff66;
     border-radius: 24px;
@@ -88,6 +98,7 @@ main {
 .hero h1 {
     font-size: clamp(28px, 7vw, 48px);
     margin-bottom: 14px;
+
     background: linear-gradient(90deg, #43d9ff, #c28aff);
     -webkit-background-clip: text;
     color: transparent;
@@ -107,7 +118,10 @@ main {
 
 .cards {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    grid-template-columns: repeat(
+        auto-fit,
+        minmax(210px, 1fr)
+    );
     gap: 17px;
 }
 
@@ -117,6 +131,7 @@ main {
     border-radius: 18px;
     padding: 25px 18px;
     text-align: center;
+
     backdrop-filter: blur(10px);
     transition: .25s;
 }
@@ -147,12 +162,14 @@ main {
     display: inline-block;
     margin-top: 16px;
     padding: 10px 18px;
+
     border: 0;
     border-radius: 10px;
     color: white;
     font-weight: bold;
     cursor: pointer;
     text-decoration: none;
+
     background: linear-gradient(100deg, #168edc, #8249d9);
 }
 
@@ -160,85 +177,15 @@ main {
     filter: brightness(1.2);
 }
 
-.music-box {
-    margin-top: 28px;
-    padding: 24px;
-    text-align: center;
-    background: var(--glass);
-    border: 1px solid #8b70ff77;
-    border-radius: 20px;
-    backdrop-filter: blur(10px);
-}
-
-.music-box h2 {
-    color: #8bdfff;
-    margin-bottom: 8px;
-}
-
-.song-name {
-    color: #e6d9ff;
-    margin: 12px 0 18px;
-}
-
-.music-controls {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 12px;
-}
-
-.music-controls button {
-    border: 0;
-    padding: 12px 22px;
-    border-radius: 30px;
-    color: white;
-    font-weight: bold;
-    background: linear-gradient(100deg, #168edc, #8249d9);
-    cursor: pointer;
-    transition: .2s;
-}
-
-.music-controls button:hover {
-    filter: brightness(1.2);
-    transform: scale(1.04);
-}
-
-.music-controls button.active {
-    background: linear-gradient(100deg, #00b894, #168edc);
-    box-shadow: 0 0 15px #42caff66;
-}
-
-input[type="range"] {
-    accent-color: #66d7ff;
-    cursor: pointer;
-}
-
-#seek {
-    width: min(400px, 90%);
-    margin-top: 18px;
-}
-
-.volume-row {
-    margin-top: 14px;
-    color: #ddd;
-}
-
-#volume {
-    width: 120px;
-    vertical-align: middle;
-}
-
-#time {
-    margin-top: 8px;
-    font-size: 13px;
-    color: #cfc5ed;
-}
+/* ==========================================
+   INFO PANEL
+========================================== */
 
 .info-panel {
     display: none;
     margin-top: 20px;
     padding: 22px;
+
     border: 1px solid #58caff88;
     border-radius: 16px;
     background: rgba(12, 15, 50, .92);
@@ -250,10 +197,138 @@ input[type="range"] {
     margin-bottom: 10px;
 }
 
+/* ==========================================
+   MINI MUSIC PLAYER
+========================================== */
+
+.music-box {
+    width: min(100%, 520px);
+    margin: 30px auto 15px;
+    padding: 14px 17px;
+
+    background: rgba(15,13,48,.92);
+    border: 1px solid #42caff88;
+    border-radius: 16px;
+
+    backdrop-filter: blur(10px);
+    box-shadow: 0 0 20px #7a4dff22;
+}
+
+.music-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.music-title {
+    color: #8bdfff;
+    font-size: 15px;
+    font-weight: bold;
+}
+
+.music-status {
+    color: #cfc5ed;
+    font-size: 11px;
+}
+
+.song-name {
+    text-align: center;
+    color: #e6d9ff;
+    font-size: 13px;
+    font-weight: bold;
+    margin-bottom: 12px;
+}
+
+.music-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#mainMusicButton {
+    width: 48px;
+    height: 48px;
+
+    border: 1px solid #80dfff;
+    border-radius: 50%;
+
+    color: white;
+    font-size: 21px;
+    font-weight: bold;
+
+    background: linear-gradient(100deg, #168edc, #8249d9);
+    box-shadow: 0 0 16px #42caff55;
+
+    cursor: pointer;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+
+    transition: .2s;
+}
+
+#mainMusicButton:active {
+    transform: scale(.90);
+}
+
+#mainMusicButton.loop-active {
+    background: linear-gradient(100deg, #00b894, #168edc);
+    box-shadow: 0 0 18px #00d9a566;
+}
+
+.seek-row {
+    margin-top: 12px;
+}
+
+#seek {
+    width: 100%;
+    accent-color: #66d7ff;
+    cursor: pointer;
+}
+
+#time {
+    text-align: center;
+    margin-top: 4px;
+    font-size: 12px;
+    color: #cfc5ed;
+}
+
+.volume-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    margin-top: 9px;
+    color: #ddd;
+    font-size: 12px;
+}
+
+#volume {
+    width: 100px;
+    accent-color: #66d7ff;
+    cursor: pointer;
+}
+
+.music-hint {
+    margin-top: 9px;
+    text-align: center;
+    color: #a9a1c9;
+    font-size: 10px;
+    line-height: 1.5;
+}
+
+/* ==========================================
+   FOOTER
+========================================== */
+
 footer {
     text-align: center;
     padding: 25px 12px;
-    margin-top: 40px;
+    margin-top: 15px;
+
     color: #cfc6e9;
     background: rgba(8, 7, 30, .8);
     border-top: 1px solid #8b70ff55;
@@ -277,6 +352,10 @@ footer {
     .hero {
         padding: 35px 14px;
     }
+
+    .music-box {
+        padding: 13px;
+    }
 }
 </style>
 </head>
@@ -284,22 +363,32 @@ footer {
 <body>
 
 <header>
-    <img class="logo" src="/logo.png"
-         alt="Logo Nguyễn Văn Phong"
-         onerror="this.style.display='none'">
+    <img
+        class="logo"
+        src="/logo.png"
+        alt="Logo Nguyễn Văn Phong"
+        onerror="this.style.display='none'"
+    >
 
-    <div class="brand">Nguyễn Văn Phong WebSite🔊</div>
+    <div class="brand">
+        Nguyễn Văn Phong WebSite🔊
+    </div>
 </header>
 
 <main>
 
+    <!-- WELCOME -->
+
     <section class="hero">
         <h1>WELCOME TO PHONG WEB</h1>
+
         <p>
             Chào mừng bạn đến với website của Nguyễn Văn Phong.<br>
             Khám phá Gaming, Python và công nghệ tại đây!
         </p>
     </section>
+
+    <!-- CATEGORIES -->
 
     <h2 class="section-title">✦ DANH MỤC ✦</h2>
 
@@ -308,9 +397,14 @@ footer {
         <article class="card">
             <div class="emoji">🎮</div>
             <h3>GAMING</h3>
-            <p>Thế giới game, giải trí và những nội dung gaming.</p>
-            <button class="action"
-                    onclick="showPanel('gaming')">
+            <p>
+                Thế giới game, giải trí và những nội dung gaming.
+            </p>
+
+            <button
+                class="action"
+                onclick="showPanel('gaming')"
+            >
                 Khám phá
             </button>
         </article>
@@ -318,9 +412,14 @@ footer {
         <article class="card">
             <div class="emoji">🐍</div>
             <h3>PYTHON</h3>
-            <p>Lập trình Python, dự án và các sản phẩm sáng tạo.</p>
-            <button class="action"
-                    onclick="showPanel('python')">
+            <p>
+                Lập trình Python, dự án và các sản phẩm sáng tạo.
+            </p>
+
+            <button
+                class="action"
+                onclick="showPanel('python')"
+            >
                 Khám phá
             </button>
         </article>
@@ -328,9 +427,14 @@ footer {
         <article class="card">
             <div class="emoji">💻</div>
             <h3>TECHNOLOGY</h3>
-            <p>Công nghệ, phần mềm và những khám phá mới.</p>
-            <button class="action"
-                    onclick="showPanel('technology')">
+            <p>
+                Công nghệ, phần mềm và những khám phá mới.
+            </p>
+
+            <button
+                class="action"
+                onclick="showPanel('technology')"
+            >
                 Khám phá
             </button>
         </article>
@@ -338,9 +442,14 @@ footer {
         <article class="card">
             <div class="emoji">📍</div>
             <h3>ĐỊNH VỊ XANH TÍM OB55</h3>
-            <p>Mở mục Định Vị Xanh Tím OB55.</p>
-            <button class="action"
-                    onclick="showPanel('location')">
+            <p>
+                Mở mục Định Vị Xanh Tím OB55.
+            </p>
+
+            <button
+                class="action"
+                onclick="showPanel('location')"
+            >
                 Mở mục
             </button>
         </article>
@@ -348,28 +457,49 @@ footer {
         <article class="card">
             <div class="emoji">⚙️</div>
             <h3>SETTING</h3>
-            <p>Cài đặt âm thanh và tùy chỉnh website.</p>
-            <button class="action"
-                    onclick="showPanel('setting')">
+            <p>
+                Cài đặt âm thanh và tùy chỉnh website.
+            </p>
+
+            <button
+                class="action"
+                onclick="showPanel('setting')"
+            >
                 Cài đặt
             </button>
         </article>
 
     </section>
 
+    <!-- INFORMATION PANEL -->
+
     <section id="info" class="info-panel">
+
         <h2 id="info-title"></h2>
+
         <p id="info-content"></p>
+
         <button class="action" onclick="closePanel()">
             Đóng
         </button>
+
     </section>
 
-    <!-- MUSIC PLAYER -->
+    <!-- MINI MUSIC PLAYER - CUỐI TRANG -->
 
     <section class="music-box">
 
-        <h2>🎵 MUSIC PLAYER</h2>
+        <div class="music-header">
+
+            <div class="music-title">
+                🎵 MINI MUSIC PLAYER
+            </div>
+
+            <div class="music-status" id="musicStatus">
+                Đã dừng
+            </div>
+
+        </div>
 
         <div class="song-name">
             THƯƠNG NHAU ĐẾN THẾ
@@ -377,34 +507,33 @@ footer {
 
         <audio id="audio" preload="metadata">
             <source src="/music.mp3" type="audio/mpeg">
-            Trình duyệt của bạn không hỗ trợ phát nhạc.
+            Trình duyệt không hỗ trợ phát nhạc.
         </audio>
 
         <div class="music-controls">
 
-            <button id="playButton"
-                    onclick="toggleMusic()">
-                ▶ PHÁT NHẠC
-            </button>
-
-            <button onclick="stopMusic()">
-                ■ DỪNG
-            </button>
-
-            <button id="loopButton"
-                    onclick="toggleLoop()">
-                🔁 LẶP: TẮT
+            <button
+                id="mainMusicButton"
+                type="button"
+                aria-label="Điều khiển nhạc"
+                title="Nhấn: phát/tạm dừng | Nhấn đúp: lặp | Nhấn giữ: dừng"
+            >
+                ▶
             </button>
 
         </div>
 
-        <div>
-            <input id="seek"
-                   type="range"
-                   min="0"
-                   max="100"
-                   value="0"
-                   step="0.1">
+        <div class="seek-row">
+
+            <input
+                id="seek"
+                type="range"
+                min="0"
+                max="100"
+                value="0"
+                step="0.1"
+            >
+
         </div>
 
         <div id="time">
@@ -412,38 +541,73 @@ footer {
         </div>
 
         <div class="volume-row">
-            Âm lượng:
 
-            <input id="volume"
-                   type="range"
-                   min="0"
-                   max="1"
-                   value="0.8"
-                   step="0.01">
+            <span>🔊 Âm lượng:</span>
+
+            <input
+                id="volume"
+                type="range"
+                min="0"
+                max="1"
+                value="0.8"
+                step="0.01"
+            >
+
+        </div>
+
+        <div class="music-hint">
+            Nhấn 1 lần: Phát / Tạm dừng |
+            Nhấn 2 lần: Bật / Tắt lặp |
+            Nhấn giữ: Dừng nhạc
         </div>
 
     </section>
 
 </main>
 
+<!-- FOOTER -->
+
 <footer>
-    © 2026 Nguyễn Văn Phong Website | PHONG WEB V7
+    © 2026 Nguyễn Văn Phong Website | PHONG WEB V8
 </footer>
 
 <script>
 
+// ==========================================
+// PHONG WEB V8 - MUSIC PLAYER
+// ==========================================
+
 const audio = document.getElementById("audio");
-const playButton = document.getElementById("playButton");
-const loopButton = document.getElementById("loopButton");
+
+const mainMusicButton =
+    document.getElementById("mainMusicButton");
+
 const seek = document.getElementById("seek");
+
 const volume = document.getElementById("volume");
+
 const timeLabel = document.getElementById("time");
 
-// ==========================================
-// MUSIC PLAYER
-// ==========================================
+const musicStatus =
+    document.getElementById("musicStatus");
+
+// MUSIC STATES
 
 let loopEnabled = false;
+
+let clickTimer = null;
+
+let holdTimer = null;
+
+let holdTriggered = false;
+
+const CLICK_DELAY = 280;
+
+const HOLD_DELAY = 800;
+
+// ==========================================
+// FORMAT TIME
+// ==========================================
 
 function formatTime(seconds) {
 
@@ -452,56 +616,96 @@ function formatTime(seconds) {
     }
 
     const minutes = Math.floor(seconds / 60);
+
     const secs = Math.floor(seconds % 60);
 
     return String(minutes).padStart(2, "0") + ":" +
            String(secs).padStart(2, "0");
 }
 
-// PHÁT / TẠM DỪNG
+// ==========================================
+// UPDATE MUSIC BUTTON
+// ==========================================
+
+function updateButton() {
+
+    if (loopEnabled) {
+
+        mainMusicButton.textContent = "🔁";
+
+        mainMusicButton.classList.add("loop-active");
+
+    } else if (!audio.paused) {
+
+        mainMusicButton.textContent = "⏸";
+
+        mainMusicButton.classList.remove("loop-active");
+
+    } else {
+
+        mainMusicButton.textContent = "▶";
+
+        mainMusicButton.classList.remove("loop-active");
+
+    }
+
+    if (!audio.paused) {
+
+        musicStatus.textContent = loopEnabled
+            ? "Đang phát • Lặp lại"
+            : "Đang phát";
+
+    } else if (audio.currentTime > 0) {
+
+        musicStatus.textContent = "Tạm dừng";
+
+    } else {
+
+        musicStatus.textContent = "Đã dừng";
+
+    }
+
+}
+
+// ==========================================
+// PLAY MUSIC
+// ==========================================
+
+function playMusic() {
+
+    audio.play().catch(() => {
+
+        musicStatus.textContent = "Không phát được nhạc";
+
+        alert(
+            "Không phát được nhạc. Hãy kiểm tra file music.mp3."
+        );
+
+    });
+
+}
+
+// ==========================================
+// TOGGLE PLAY / PAUSE
+// ==========================================
 
 function toggleMusic() {
 
     if (audio.paused) {
 
-        audio.play().then(() => {
-
-            playButton.textContent = "⏸ TẠM DỪNG";
-
-        }).catch(() => {
-
-            alert("Không phát được nhạc. Hãy kiểm tra file music.mp3.");
-
-        });
+        playMusic();
 
     } else {
 
         audio.pause();
 
-        playButton.textContent = "▶ PHÁT NHẠC";
-
     }
+
 }
 
-// DỪNG NHẠC VÀ TẮT LOOP
-
-function stopMusic() {
-
-    audio.pause();
-    audio.currentTime = 0;
-
-    loopEnabled = false;
-    audio.loop = false;
-
-    loopButton.textContent = "🔁 LẶP: TẮT";
-    loopButton.classList.remove("active");
-
-    playButton.textContent = "▶ PHÁT NHẠC";
-
-    updateTime();
-}
-
-// BẬT / TẮT LẶP NHẠC
+// ==========================================
+// TOGGLE LOOP
+// ==========================================
 
 function toggleLoop() {
 
@@ -509,47 +713,148 @@ function toggleLoop() {
 
     audio.loop = loopEnabled;
 
-    if (loopEnabled) {
-
-        loopButton.textContent = "🔁 LẶP: BẬT";
-        loopButton.classList.add("active");
-
-    } else {
-
-        loopButton.textContent = "🔁 LẶP: TẮT";
-        loopButton.classList.remove("active");
-
-    }
+    updateButton();
 
 }
 
-// CẬP NHẬT NÚT PHÁT NHẠC
+// ==========================================
+// STOP MUSIC
+// ==========================================
 
-audio.addEventListener("play", () => {
+function stopMusic() {
 
-    playButton.textContent = "⏸ TẠM DỪNG";
+    audio.pause();
 
-});
+    audio.currentTime = 0;
 
-audio.addEventListener("pause", () => {
+    loopEnabled = false;
 
-    playButton.textContent = "▶ PHÁT NHẠC";
+    audio.loop = false;
 
-});
+    updateButton();
 
-audio.addEventListener("ended", () => {
+    updateTime();
 
-    if (!loopEnabled) {
+}
 
-        playButton.textContent = "▶ PHÁT NHẠC";
+// ==========================================
+// ONE BUTTON CONTROL
+// ==========================================
+
+// Nhấn 1 lần:
+// Phát hoặc tạm dừng.
+//
+// Nhấn 2 lần:
+// Bật hoặc tắt lặp.
+//
+// Nhấn giữ 0.8 giây:
+// Dừng nhạc và tắt lặp.
+
+mainMusicButton.addEventListener(
+    "pointerdown",
+    function(event) {
+
+        if (event.button !== undefined && event.button !== 0) {
+            return;
+        }
+
+        event.preventDefault();
+
+        holdTriggered = false;
+
+        clearTimeout(holdTimer);
+
+        holdTimer = setTimeout(() => {
+
+            holdTriggered = true;
+
+            clearTimeout(clickTimer);
+
+            clickTimer = null;
+
+            stopMusic();
+
+        }, HOLD_DELAY);
 
     }
+);
 
-});
+mainMusicButton.addEventListener(
+    "pointerup",
+    function(event) {
 
-// CẬP NHẬT THỜI GIAN
+        clearTimeout(holdTimer);
+
+        if (holdTriggered) {
+
+            holdTriggered = false;
+
+            return;
+
+        }
+
+        if (clickTimer !== null) {
+
+            clearTimeout(clickTimer);
+
+            clickTimer = null;
+
+            toggleLoop();
+
+        } else {
+
+            clickTimer = setTimeout(() => {
+
+                toggleMusic();
+
+                clickTimer = null;
+
+            }, CLICK_DELAY);
+
+        }
+
+    }
+);
+
+mainMusicButton.addEventListener(
+    "pointercancel",
+    function() {
+
+        clearTimeout(holdTimer);
+
+        clearTimeout(clickTimer);
+
+        holdTimer = null;
+
+        clickTimer = null;
+
+    }
+);
+
+mainMusicButton.addEventListener(
+    "contextmenu",
+    function(event) {
+
+        event.preventDefault();
+
+    }
+);
+
+// ==========================================
+// AUDIO EVENTS
+// ==========================================
+
+audio.addEventListener("play", updateButton);
+
+audio.addEventListener("pause", updateButton);
+
+audio.addEventListener("ended", updateButton);
 
 audio.addEventListener("loadedmetadata", updateTime);
+
+// ==========================================
+// UPDATE TIME AND PROGRESS
+// ==========================================
 
 audio.addEventListener("timeupdate", () => {
 
@@ -575,7 +880,9 @@ function updateTime() {
 
 }
 
-// TUA NHẠC
+// ==========================================
+// SEEK MUSIC
+// ==========================================
 
 seek.addEventListener("input", () => {
 
@@ -591,7 +898,9 @@ seek.addEventListener("input", () => {
 
 });
 
-// ĐIỀU CHỈNH ÂM LƯỢNG
+// ==========================================
+// VOLUME
+// ==========================================
 
 volume.addEventListener("input", () => {
 
@@ -608,31 +917,55 @@ audio.volume = Number(volume.value);
 const panels = {
 
     gaming: {
+
         title: "🎮 GAMING",
-        content: "Chào mừng đến với khu vực GAMING của Nguyễn Văn Phong. Nội dung game sẽ được cập nhật tại đây."
+
+        content:
+        "Chào mừng đến với khu vực GAMING của Nguyễn Văn Phong. Nội dung game sẽ được cập nhật tại đây."
+
     },
 
     python: {
+
         title: "🐍 PYTHON",
-        content: "Khu vực PYTHON: các dự án lập trình, mã nguồn và sản phẩm Python."
+
+        content:
+        "Khu vực PYTHON: các dự án lập trình, mã nguồn và sản phẩm Python."
+
     },
 
     technology: {
+
         title: "💻 TECHNOLOGY",
-        content: "Khu vực TECHNOLOGY: khám phá công nghệ, phần mềm và các thủ thuật hữu ích."
+
+        content:
+        "Khu vực TECHNOLOGY: khám phá công nghệ, phần mềm và các thủ thuật hữu ích."
+
     },
 
     location: {
+
         title: "📍 ĐỊNH VỊ XANH TÍM OB55",
-        content: "Bạn đã mở mục ĐỊNH VỊ XANH TÍM OB55. Hãy bổ sung đường dẫn hoặc nội dung dịch vụ của bạn tại đây khi có."
+
+        content:
+        "Bạn đã mở mục ĐỊNH VỊ XANH TÍM OB55. Hãy bổ sung đường dẫn hoặc nội dung dịch vụ của bạn tại đây khi có."
+
     },
 
     setting: {
+
         title: "⚙️ SETTING",
-        content: "Cài đặt âm thanh: sử dụng thanh âm lượng trong mục Music Player để điều chỉnh nhạc. Bạn cũng có thể bật hoặc tắt chế độ lặp nhạc liên tục."
+
+        content:
+        "Cài đặt âm thanh: sử dụng thanh âm lượng trong Mini Music Player. Nhấn một lần để phát hoặc tạm dừng, nhấn hai lần để bật hoặc tắt lặp nhạc, nhấn giữ để dừng."
+
     }
 
 };
+
+// ==========================================
+// SHOW PANEL
+// ==========================================
 
 function showPanel(name) {
 
@@ -646,22 +979,35 @@ function showPanel(name) {
     document.getElementById("info-content").textContent =
         item.content;
 
-    document.getElementById("info").style.display = "block";
+    document.getElementById("info").style.display =
+        "block";
 
     document.getElementById("info").scrollIntoView({
 
         behavior: "smooth",
+
         block: "center"
 
     });
 
 }
 
+// ==========================================
+// CLOSE PANEL
+// ==========================================
+
 function closePanel() {
 
-    document.getElementById("info").style.display = "none";
+    document.getElementById("info").style.display =
+        "none";
 
 }
+
+// INITIALIZE
+
+updateButton();
+
+updateTime();
 
 </script>
 
@@ -670,6 +1016,10 @@ function closePanel() {
 """
 
 
+# ==========================================
+# PYTHON HTTP SERVER
+# ==========================================
+
 class Website(BaseHTTPRequestHandler):
 
     def do_GET(self):
@@ -677,6 +1027,8 @@ class Website(BaseHTTPRequestHandler):
         requested_path = unquote(
             self.path.split("?", 1)[0]
         )
+
+        # MAIN WEBSITE
 
         if requested_path in ("/", "/index.html"):
 
@@ -700,16 +1052,19 @@ class Website(BaseHTTPRequestHandler):
             )
 
             self.end_headers()
+
             self.wfile.write(content)
 
             return
 
-        # CHỈ CHO PHÉP CÁC FILE TÀI NGUYÊN
+        # ALLOWED FILES
 
         allowed_files = {
 
             "/logo.png": "logo.png",
+
             "/background.jpg": "background.jpg",
+
             "/music.mp3": "music.mp3",
 
         }
@@ -741,12 +1096,15 @@ class Website(BaseHTTPRequestHandler):
         )[0]
 
         if filename.endswith(".mp3"):
+
             content_type = "audio/mpeg"
 
         elif filename.endswith(".png"):
+
             content_type = "image/png"
 
         elif filename.endswith(".jpg"):
+
             content_type = "image/jpeg"
 
         try:
@@ -798,6 +1156,10 @@ class Website(BaseHTTPRequestHandler):
         )
 
 
+# ==========================================
+# START SERVER
+# ==========================================
+
 if __name__ == "__main__":
 
     server = ThreadingHTTPServer(
@@ -806,7 +1168,8 @@ if __name__ == "__main__":
     )
 
     print("======================================")
-    print(" PHONG WEB V7 - LOOP MUSIC EDITION")
+    print(" PHONG WEB V8 - MINI MUSIC PLAYER")
+    print(" NGUYEN VAN PHONG WEBSITE")
     print(" Port:", PORT)
     print("======================================")
 
@@ -816,7 +1179,7 @@ if __name__ == "__main__":
 
     except KeyboardInterrupt:
 
-        print("Dang dung PHONG WEB V7...")
+        print("Dang dung PHONG WEB V8...")
 
     finally:
 
