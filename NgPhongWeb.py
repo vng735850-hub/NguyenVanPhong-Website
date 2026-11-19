@@ -429,7 +429,7 @@ footer {
     <!-- CATEGORIES -->
 
     <h2 class="section-title">
-        ✦ DANH MỤC ✦
+        ✦ Tất Cả Những Gì Bạn Cần 🤩 ✦
     </h2>
 
     <section class="cards">
