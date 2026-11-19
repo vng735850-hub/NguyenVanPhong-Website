@@ -6,9 +6,9 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import unquote
 
 # ==========================================
-# PHONG WEB V8
+# PHONG WEB V9
 # NGUYEN VAN PHONG WEBSITE
-# MINI MUSIC PLAYER EDITION
+# MINI CIRCLE MUSIC PLAYER
 # ==========================================
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -16,6 +16,7 @@ PORT = int(os.environ.get("PORT", 5000))
 
 HTML = r"""<!DOCTYPE html>
 <html lang="vi">
+
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -24,6 +25,7 @@ HTML = r"""<!DOCTYPE html>
 <title>Nguyễn Văn Phong WebSite🔊</title>
 
 <style>
+
 * {
     margin: 0;
     padding: 0;
@@ -49,6 +51,8 @@ body {
         ),
         url("/background.jpg") center/cover fixed no-repeat;
 }
+
+/* HEADER */
 
 header {
     display: flex;
@@ -79,10 +83,14 @@ header {
     color: transparent;
 }
 
+/* MAIN */
+
 main {
     width: min(1100px, 92%);
     margin: 35px auto;
 }
+
+/* HERO */
 
 .hero {
     text-align: center;
@@ -109,6 +117,8 @@ main {
     line-height: 1.7;
 }
 
+/* SECTION */
+
 .section-title {
     text-align: center;
     margin: 35px 0 20px;
@@ -116,12 +126,15 @@ main {
     color: #75dcff;
 }
 
+/* CARDS */
+
 .cards {
     display: grid;
     grid-template-columns: repeat(
         auto-fit,
         minmax(210px, 1fr)
     );
+
     gap: 17px;
 }
 
@@ -158,6 +171,8 @@ main {
     line-height: 1.6;
 }
 
+/* BUTTON */
+
 .action {
     display: inline-block;
     margin-top: 16px;
@@ -177,9 +192,7 @@ main {
     filter: brightness(1.2);
 }
 
-/* ==========================================
-   INFO PANEL
-========================================== */
+/* INFORMATION PANEL */
 
 .info-panel {
     display: none;
@@ -197,48 +210,23 @@ main {
     margin-bottom: 10px;
 }
 
-/* ==========================================
-   MINI MUSIC PLAYER
-========================================== */
+/* ======================================
+   MINI CIRCLE MUSIC PLAYER
+====================================== */
 
 .music-box {
-    width: min(100%, 520px);
-    margin: 30px auto 15px;
-    padding: 14px 17px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 8px 0;
 
-    background: rgba(15,13,48,.92);
-    border: 1px solid #42caff88;
-    border-radius: 16px;
-
-    backdrop-filter: blur(10px);
-    box-shadow: 0 0 20px #7a4dff22;
-}
-
-.music-header {
     display: flex;
+    justify-content: center;
     align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    margin-bottom: 12px;
-}
 
-.music-title {
-    color: #8bdfff;
-    font-size: 15px;
-    font-weight: bold;
-}
-
-.music-status {
-    color: #cfc5ed;
-    font-size: 11px;
-}
-
-.song-name {
-    text-align: center;
-    color: #e6d9ff;
-    font-size: 13px;
-    font-weight: bold;
-    margin-bottom: 12px;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    backdrop-filter: none;
 }
 
 .music-controls {
@@ -247,87 +235,57 @@ main {
     align-items: center;
 }
 
-#mainMusicButton {
-    width: 48px;
-    height: 48px;
+/* ONLY ONE CIRCLE BUTTON */
 
-    border: 1px solid #80dfff;
+#mainMusicButton {
+    width: 46px;
+    height: 46px;
+
+    border: 2px solid #42caff;
     border-radius: 50%;
 
+    background: linear-gradient(
+        135deg,
+        #168edc,
+        #8249d9
+    );
+
     color: white;
-    font-size: 21px;
+    font-size: 23px;
     font-weight: bold;
 
-    background: linear-gradient(100deg, #168edc, #8249d9);
-    box-shadow: 0 0 16px #42caff55;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 
     cursor: pointer;
+
+    box-shadow: 0 0 15px #42caff77;
+
     touch-action: none;
     user-select: none;
     -webkit-user-select: none;
 
-    transition: .2s;
+    transition: transform .15s, box-shadow .2s;
 }
 
 #mainMusicButton:active {
     transform: scale(.90);
 }
 
+/* LOOP ON */
+
 #mainMusicButton.loop-active {
-    background: linear-gradient(100deg, #00b894, #168edc);
-    box-shadow: 0 0 18px #00d9a566;
+    border-color: #42ffbd;
+    box-shadow: 0 0 15px #42ffbd88;
 }
 
-.seek-row {
-    margin-top: 12px;
-}
-
-#seek {
-    width: 100%;
-    accent-color: #66d7ff;
-    cursor: pointer;
-}
-
-#time {
-    text-align: center;
-    margin-top: 4px;
-    font-size: 12px;
-    color: #cfc5ed;
-}
-
-.volume-row {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-
-    margin-top: 9px;
-    color: #ddd;
-    font-size: 12px;
-}
-
-#volume {
-    width: 100px;
-    accent-color: #66d7ff;
-    cursor: pointer;
-}
-
-.music-hint {
-    margin-top: 9px;
-    text-align: center;
-    color: #a9a1c9;
-    font-size: 10px;
-    line-height: 1.5;
-}
-
-/* ==========================================
-   FOOTER
-========================================== */
+/* FOOTER */
 
 footer {
     text-align: center;
     padding: 25px 12px;
-    margin-top: 15px;
+    margin-top: 0;
 
     color: #cfc6e9;
     background: rgba(8, 7, 30, .8);
@@ -335,7 +293,10 @@ footer {
     font-size: 14px;
 }
 
+/* MOBILE */
+
 @media(max-width: 500px) {
+
     header {
         padding: 12px 4%;
     }
@@ -353,16 +314,17 @@ footer {
         padding: 35px 14px;
     }
 
-    .music-box {
-        padding: 13px;
-    }
 }
+
 </style>
 </head>
 
 <body>
 
+<!-- HEADER -->
+
 <header>
+
     <img
         class="logo"
         src="/logo.png"
@@ -373,6 +335,7 @@ footer {
     <div class="brand">
         Nguyễn Văn Phong WebSite🔊
     </div>
+
 </header>
 
 <main>
@@ -380,23 +343,30 @@ footer {
     <!-- WELCOME -->
 
     <section class="hero">
+
         <h1>WELCOME TO PHONG WEB</h1>
 
         <p>
             Chào mừng bạn đến với website của Nguyễn Văn Phong.<br>
             Khám phá Gaming, Python và công nghệ tại đây!
         </p>
+
     </section>
 
     <!-- CATEGORIES -->
 
-    <h2 class="section-title">✦ DANH MỤC ✦</h2>
+    <h2 class="section-title">
+        ✦ DANH MỤC ✦
+    </h2>
 
     <section class="cards">
 
         <article class="card">
+
             <div class="emoji">🎮</div>
+
             <h3>GAMING</h3>
+
             <p>
                 Thế giới game, giải trí và những nội dung gaming.
             </p>
@@ -407,11 +377,15 @@ footer {
             >
                 Khám phá
             </button>
+
         </article>
 
         <article class="card">
+
             <div class="emoji">🐍</div>
+
             <h3>PYTHON</h3>
+
             <p>
                 Lập trình Python, dự án và các sản phẩm sáng tạo.
             </p>
@@ -422,11 +396,15 @@ footer {
             >
                 Khám phá
             </button>
+
         </article>
 
         <article class="card">
+
             <div class="emoji">💻</div>
+
             <h3>TECHNOLOGY</h3>
+
             <p>
                 Công nghệ, phần mềm và những khám phá mới.
             </p>
@@ -437,11 +415,15 @@ footer {
             >
                 Khám phá
             </button>
+
         </article>
 
         <article class="card">
+
             <div class="emoji">📍</div>
+
             <h3>ĐỊNH VỊ XANH TÍM OB55</h3>
+
             <p>
                 Mở mục Định Vị Xanh Tím OB55.
             </p>
@@ -452,11 +434,15 @@ footer {
             >
                 Mở mục
             </button>
+
         </article>
 
         <article class="card">
+
             <div class="emoji">⚙️</div>
+
             <h3>SETTING</h3>
+
             <p>
                 Cài đặt âm thanh và tùy chỉnh website.
             </p>
@@ -467,6 +453,7 @@ footer {
             >
                 Cài đặt
             </button>
+
         </article>
 
     </section>
@@ -485,113 +472,54 @@ footer {
 
     </section>
 
-    <!-- MINI MUSIC PLAYER - CUỐI TRANG -->
-
-    <section class="music-box">
-
-        <div class="music-header">
-
-            <div class="music-title">
-                🎵 MINI MUSIC PLAYER
-            </div>
-
-            <div class="music-status" id="musicStatus">
-                Đã dừng
-            </div>
-
-        </div>
-
-        <div class="song-name">
-            THƯƠNG NHAU ĐẾN THẾ
-        </div>
-
-        <audio id="audio" preload="metadata">
-            <source src="/music.mp3" type="audio/mpeg">
-            Trình duyệt không hỗ trợ phát nhạc.
-        </audio>
-
-        <div class="music-controls">
-
-            <button
-                id="mainMusicButton"
-                type="button"
-                aria-label="Điều khiển nhạc"
-                title="Nhấn: phát/tạm dừng | Nhấn đúp: lặp | Nhấn giữ: dừng"
-            >
-                ▶
-            </button>
-
-        </div>
-
-        <div class="seek-row">
-
-            <input
-                id="seek"
-                type="range"
-                min="0"
-                max="100"
-                value="0"
-                step="0.1"
-            >
-
-        </div>
-
-        <div id="time">
-            00:00 / 00:00
-        </div>
-
-        <div class="volume-row">
-
-            <span>🔊 Âm lượng:</span>
-
-            <input
-                id="volume"
-                type="range"
-                min="0"
-                max="1"
-                value="0.8"
-                step="0.01"
-            >
-
-        </div>
-
-        <div class="music-hint">
-            Nhấn 1 lần: Phát / Tạm dừng |
-            Nhấn 2 lần: Bật / Tắt lặp |
-            Nhấn giữ: Dừng nhạc
-        </div>
-
-    </section>
-
 </main>
+
+<!-- =====================================
+     MINI MUSIC PLAYER
+     NẰM SÁT CUỐI WEBSITE
+===================================== -->
+
+<section class="music-box">
+
+    <audio id="audio" preload="metadata">
+
+        <source src="/music.mp3" type="audio/mpeg">
+
+        Trình duyệt không hỗ trợ phát nhạc.
+
+    </audio>
+
+    <div class="music-controls">
+
+        <button
+            id="mainMusicButton"
+            type="button"
+            aria-label="Phát hoặc tạm dừng nhạc"
+            title="Nhấn: Phát/Tạm dừng | Nhấn đúp: Lặp | Nhấn giữ: Dừng"
+        >▶</button>
+
+    </div>
+
+</section>
 
 <!-- FOOTER -->
 
 <footer>
-    © 2026 Nguyễn Văn Phong Website | PHONG WEB V8
+
+    © 2026 Nguyễn Văn Phong Website | PHONG WEB V9
+
 </footer>
 
 <script>
 
 // ==========================================
-// PHONG WEB V8 - MUSIC PLAYER
+// PHONG WEB V9 - MUSIC SYSTEM
 // ==========================================
 
 const audio = document.getElementById("audio");
 
 const mainMusicButton =
     document.getElementById("mainMusicButton");
-
-const seek = document.getElementById("seek");
-
-const volume = document.getElementById("volume");
-
-const timeLabel = document.getElementById("time");
-
-const musicStatus =
-    document.getElementById("musicStatus");
-
-// MUSIC STATES
 
 let loopEnabled = false;
 
@@ -606,64 +534,29 @@ const CLICK_DELAY = 280;
 const HOLD_DELAY = 800;
 
 // ==========================================
-// FORMAT TIME
-// ==========================================
-
-function formatTime(seconds) {
-
-    if (!Number.isFinite(seconds)) {
-        return "00:00";
-    }
-
-    const minutes = Math.floor(seconds / 60);
-
-    const secs = Math.floor(seconds % 60);
-
-    return String(minutes).padStart(2, "0") + ":" +
-           String(secs).padStart(2, "0");
-}
-
-// ==========================================
-// UPDATE MUSIC BUTTON
+// UPDATE BUTTON
 // ==========================================
 
 function updateButton() {
 
-    if (loopEnabled) {
+    if (audio.paused) {
 
-        mainMusicButton.textContent = "🔁";
-
-        mainMusicButton.classList.add("loop-active");
-
-    } else if (!audio.paused) {
-
-        mainMusicButton.textContent = "⏸";
-
-        mainMusicButton.classList.remove("loop-active");
-
-    } else {
+        // MUSIC OFF
 
         mainMusicButton.textContent = "▶";
 
-        mainMusicButton.classList.remove("loop-active");
-
-    }
-
-    if (!audio.paused) {
-
-        musicStatus.textContent = loopEnabled
-            ? "Đang phát • Lặp lại"
-            : "Đang phát";
-
-    } else if (audio.currentTime > 0) {
-
-        musicStatus.textContent = "Tạm dừng";
-
     } else {
 
-        musicStatus.textContent = "Đã dừng";
+        // MUSIC ON
+
+        mainMusicButton.textContent = "Ⅱ";
 
     }
+
+    mainMusicButton.classList.toggle(
+        "loop-active",
+        loopEnabled
+    );
 
 }
 
@@ -675,8 +568,6 @@ function playMusic() {
 
     audio.play().catch(() => {
 
-        musicStatus.textContent = "Không phát được nhạc";
-
         alert(
             "Không phát được nhạc. Hãy kiểm tra file music.mp3."
         );
@@ -686,7 +577,7 @@ function playMusic() {
 }
 
 // ==========================================
-// TOGGLE PLAY / PAUSE
+// PLAY / PAUSE
 // ==========================================
 
 function toggleMusic() {
@@ -704,7 +595,7 @@ function toggleMusic() {
 }
 
 // ==========================================
-// TOGGLE LOOP
+// LOOP MUSIC
 // ==========================================
 
 function toggleLoop() {
@@ -733,28 +624,24 @@ function stopMusic() {
 
     updateButton();
 
-    updateTime();
-
 }
 
 // ==========================================
 // ONE BUTTON CONTROL
 // ==========================================
 
-// Nhấn 1 lần:
-// Phát hoặc tạm dừng.
-//
-// Nhấn 2 lần:
-// Bật hoặc tắt lặp.
-//
-// Nhấn giữ 0.8 giây:
-// Dừng nhạc và tắt lặp.
+// Nhấn 1 lần: Phát / Tạm dừng
+// Nhấn 2 lần: Bật / Tắt lặp
+// Nhấn giữ: Dừng nhạc
 
 mainMusicButton.addEventListener(
     "pointerdown",
     function(event) {
 
-        if (event.button !== undefined && event.button !== 0) {
+        if (
+            event.button !== undefined &&
+            event.button !== 0
+        ) {
             return;
         }
 
@@ -781,7 +668,7 @@ mainMusicButton.addEventListener(
 
 mainMusicButton.addEventListener(
     "pointerup",
-    function(event) {
+    function() {
 
         clearTimeout(holdTimer);
 
@@ -850,66 +737,6 @@ audio.addEventListener("pause", updateButton);
 
 audio.addEventListener("ended", updateButton);
 
-audio.addEventListener("loadedmetadata", updateTime);
-
-// ==========================================
-// UPDATE TIME AND PROGRESS
-// ==========================================
-
-audio.addEventListener("timeupdate", () => {
-
-    if (
-        Number.isFinite(audio.duration) &&
-        audio.duration > 0
-    ) {
-
-        seek.value =
-            (audio.currentTime / audio.duration) * 100;
-
-    }
-
-    updateTime();
-
-});
-
-function updateTime() {
-
-    timeLabel.textContent =
-        formatTime(audio.currentTime) + " / " +
-        formatTime(audio.duration);
-
-}
-
-// ==========================================
-// SEEK MUSIC
-// ==========================================
-
-seek.addEventListener("input", () => {
-
-    if (
-        Number.isFinite(audio.duration) &&
-        audio.duration > 0
-    ) {
-
-        audio.currentTime =
-            (Number(seek.value) / 100) * audio.duration;
-
-    }
-
-});
-
-// ==========================================
-// VOLUME
-// ==========================================
-
-volume.addEventListener("input", () => {
-
-    audio.volume = Number(volume.value);
-
-});
-
-audio.volume = Number(volume.value);
-
 // ==========================================
 // WEBSITE PANELS
 // ==========================================
@@ -957,7 +784,7 @@ const panels = {
         title: "⚙️ SETTING",
 
         content:
-        "Cài đặt âm thanh: sử dụng thanh âm lượng trong Mini Music Player. Nhấn một lần để phát hoặc tạm dừng, nhấn hai lần để bật hoặc tắt lặp nhạc, nhấn giữ để dừng."
+        "Trình phát nhạc mini: nhấn một lần để phát hoặc tạm dừng, nhấn hai lần để bật hoặc tắt lặp, nhấn giữ để dừng nhạc."
 
     }
 
@@ -1003,11 +830,13 @@ function closePanel() {
 
 }
 
+// ==========================================
 // INITIALIZE
+// ==========================================
+
+audio.volume = 0.8;
 
 updateButton();
-
-updateTime();
 
 </script>
 
@@ -1168,7 +997,8 @@ if __name__ == "__main__":
     )
 
     print("======================================")
-    print(" PHONG WEB V8 - MINI MUSIC PLAYER")
+    print(" PHONG WEB V9")
+    print(" MINI CIRCLE MUSIC PLAYER")
     print(" NGUYEN VAN PHONG WEBSITE")
     print(" Port:", PORT)
     print("======================================")
@@ -1179,7 +1009,7 @@ if __name__ == "__main__":
 
     except KeyboardInterrupt:
 
-        print("Dang dung PHONG WEB V8...")
+        print("Dang dung PHONG WEB V9...")
 
     finally:
 
