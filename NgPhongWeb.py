@@ -2,22 +2,30 @@
 import os
 import json
 import mimetypes
+import urllib.request
+import urllib.error
 from pathlib import Path
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlencode, urlsplit, unquote
 
 # ==========================================
-# PHONG WEB V20
-# VUOTNHANH QUICK LINK API
+# PHONG WEB V21
+# VUOTNHANH + LINK4M API
 # ==========================================
 
 BASE_DIR = Path(__file__).resolve().parent
 PORT = int(os.environ.get("PORT", 5000))
 
-# API KEY: Cấu hình trong Environment Variables trên Render
-API_KEY = os.environ.get("VUOTNHANH_API_KEY", "").strip()
+# API VUOTNHANH - GIỮ NGUYÊN
+API_KEY = os.environ.get(
+    "VUOTNHANH_API_KEY", ""
+).strip()
 
-# Địa chỉ website đang chạy trên Render
+# API LINK4M - MỚI
+LINK4M_API_TOKEN = os.environ.get(
+    "LINK4M_API_TOKEN", ""
+).strip()
+
 SITE_URL = os.environ.get(
     "SITE_URL",
     "https://phong-web.onrender.com"
@@ -29,17 +37,25 @@ MEDIAFIRE_LINK = (
 )
 
 VUOTNHANH_ENDPOINT = "https://vuotnhanh.com/zVOM"
+LINK4M_ENDPOINT = "https://link4m.co/api-shorten/v2"
+
+
+# ==========================================
+# HTML
+# ==========================================
 
 HTML = r"""
 <!DOCTYPE html>
 <html lang="vi">
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>NGUYỄN VĂN PHONG WEBSITE</title>
 
 <style>
+
 * {
     box-sizing: border-box;
 }
@@ -148,9 +164,46 @@ h1 {
     font-size: 13px;
 }
 
+/* NEW HIDDEN MENU */
+
+.menu-container {
+    width: 100%;
+    max-width: 700px;
+    margin: 25px auto;
+}
+
+.menu-card {
+    padding: 25px 15px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, #252b65, #532b91);
+    border: 1px solid rgba(255,255,255,0.2);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+}
+
+.menu-card h2 {
+    font-size: 20px;
+    margin: 5px 0 20px;
+}
+
+.open-menu-button {
+    display: inline-block;
+    padding: 12px 35px;
+    border: none;
+    border-radius: 25px;
+    background: white;
+    color: #5632a8;
+    font-weight: bold;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+.open-menu-button:hover {
+    box-shadow: 0 0 20px #a98aff;
+}
+
 /* LINK PAGE */
 
-#linkPage {
+.link-page {
     display: none;
     max-width: 600px;
     margin: 55px auto;
@@ -165,7 +218,7 @@ h1 {
     font-size: 65px;
 }
 
-#linkPage h2 {
+.link-page h2 {
     font-size: 25px;
     line-height: 1.5;
     margin: 20px 0;
@@ -204,7 +257,7 @@ h1 {
     font-size: 14px;
 }
 
-#status {
+.status {
     margin-top: 18px;
     color: #ffe28a;
     font-size: 14px;
@@ -265,6 +318,7 @@ footer {
 }
 
 @media(max-width: 500px) {
+
     header {
         font-size: 18px;
     }
@@ -290,10 +344,15 @@ footer {
         font-size: 11px;
     }
 
-    #linkPage h2 {
+    .link-page h2 {
         font-size: 21px;
     }
+
+    .menu-card h2 {
+        font-size: 17px;
+    }
 }
+
 </style>
 </head>
 
@@ -304,6 +363,8 @@ footer {
 </header>
 
 <main>
+
+<!-- HOME PAGE -->
 
 <div id="homePage">
 
@@ -320,6 +381,8 @@ footer {
         <br>
         📍 ĐỊNH VỊ XANH TÍM OB55
     </div>
+
+    <!-- OLD LOCATION MENU -->
 
     <section class="location-container">
 
@@ -347,11 +410,34 @@ footer {
 
     </section>
 
+    <!-- NEW HIDDEN MENU ENTRY -->
+
+    <section class="menu-container">
+
+        <div class="menu-card">
+
+            <h2>🔐 DETA IPA CRACK NOKЕY</h2>
+
+            <button
+                class="open-menu-button"
+                id="openMenuButton"
+                type="button"
+            >
+                MỞ MENU
+            </button>
+
+        </div>
+
+    </section>
+
 </div>
 
-<div id="linkPage">
 
-    <div class="link-icon">🔐</div>
+<!-- OLD VUOTNHANH PAGE -->
+
+<div id="locationPage" class="link-page">
+
+    <div class="link-icon">📍</div>
 
     <h2>
         BẠN CẦN VƯỢT LINK ĐỂ LẤY FILE MEDIAFIRE
@@ -365,13 +451,48 @@ footer {
 
     <button
         class="cross-link-button"
-        id="crossLinkButton"
+        id="vuotNhanhButton"
         type="button"
     >
         🔓 VƯỢT LINK
     </button>
 
-    <div id="status"></div>
+    <div class="status" id="locationStatus"></div>
+
+    <br>
+
+    <a class="back-button" href="/">
+        ← QUAY LẠI TRANG CHỦ
+    </a>
+
+</div>
+
+
+<!-- NEW LINK4M PAGE -->
+
+<div id="menuPage" class="link-page">
+
+    <div class="link-icon">🔐</div>
+
+    <h2>
+        BẠN CẦN VƯỢT LINK ĐỂ LẤY FILE MEDIAFIRE
+    </h2>
+
+    <div class="link-description">
+        Nhấn nút bên dưới để tạo đường dẫn Link4M.
+        <br>
+        Sau khi hoàn thành, bạn sẽ được chuyển đến file MediaFire.
+    </div>
+
+    <button
+        class="cross-link-button"
+        id="link4mButton"
+        type="button"
+    >
+        🔓 VƯỢT LINK
+    </button>
+
+    <div class="status" id="link4mStatus"></div>
 
     <br>
 
@@ -382,6 +503,9 @@ footer {
 </div>
 
 </main>
+
+
+<!-- MUSIC BUTTON -->
 
 <button
     class="music-mini"
@@ -397,11 +521,13 @@ footer {
     <source src="/music.mp3" type="audio/mpeg">
 </audio>
 
+
 <footer>
     © 2026 Nguyễn Văn Phong Website
     <br><br>
-    PHONG WEB V20
+    PHONG WEB V21
 </footer>
+
 
 <script>
 
@@ -410,44 +536,85 @@ footer {
 // ==========================================
 
 const homePage = document.getElementById("homePage");
-const linkPage = document.getElementById("linkPage");
+const locationPage = document.getElementById("locationPage");
+const menuPage = document.getElementById("menuPage");
 
 function showPage() {
 
-    if (window.location.pathname === "/dinh-vi") {
-        homePage.style.display = "none";
-        linkPage.style.display = "block";
+    const path = window.location.pathname;
+
+    homePage.style.display = "none";
+    locationPage.style.display = "none";
+    menuPage.style.display = "none";
+
+    if (path === "/dinh-vi") {
+
+        locationPage.style.display = "block";
+
+    } else if (path === "/menu") {
+
+        menuPage.style.display = "block";
+
     } else {
+
         homePage.style.display = "block";
-        linkPage.style.display = "none";
+
     }
+}
+
+function navigate(path) {
+
+    history.pushState({}, "", path);
+
+    showPage();
+
+    window.scrollTo(0, 0);
 }
 
 window.addEventListener("popstate", showPage);
 
-document.querySelector(".location-link").addEventListener("click", function(e) {
+
+// OLD LOCATION NAVIGATION
+
+document.querySelector(".location-link")
+.addEventListener("click", function(e) {
+
     e.preventDefault();
 
-    history.pushState({}, "", "/dinh-vi");
+    navigate("/dinh-vi");
 
-    showPage();
-    window.scrollTo(0, 0);
+});
+
+
+// NEW MENU NAVIGATION
+
+document.getElementById("openMenuButton")
+.addEventListener("click", function() {
+
+    navigate("/menu");
+
 });
 
 showPage();
 
 
 // ==========================================
-// VUOTNHANH QUICK LINK
+// OLD VUOTNHANH API
+// DO NOT REPLACE
 // ==========================================
 
-const crossLinkButton = document.getElementById("crossLinkButton");
-const statusText = document.getElementById("status");
+const vuotNhanhButton =
+document.getElementById("vuotNhanhButton");
 
-crossLinkButton.addEventListener("click", async function() {
+const locationStatus =
+document.getElementById("locationStatus");
 
-    crossLinkButton.disabled = true;
-    statusText.textContent = "Đang tạo đường dẫn vượt link...";
+vuotNhanhButton.addEventListener("click", async function() {
+
+    vuotNhanhButton.disabled = true;
+
+    locationStatus.textContent =
+    "Đang tạo đường dẫn Vượt Nhanh...";
 
     try {
 
@@ -459,17 +626,75 @@ crossLinkButton.addEventListener("click", async function() {
         const data = await response.json();
 
         if (!response.ok || !data.success) {
-            throw new Error(data.message || "Không thể tạo link.");
+
+            throw new Error(
+                data.message || "Không thể tạo link."
+            );
+
         }
 
-        statusText.textContent = "Đang chuyển đến Vượt Nhanh...";
+        locationStatus.textContent =
+        "Đang chuyển đến Vượt Nhanh...";
 
         window.location.href = data.url;
 
     } catch(error) {
 
-        statusText.textContent = "Lỗi: " + error.message;
-        crossLinkButton.disabled = false;
+        locationStatus.textContent =
+        "Lỗi: " + error.message;
+
+        vuotNhanhButton.disabled = false;
+
+    }
+
+});
+
+
+// ==========================================
+// NEW LINK4M API
+// ==========================================
+
+const link4mButton =
+document.getElementById("link4mButton");
+
+const link4mStatus =
+document.getElementById("link4mStatus");
+
+link4mButton.addEventListener("click", async function() {
+
+    link4mButton.disabled = true;
+
+    link4mStatus.textContent =
+    "Đang tạo đường dẫn Link4M...";
+
+    try {
+
+        const response = await fetch("/create-link4m", {
+            method: "GET",
+            cache: "no-store"
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+
+            throw new Error(
+                data.message || "Không thể tạo link Link4M."
+            );
+
+        }
+
+        link4mStatus.textContent =
+        "Đang chuyển đến Link4M...";
+
+        window.location.href = data.url;
+
+    } catch(error) {
+
+        link4mStatus.textContent =
+        "Lỗi: " + error.message;
+
+        link4mButton.disabled = false;
 
     }
 
@@ -489,12 +714,17 @@ let isPlaying = false;
 function updateMusicButton() {
 
     if (isPlaying) {
+
         musicButton.classList.add("playing");
         musicIcon.textContent = "♫";
+
     } else {
+
         musicButton.classList.remove("playing");
         musicIcon.textContent = "▶";
+
     }
+
 }
 
 musicButton.addEventListener("click", async function() {
@@ -504,7 +734,9 @@ musicButton.addEventListener("click", async function() {
         try {
 
             audio.loop = true;
+
             await audio.play();
+
             isPlaying = true;
 
         } catch(error) {
@@ -513,6 +745,7 @@ musicButton.addEventListener("click", async function() {
             isPlaying = false;
 
             console.log("Music error:", error);
+
         }
 
     } else {
@@ -522,26 +755,33 @@ musicButton.addEventListener("click", async function() {
         audio.loop = false;
 
         isPlaying = false;
+
     }
 
     updateMusicButton();
 
 });
 
+
 audio.addEventListener("pause", function() {
 
     if (isPlaying) {
+
         isPlaying = false;
         audio.loop = false;
+
         updateMusicButton();
+
     }
 
 });
+
 
 audio.addEventListener("error", function() {
 
     isPlaying = false;
     audio.loop = false;
+
     updateMusicButton();
 
     console.log("Không tìm thấy music.mp3");
@@ -555,110 +795,297 @@ audio.addEventListener("error", function() {
 """
 
 
+# ==========================================
+# WEBSITE SERVER
+# ==========================================
+
 class Website(BaseHTTPRequestHandler):
 
     def send_json(self, status, data):
 
-        content = json.dumps(data).encode("utf-8")
+        content = json.dumps(
+            data,
+            ensure_ascii=False
+        ).encode("utf-8")
 
         self.send_response(status)
+
         self.send_header(
             "Content-Type",
             "application/json; charset=utf-8"
         )
-        self.send_header("Content-Length", str(len(content)))
+
+        self.send_header(
+            "Content-Length",
+            str(len(content))
+        )
+
         self.send_header("Cache-Control", "no-store")
+
         self.end_headers()
 
         try:
             self.wfile.write(content)
+
         except (BrokenPipeError, ConnectionResetError):
             pass
+
 
     def do_GET(self):
 
         path = unquote(urlsplit(self.path).path)
 
-        # HOME AND LINK PAGE
 
-        if path in ("/", "/index.html", "/dinh-vi"):
+        # ======================================
+        # HOME AND PAGES
+        # ======================================
+
+        if path in (
+            "/",
+            "/index.html",
+            "/dinh-vi",
+            "/menu"
+        ):
 
             content = HTML.encode("utf-8")
 
             self.send_response(200)
+
             self.send_header(
                 "Content-Type",
                 "text/html; charset=utf-8"
             )
+
             self.send_header(
                 "Content-Length",
                 str(len(content))
             )
+
             self.send_header("Cache-Control", "no-cache")
+
             self.end_headers()
 
             try:
                 self.wfile.write(content)
+
             except (BrokenPipeError, ConnectionResetError):
                 pass
 
             return
 
-        # CREATE VUOTNHANH LINK
+
+        # ======================================
+        # OLD VUOTNHANH API
+        # KEEP ORIGINAL SYSTEM
+        # ======================================
 
         if path == "/create-link":
 
             if not API_KEY:
+
                 self.send_json(500, {
                     "success": False,
                     "message": "Chưa cấu hình Vượt Nhanh API Key trên Render."
                 })
+
                 return
 
+
             if not SITE_URL.startswith("https://"):
+
                 self.send_json(500, {
                     "success": False,
                     "message": "SITE_URL phải là địa chỉ HTTPS."
                 })
+
                 return
 
-            # Sau khi người dùng vượt link, Vượt Nhanh
-            # sẽ đưa họ về địa chỉ này.
+
             return_url = SITE_URL + "/complete"
 
-            # Tạo URL Quick Link theo tài liệu bạn cung cấp.
             query = urlencode({
                 "api": API_KEY,
                 "url": return_url
             })
 
-            quick_link = VUOTNHANH_ENDPOINT + "?" + query
+            quick_link = (
+                VUOTNHANH_ENDPOINT + "?" + query
+            )
 
             self.send_json(200, {
                 "success": True,
                 "url": quick_link
             })
 
-            print("[PHONG WEB] Created Vượt Nhanh link")
+            print("[PHONG WEB] Vượt Nhanh link created")
 
             return
 
-        # RETURN PAGE
+
+        # ======================================
+        # OLD VUOTNHANH RETURN
+        # KEEP ORIGINAL SYSTEM
+        # ======================================
 
         if path == "/complete":
 
-            # Đây chỉ là trang nhận chuyển hướng.
-            # Chưa phải xác minh hoàn thành vượt link.
             self.send_response(302)
-            self.send_header("Location", MEDIAFIRE_LINK)
+
+            self.send_header(
+                "Location",
+                MEDIAFIRE_LINK
+            )
+
             self.send_header("Cache-Control", "no-store")
+
             self.end_headers()
 
-            print("[PHONG WEB] Visitor returned to completion URL")
+            print("[PHONG WEB] Vượt Nhanh return")
 
             return
 
+
+        # ======================================
+        # NEW LINK4M API
+        # SEPARATE FROM VUOTNHANH
+        # ======================================
+
+        if path == "/create-link4m":
+
+            if not LINK4M_API_TOKEN:
+
+                self.send_json(500, {
+                    "success": False,
+                    "message": "Chưa cấu hình Link4M API Token trên Render."
+                })
+
+                return
+
+
+            try:
+
+                params = urlencode({
+                    "api": LINK4M_API_TOKEN,
+                    "url": MEDIAFIRE_LINK
+                })
+
+                api_url = (
+                    LINK4M_ENDPOINT + "?" + params
+                )
+
+                request = urllib.request.Request(
+                    api_url,
+                    headers={
+                        "User-Agent": "PHONG-WEB/21"
+                    }
+                )
+
+                with urllib.request.urlopen(
+                    request,
+                    timeout=20
+                ) as response:
+
+                    result = json.loads(
+                        response.read().decode("utf-8")
+                    )
+
+
+                if result.get("status") != "success":
+
+                    self.send_json(502, {
+                        "success": False,
+                        "message": result.get(
+                            "message",
+                            "Link4M không thể tạo link."
+                        )
+                    })
+
+                    return
+
+
+                shortened_url = result.get(
+                    "shortenedUrl",
+                    ""
+                )
+
+                parsed_url = urlsplit(shortened_url)
+
+                if (
+                    parsed_url.scheme != "https"
+                    or parsed_url.hostname != "link4m.com"
+                ):
+
+                    self.send_json(502, {
+                        "success": False,
+                        "message": "Link4M trả về đường dẫn không hợp lệ."
+                    })
+
+                    return
+
+
+                self.send_json(200, {
+                    "success": True,
+                    "url": shortened_url
+                })
+
+                print(
+                    "[PHONG WEB] Link4M link created successfully"
+                )
+
+            except urllib.error.HTTPError as error:
+
+                print(
+                    "[PHONG WEB] Link4M HTTP error:",
+                    error.code
+                )
+
+                self.send_json(502, {
+                    "success": False,
+                    "message": "Link4M API từ chối yêu cầu."
+                })
+
+            except urllib.error.URLError as error:
+
+                print(
+                    "[PHONG WEB] Link4M connection error:",
+                    error
+                )
+
+                self.send_json(502, {
+                    "success": False,
+                    "message": "Không thể kết nối Link4M."
+                })
+
+            except (ValueError, TimeoutError) as error:
+
+                print(
+                    "[PHONG WEB] Link4M response error:",
+                    error
+                )
+
+                self.send_json(502, {
+                    "success": False,
+                    "message": "Link4M trả về dữ liệu không hợp lệ hoặc hết thời gian chờ."
+                })
+
+            except Exception as error:
+
+                print(
+                    "[PHONG WEB] Link4M error:",
+                    error
+                )
+
+                self.send_json(500, {
+                    "success": False,
+                    "message": "Lỗi xử lý Link4M."
+                })
+
+            return
+
+
+        # ======================================
         # STATIC FILES
+        # ======================================
 
         allowed_files = {
             "/logo.png",
@@ -667,28 +1094,49 @@ class Website(BaseHTTPRequestHandler):
         }
 
         if path not in allowed_files:
+
             self.send_error(404, "File not found")
+
             return
+
 
         file_path = BASE_DIR / path.lstrip("/")
 
         if not file_path.is_file():
+
             self.send_error(404, "Asset not found")
+
             return
+
 
         content_type = mimetypes.guess_type(
             str(file_path)
         )[0] or "application/octet-stream"
+
 
         try:
 
             file_size = file_path.stat().st_size
 
             self.send_response(200)
-            self.send_header("Content-Type", content_type)
-            self.send_header("Content-Length", str(file_size))
-            self.send_header("Accept-Ranges", "bytes")
+
+            self.send_header(
+                "Content-Type",
+                content_type
+            )
+
+            self.send_header(
+                "Content-Length",
+                str(file_size)
+            )
+
+            self.send_header(
+                "Accept-Ranges",
+                "bytes"
+            )
+
             self.end_headers()
+
 
             with open(file_path, "rb") as file:
 
@@ -701,15 +1149,29 @@ class Website(BaseHTTPRequestHandler):
 
                     self.wfile.write(chunk)
 
+
         except (BrokenPipeError, ConnectionResetError):
             pass
 
         except OSError as error:
-            print("[PHONG WEB] File error:", error)
+
+            print(
+                "[PHONG WEB] File error:",
+                error
+            )
+
 
     def log_message(self, format, *args):
-        print("[PHONG WEB]", format % args)
 
+        print(
+            "[PHONG WEB]",
+            format % args
+        )
+
+
+# ==========================================
+# START SERVER
+# ==========================================
 
 if __name__ == "__main__":
 
@@ -719,23 +1181,42 @@ if __name__ == "__main__":
     )
 
     print("====================================")
-    print("          PHONG WEB V20")
+    print("          PHONG WEB V21")
     print("====================================")
-    print("Server running on port:", PORT)
-    print("Vuotnhanh Quick Link:", "ENABLED" if API_KEY else "MISSING API KEY")
-    print("Return URL:", SITE_URL + "/complete")
-    print("MediaFire redirect: ENABLED")
+
+    print("Server port:", PORT)
+
+    print(
+        "VuotNhanh API:",
+        "ENABLED" if API_KEY else "MISSING API KEY"
+    )
+
+    print(
+        "Link4M API:",
+        "ENABLED" if LINK4M_API_TOKEN else "MISSING API TOKEN"
+    )
+
+    print("Location route: /dinh-vi")
+    print("Menu route: /menu")
+    print("VuotNhanh endpoint: /create-link")
+    print("Link4M endpoint: /create-link4m")
+
+    print("Original MediaFire link: ENABLED")
     print("Fixed music button: ENABLED")
     print("Music looping: ENABLED")
     print("Location aspect ratio: 7:2")
     print("Advertisements: REMOVED")
+
     print("====================================")
 
     try:
+
         server.serve_forever()
 
     except KeyboardInterrupt:
+
         print("\n[PHONG WEB] Server stopped.")
 
     finally:
+
         server.server_close()
