@@ -6,8 +6,8 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import unquote
 
 # ==========================================
-# PHONG WEB V18
-# MUSIC BUTTON MINI CIRCLE
+# PHONG WEB V19
+# FIXED MINI MUSIC BUTTON
 # ==========================================
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -20,12 +20,14 @@ HTML = r"""
 <!DOCTYPE html>
 <html lang="vi">
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>NGUYỄN VĂN PHONG WEBSITE</title>
 
 <style>
+
 * {
     box-sizing: border-box;
 }
@@ -33,12 +35,14 @@ HTML = r"""
 body {
     margin: 0;
     min-height: 100vh;
-    padding-bottom: 90px;
+    padding-bottom: 100px;
     font-family: Arial, sans-serif;
     color: white;
     text-align: center;
     background: radial-gradient(circle at top, #253d91, #080d22 70%);
 }
+
+/* HEADER */
 
 header {
     padding: 22px 10px;
@@ -71,6 +75,8 @@ h1 {
     margin: 15px auto 30px;
     max-width: 600px;
 }
+
+/* LOCATION CARD */
 
 .location-container {
     width: 100%;
@@ -174,7 +180,7 @@ h1 {
 }
 
 .cross-link-button:hover {
-    transform: scale(1.05);
+    filter: brightness(1.15);
 }
 
 .back-button {
@@ -185,32 +191,56 @@ h1 {
     font-size: 14px;
 }
 
-/* MINI MUSIC BUTTON */
+/* =================================
+   FIXED MINI MUSIC BUTTON
+   ALWAYS SAME POSITION
+================================= */
 
 .music-mini {
-    position: fixed;
-    bottom: 18px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 58px;
-    height: 58px;
+    position: fixed !important;
+
+    bottom: 15px !important;
+    left: 50% !important;
+    right: auto !important;
+    top: auto !important;
+
+    margin: 0 !important;
+
+    transform: translateX(-50%) !important;
+
+    width: 55px;
+    height: 55px;
+
+    min-width: 55px;
+    min-height: 55px;
+
     border-radius: 50%;
     border: 2px solid rgba(255,255,255,0.8);
+
     background: linear-gradient(135deg, #1685ff, #7736d5);
     color: white;
+
     font-size: 25px;
+
     display: flex;
     align-items: center;
     justify-content: center;
+
     cursor: pointer;
-    z-index: 9999;
+
+    z-index: 99999;
+
     box-shadow: 0 0 18px rgba(40,120,255,0.6);
-    transition: 0.2s;
+
+    transition: background 0.2s, box-shadow 0.2s;
+
     -webkit-tap-highlight-color: transparent;
+
+    outline: none;
 }
 
 .music-mini:active {
-    transform: translateX(-50%) scale(0.9);
+    transform: translateX(-50%) !important;
 }
 
 .music-mini.playing {
@@ -222,13 +252,18 @@ h1 {
     pointer-events: none;
 }
 
+/* FOOTER */
+
 footer {
     padding: 25px 10px;
     color: #9eafd8;
     font-size: 12px;
 }
 
+/* MOBILE */
+
 @media(max-width: 500px) {
+
     header {
         font-size: 18px;
     }
@@ -257,14 +292,10 @@ footer {
     #linkPage h2 {
         font-size: 21px;
     }
-
-    .music-mini {
-        width: 54px;
-        height: 54px;
-        bottom: 15px;
-    }
 }
+
 </style>
+
 </head>
 
 <body>
@@ -274,6 +305,8 @@ footer {
 </header>
 
 <main>
+
+<!-- HOME PAGE -->
 
 <div id="homePage">
 
@@ -297,7 +330,9 @@ footer {
 
             <div class="location-card">
 
-                <div class="location-emoji">📍</div>
+                <div class="location-emoji">
+                    📍
+                </div>
 
                 <div class="location-info">
 
@@ -319,11 +354,14 @@ footer {
 
 </div>
 
+
 <!-- INTERMEDIATE PAGE -->
 
 <div id="linkPage">
 
-    <div class="link-icon">🔐</div>
+    <div class="link-icon">
+        🔐
+    </div>
 
     <h2>
         BẠN CẦN VƯỢT LINK ĐỂ LẤY FILE MEDIAFIRE
@@ -354,13 +392,15 @@ footer {
 
 </main>
 
-<!-- MINI MUSIC PLAYER -->
+
+<!-- FIXED MUSIC BUTTON -->
 
 <button
     class="music-mini"
     id="musicButton"
     aria-label="Bật hoặc tắt nhạc"
     title="Bật / Tắt nhạc"
+    type="button"
 >
     <span class="music-icon" id="musicIcon">▶</span>
 </button>
@@ -369,11 +409,13 @@ footer {
     <source src="/music.mp3" type="audio/mpeg">
 </audio>
 
+
 <footer>
     © 2026 Nguyễn Văn Phong Website
     <br><br>
-    PHONG WEB V18
+    PHONG WEB V19
 </footer>
+
 
 <script>
 
@@ -387,12 +429,17 @@ const linkPage = document.getElementById("linkPage");
 function showPage() {
 
     if (window.location.pathname === "/dinh-vi") {
+
         homePage.style.display = "none";
         linkPage.style.display = "block";
+
     } else {
+
         homePage.style.display = "block";
         linkPage.style.display = "none";
+
     }
+
 }
 
 window.addEventListener("popstate", showPage);
@@ -406,15 +453,16 @@ document.querySelector(".location-link").addEventListener("click", function(e) {
     showPage();
 
     window.scrollTo(0, 0);
+
 });
 
 showPage();
 
 
 // ==========================================
-// MUSIC ON / OFF
-// ON  = PLAY MUSIC + LOOP
-// OFF = STOP MUSIC + DISABLE LOOP
+// MUSIC CONTROL
+// ON  = MUSIC + LOOP
+// OFF = STOP MUSIC + LOOP OFF
 // ==========================================
 
 const audio = document.getElementById("audio");
@@ -436,6 +484,7 @@ function updateMusicButton() {
         musicIcon.textContent = "▶";
 
     }
+
 }
 
 musicButton.addEventListener("click", async function() {
@@ -444,7 +493,6 @@ musicButton.addEventListener("click", async function() {
 
         try {
 
-            // Turn ON music and looping together
             audio.loop = true;
 
             await audio.play();
@@ -462,7 +510,6 @@ musicButton.addEventListener("click", async function() {
 
     } else {
 
-        // Turn OFF music and looping together
         audio.pause();
         audio.currentTime = 0;
         audio.loop = false;
@@ -478,9 +525,12 @@ musicButton.addEventListener("click", async function() {
 audio.addEventListener("pause", function() {
 
     if (isPlaying) {
+
         isPlaying = false;
         audio.loop = false;
+
         updateMusicButton();
+
     }
 
 });
@@ -514,19 +564,24 @@ class Website(BaseHTTPRequestHandler):
             content = HTML.encode("utf-8")
 
             self.send_response(200)
+
             self.send_header(
                 "Content-Type",
                 "text/html; charset=utf-8"
             )
+
             self.send_header(
                 "Content-Length",
                 str(len(content))
             )
+
             self.send_header("Cache-Control", "no-cache")
+
             self.end_headers()
 
             try:
                 self.wfile.write(content)
+
             except (BrokenPipeError, ConnectionResetError):
                 pass
 
@@ -539,12 +594,14 @@ class Website(BaseHTTPRequestHandler):
         }
 
         if path not in allowed_files:
+
             self.send_error(404, "File not found")
             return
 
         file_path = BASE_DIR / path.lstrip("/")
 
         if not file_path.is_file():
+
             self.send_error(404, "Asset not found")
             return
 
@@ -557,9 +614,11 @@ class Website(BaseHTTPRequestHandler):
             file_size = file_path.stat().st_size
 
             self.send_response(200)
+
             self.send_header("Content-Type", content_type)
             self.send_header("Content-Length", str(file_size))
             self.send_header("Accept-Ranges", "bytes")
+
             self.end_headers()
 
             with open(file_path, "rb") as file:
@@ -577,9 +636,11 @@ class Website(BaseHTTPRequestHandler):
             pass
 
         except OSError as error:
+
             print("[PHONG WEB] File error:", error)
 
     def log_message(self, format, *args):
+
         print("[PHONG WEB]", format % args)
 
 
@@ -591,21 +652,24 @@ if __name__ == "__main__":
     )
 
     print("====================================")
-    print("          PHONG WEB V18")
+    print("          PHONG WEB V19")
     print("====================================")
     print("Server running on port:", PORT)
-    print("Link4m intermediate page: ENABLED")
-    print("Mini circular music button: ENABLED")
-    print("Music looping: AUTO ON/OFF")
+    print("Link4m page: ENABLED")
+    print("Fixed music button: ENABLED")
+    print("Music looping: AUTO")
     print("Location aspect ratio: 7:2")
     print("Advertisements: REMOVED")
     print("====================================")
 
     try:
+
         server.serve_forever()
 
     except KeyboardInterrupt:
+
         print("\n[PHONG WEB] Server stopped.")
 
     finally:
+
         server.server_close()
