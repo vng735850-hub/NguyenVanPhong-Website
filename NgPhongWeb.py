@@ -37,7 +37,7 @@ MEDIAFIRE_LINK = (
 )
 
 VUOTNHANH_ENDPOINT = "https://vuotnhanh.com/zVOM"
-LINK4M_ENDPOINT = "https://link4m.co/api-shorten/v2"
+LINK4M_ENDPOINT = "https://link4m.org/vQWCJ0"
 
 
 # ==========================================
