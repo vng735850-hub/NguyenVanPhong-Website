@@ -4,14 +4,24 @@ import json
 import mimetypes
 import urllib.request
 import urllib.error
+import secrets
+import time
+import threading
 
 from pathlib import Path
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import urlencode, urlsplit, unquote
+from urllib.parse import (
+    urlencode,
+    urlsplit,
+    unquote,
+    parse_qs,
+    quote
+)
 
 # ==========================================
-# PHONG WEB V24
+# PHONG WEB V25
 # VUOTNHANH DEVELOPERS API + LINK4M API
+# LINK4M RETURN CONFIRMATION
 # ==========================================
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -40,9 +50,81 @@ MEDIAFIRE_LINK = (
     "yen60lu05hfnng4/DINH_VI_BT.zip/file"
 )
 
+# LINK4M SESSION
+SESSION_TTL = 30 * 60
+link4m_sessions = {}
+session_lock = threading.Lock()
+
+
+def clean_sessions():
+    """Xóa các phiên Link4M đã hết hạn."""
+    now = time.time()
+
+    with session_lock:
+        expired = [
+            token
+            for token, data in link4m_sessions.items()
+            if now - data["created"] > SESSION_TTL
+        ]
+
+        for token in expired:
+            link4m_sessions.pop(token, None)
+
+
+def create_link4m_session():
+    clean_sessions()
+
+    token = secrets.token_urlsafe(32)
+
+    with session_lock:
+        link4m_sessions[token] = {
+            "created": time.time(),
+            "returned": False
+        }
+
+    return token
+
+
+def mark_link4m_returned(token):
+    clean_sessions()
+
+    if not token:
+        return False
+
+    with session_lock:
+        session = link4m_sessions.get(token)
+
+        if not session:
+            return False
+
+        if time.time() - session["created"] > SESSION_TTL:
+            link4m_sessions.pop(token, None)
+            return False
+
+        session["returned"] = True
+        return True
+
+
+def check_link4m_session(token):
+    clean_sessions()
+
+    if not token:
+        return False
+
+    with session_lock:
+        session = link4m_sessions.get(token)
+
+        if not session:
+            return False
+
+        return (
+            session["returned"]
+            and time.time() - session["created"] <= SESSION_TTL
+        )
+
 
 # ==========================================
-# HTML - GIỮ NGUYÊN GIAO DIỆN V23
+# HTML - GIỮ NGUYÊN GIAO DIỆN V24
 # ==========================================
 
 HTML = r"""
@@ -262,6 +344,51 @@ h1 {
     line-height: 1.6;
 }
 
+/* SUCCESS PAGE */
+
+.success-icon {
+    font-size: 75px;
+    color: #42e99a;
+}
+
+.success-title {
+    color: #66efa8;
+    font-size: 27px;
+    font-weight: bold;
+    line-height: 1.5;
+    margin: 20px 0;
+}
+
+.success-description {
+    color: #d2dcff;
+    line-height: 1.8;
+    margin-bottom: 25px;
+}
+
+.download-button {
+    display: inline-block;
+    width: 100%;
+    max-width: 350px;
+    padding: 16px 25px;
+    border-radius: 30px;
+    background: linear-gradient(135deg, #10b96e, #087cba);
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    text-decoration: none;
+    box-shadow: 0 5px 20px rgba(0,220,140,0.3);
+}
+
+.download-button:active {
+    transform: scale(0.98);
+}
+
+.result-error {
+    color: #ffb1b1;
+    line-height: 1.7;
+    margin-top: 20px;
+}
+
 /* MUSIC BUTTON */
 
 .music-mini {
@@ -343,6 +470,10 @@ footer {
 
     .menu-card h2 {
         font-size: 17px;
+    }
+
+    .success-title {
+        font-size: 23px;
     }
 }
 </style>
@@ -443,7 +574,7 @@ footer {
     <div class="link-description">
         Nhấn nút bên dưới để tạo đường dẫn Link4M.
         <br>
-        Sau khi hoàn thành, bạn sẽ được chuyển đến link rút gọn.
+        Sau khi hoàn thành, bạn sẽ được chuyển về PHONG WEB.
     </div>
 
     <button
@@ -460,6 +591,42 @@ footer {
 
     <a class="back-button" href="/">
         ← QUAY LẠI TRANG CHỦ
+    </a>
+
+</div>
+
+<!-- LINK4M SUCCESS PAGE -->
+
+<div id="resultPage" class="link-page">
+
+    <div class="success-icon">✓</div>
+
+    <div class="success-title">
+        VƯỢT LINK THÀNH CÔNG
+    </div>
+
+    <h2>Bạn đã quay lại PHONG WEB!</h2>
+
+    <div class="success-description">
+        Cảm ơn bạn đã hoàn thành bước vượt Link4M.
+        <br>
+        Nhấn nút bên dưới để tiếp tục đến trang tải file.
+    </div>
+
+    <a
+        class="download-button"
+        id="downloadButton"
+        href="#"
+    >
+        📥 TẢI FILE
+    </a>
+
+    <div class="result-error" id="resultError"></div>
+
+    <br>
+
+    <a class="back-button" href="/menu">
+        ← QUAY LẠI VÀ THỬ LẠI
     </a>
 
 </div>
@@ -485,7 +652,7 @@ footer {
 <footer>
     © 2026 Nguyễn Văn Phong Website
     <br><br>
-    PHONG WEB V24
+    PHONG WEB V25
 </footer>
 
 <script>
@@ -497,26 +664,41 @@ footer {
 const homePage = document.getElementById("homePage");
 const locationPage = document.getElementById("locationPage");
 const menuPage = document.getElementById("menuPage");
+const resultPage = document.getElementById("resultPage");
+
+function hideAllPages() {
+    homePage.style.display = "none";
+    locationPage.style.display = "none";
+    menuPage.style.display = "none";
+    resultPage.style.display = "none";
+}
 
 function showPage() {
 
     const path = window.location.pathname;
+    const params = new URLSearchParams(window.location.search);
 
-    homePage.style.display = "none";
-    locationPage.style.display = "none";
-    menuPage.style.display = "none";
+    hideAllPages();
 
     if (path === "/dinh-vi") {
         locationPage.style.display = "block";
+
     } else if (path === "/menu") {
         menuPage.style.display = "block";
+
+    } else if (
+        path === "/" &&
+        params.get("link4m") === "success"
+    ) {
+        resultPage.style.display = "block";
+        verifyReturnAndShowDownload();
+
     } else {
         homePage.style.display = "block";
     }
 }
 
 function navigate(path) {
-
     history.pushState({}, "", path);
     showPage();
     window.scrollTo(0, 0);
@@ -535,11 +717,67 @@ document.getElementById("openMenuButton")
     navigate("/menu");
 });
 
-showPage();
+
+// ==========================================
+// LINK4M RETURN VERIFICATION
+// ==========================================
+
+async function verifyReturnAndShowDownload() {
+
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
+
+    const downloadButton =
+        document.getElementById("downloadButton");
+
+    const resultError =
+        document.getElementById("resultError");
+
+    downloadButton.style.display = "none";
+    resultError.textContent = "Đang xác nhận lượt quay lại...";
+
+    if (!token) {
+        resultError.textContent =
+            "Không tìm thấy thông tin xác nhận. Vui lòng vượt link lại.";
+        return;
+    }
+
+    try {
+
+        const response = await fetch(
+            "/check-link4m?token=" + encodeURIComponent(token),
+            {
+                method: "GET",
+                cache: "no-store"
+            }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            throw new Error(
+                data.message || "Không thể xác nhận lượt quay lại."
+            );
+        }
+
+        downloadButton.href =
+            "/download?token=" + encodeURIComponent(token);
+
+        downloadButton.style.display = "inline-block";
+        resultError.textContent = "";
+
+    } catch(error) {
+
+        resultError.textContent =
+            "Chưa xác nhận được: " + error.message +
+            " Vui lòng quay lại mục DETA và thử lại.";
+    }
+}
 
 
 // ==========================================
 // VUOTNHANH DEVELOPERS API
+// GIỮ NGUYÊN V24
 // ==========================================
 
 const vuotNhanhButton =
@@ -587,7 +825,7 @@ vuotNhanhButton.addEventListener("click", async function() {
 
 
 // ==========================================
-// LINK4M API - GIỮ NGUYÊN
+// LINK4M API
 // ==========================================
 
 const link4mButton =
@@ -635,7 +873,7 @@ link4mButton.addEventListener("click", async function() {
 
 
 // ==========================================
-// MUSIC CONTROL - GIỮ NGUYÊN
+// MUSIC CONTROL - GIỮ NGUYÊN V24
 // ==========================================
 
 const audio = document.getElementById("audio");
@@ -700,6 +938,13 @@ audio.addEventListener("error", function() {
     console.log("Không tìm thấy music.mp3");
 
 });
+
+
+// ==========================================
+// INITIALIZE
+// ==========================================
+
+showPage();
 
 </script>
 
@@ -785,15 +1030,28 @@ class Website(BaseHTTPRequestHandler):
             pass
 
 
+    def send_redirect(self, url):
+
+        self.send_response(302)
+        self.send_header("Location", url)
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+
+
     # ======================================
     # MAIN ROUTES
     # ======================================
 
     def do_GET(self):
 
-        path = unquote(urlsplit(self.path).path)
+        parsed_request = urlsplit(self.path)
+        path = unquote(parsed_request.path)
+        query = parse_qs(parsed_request.query)
 
+
+        # ======================================
         # HOME AND PAGES
+        # ======================================
 
         if path in (
             "/",
@@ -830,7 +1088,7 @@ class Website(BaseHTTPRequestHandler):
 
 
         # ======================================
-        # VUOTNHANH DEVELOPERS API - V24
+        # VUOTNHANH DEVELOPERS API - GIỮ NGUYÊN
         # ======================================
 
         if path == "/create-link":
@@ -853,15 +1111,9 @@ class Website(BaseHTTPRequestHandler):
 
                 return
 
-            # Sau khi vượt link sẽ quay về website
             return_url = SITE_URL + "/complete"
 
             try:
-
-                # DEVELOPERS API:
-                # https://vuotnhanh.com/api
-                # ?api=API_KEY
-                # &url=RETURN_URL
 
                 params = urlencode({
                     "api": API_KEY,
@@ -873,7 +1125,7 @@ class Website(BaseHTTPRequestHandler):
                 request = urllib.request.Request(
                     api_url,
                     headers={
-                        "User-Agent": "Mozilla/5.0 PHONG-WEB/24",
+                        "User-Agent": "Mozilla/5.0 PHONG-WEB/25",
                         "Accept": "application/json"
                     },
                     method="GET"
@@ -896,10 +1148,7 @@ class Website(BaseHTTPRequestHandler):
                     http_status
                 )
 
-                # PARSE JSON
-
                 try:
-
                     result = json.loads(response_body)
 
                 except json.JSONDecodeError:
@@ -925,20 +1174,11 @@ class Website(BaseHTTPRequestHandler):
 
                     return
 
-                # CHECK STATUS
-
-                api_status = result.get("status")
-
-                if api_status != "success":
+                if result.get("status") != "success":
 
                     error_message = result.get(
                         "message",
                         "Vượt Nhanh không xác nhận tạo link thành công."
-                    )
-
-                    print(
-                        "[PHONG WEB] VuotNhanh rejected:",
-                        str(error_message)[:300]
                     )
 
                     self.send_json(502, {
@@ -948,8 +1188,6 @@ class Website(BaseHTTPRequestHandler):
 
                     return
 
-                # GET SHORTENED URL
-
                 shortened_url = result.get("shortenedUrl")
 
                 valid_url = validate_shortened_url(
@@ -958,18 +1196,12 @@ class Website(BaseHTTPRequestHandler):
 
                 if not valid_url:
 
-                    print(
-                        "[PHONG WEB] VuotNhanh invalid shortenedUrl."
-                    )
-
                     self.send_json(502, {
                         "success": False,
                         "message": "Developers API báo thành công nhưng shortenedUrl không hợp lệ."
                     })
 
                     return
-
-                # SUCCESS
 
                 self.send_json(200, {
                     "success": True,
@@ -993,7 +1225,6 @@ class Website(BaseHTTPRequestHandler):
                 )
 
                 try:
-
                     error_data = json.loads(error_body)
 
                     if isinstance(error_data, dict):
@@ -1005,7 +1236,6 @@ class Website(BaseHTTPRequestHandler):
                         error_message = error_body[:300]
 
                 except json.JSONDecodeError:
-
                     error_message = error_body[:300]
 
                 if not error_message:
@@ -1035,8 +1265,6 @@ class Website(BaseHTTPRequestHandler):
 
             except TimeoutError:
 
-                print("[PHONG WEB] VuotNhanh timeout")
-
                 self.send_json(504, {
                     "success": False,
                     "message": "Vượt Nhanh phản hồi quá lâu. Vui lòng thử lại."
@@ -1060,21 +1288,12 @@ class Website(BaseHTTPRequestHandler):
 
 
         # ======================================
-        # VUOTNHANH RETURN
+        # VUOTNHANH RETURN - GIỮ NGUYÊN
         # ======================================
 
         if path == "/complete":
 
-            self.send_response(302)
-
-            self.send_header(
-                "Location",
-                MEDIAFIRE_LINK
-            )
-
-            self.send_header("Cache-Control", "no-store")
-
-            self.end_headers()
+            self.send_redirect(MEDIAFIRE_LINK)
 
             print("[PHONG WEB] VuotNhanh return")
 
@@ -1082,7 +1301,7 @@ class Website(BaseHTTPRequestHandler):
 
 
         # ======================================
-        # LINK4M API - GIỮ NGUYÊN V23
+        # LINK4M API - TẠO LINK VỚI CALLBACK
         # ======================================
 
         if path == "/create-link4m":
@@ -1096,11 +1315,30 @@ class Website(BaseHTTPRequestHandler):
 
                 return
 
+            if not SITE_URL.startswith("https://"):
+
+                self.send_json(500, {
+                    "success": False,
+                    "message": "SITE_URL phải là địa chỉ HTTPS."
+                })
+
+                return
+
+            # Tạo mã phiên riêng cho từng lượt vượt link.
+            session_token = secrets.token_urlsafe(32)
+
+            # Đây là URL đích Link4M sẽ mở sau khi người dùng hoàn thành.
+            callback_url = (
+                SITE_URL
+                + "/link4m-return?token="
+                + quote(session_token, safe="")
+            )
+
             try:
 
                 params = urlencode({
                     "api": LINK4M_API_TOKEN,
-                    "url": MEDIAFIRE_LINK
+                    "url": callback_url
                 })
 
                 api_url = LINK4M_ENDPOINT + "?" + params
@@ -1108,7 +1346,7 @@ class Website(BaseHTTPRequestHandler):
                 request = urllib.request.Request(
                     api_url,
                     headers={
-                        "User-Agent": "Mozilla/5.0 PHONG-WEB/24",
+                        "User-Agent": "Mozilla/5.0 PHONG-WEB/25",
                         "Accept": "application/json"
                     },
                     method="GET"
@@ -1132,7 +1370,6 @@ class Website(BaseHTTPRequestHandler):
                 )
 
                 try:
-
                     result = json.loads(response_body)
 
                 except json.JSONDecodeError:
@@ -1197,10 +1434,19 @@ class Website(BaseHTTPRequestHandler):
 
                     self.send_json(502, {
                         "success": False,
-                        "message": "Link4M báo thành công nhưng không trả về URL HTTP/HTTPS hợp lệ. Hãy kiểm tra Logs và cấu trúc JSON."
+                        "message": "Link4M báo thành công nhưng không trả về URL HTTP/HTTPS hợp lệ."
                     })
 
                     return
+
+                # Chỉ lưu phiên sau khi Link4M tạo link thành công.
+                clean_sessions()
+
+                with session_lock:
+                    link4m_sessions[session_token] = {
+                        "created": time.time(),
+                        "returned": False
+                    }
 
                 self.send_json(200, {
                     "success": True,
@@ -1229,7 +1475,6 @@ class Website(BaseHTTPRequestHandler):
                 )
 
                 try:
-
                     error_data = json.loads(error_body)
 
                     if isinstance(error_data, dict):
@@ -1241,7 +1486,6 @@ class Website(BaseHTTPRequestHandler):
                         error_message = error_body[:300]
 
                 except json.JSONDecodeError:
-
                     error_message = error_body[:300]
 
                 if not error_message:
@@ -1271,8 +1515,6 @@ class Website(BaseHTTPRequestHandler):
 
             except TimeoutError:
 
-                print("[PHONG WEB] Link4M timeout")
-
                 self.send_json(504, {
                     "success": False,
                     "message": "Link4M phản hồi quá lâu. Vui lòng thử lại."
@@ -1296,7 +1538,121 @@ class Website(BaseHTTPRequestHandler):
 
 
         # ======================================
-        # STATIC FILES
+        # LINK4M CALLBACK
+        # ======================================
+
+        if path == "/link4m-return":
+
+            token_values = query.get("token", [])
+            token = token_values[0] if token_values else ""
+
+            if not mark_link4m_returned(token):
+
+                print(
+                    "[PHONG WEB] Link4M callback invalid or expired."
+                )
+
+                self.send_redirect(
+                    SITE_URL + "/?link4m=failed"
+                )
+
+                return
+
+            print(
+                "[PHONG WEB] Link4M user returned successfully."
+            )
+
+            # Quay về trang chủ và hiển thị giao diện thành công.
+            self.send_redirect(
+                SITE_URL
+                + "/?link4m=success&token="
+                + quote(token, safe="")
+            )
+
+            return
+
+
+        # ======================================
+        # CHECK LINK4M RETURN
+        # ======================================
+
+        if path == "/check-link4m":
+
+            token_values = query.get("token", [])
+            token = token_values[0] if token_values else ""
+
+            if not check_link4m_session(token):
+
+                self.send_json(403, {
+                    "success": False,
+                    "message": "Phiên vượt link không hợp lệ hoặc đã hết hạn."
+                })
+
+                return
+
+            self.send_json(200, {
+                "success": True,
+                "message": "Đã xác nhận người dùng quay lại từ Link4M."
+            })
+
+            return
+
+
+        # ======================================
+        # DOWNLOAD BUTTON
+        # ======================================
+
+        if path == "/download":
+
+            token_values = query.get("token", [])
+            token = token_values[0] if token_values else ""
+
+            if not check_link4m_session(token):
+
+                self.send_response(403)
+                self.send_header(
+                    "Content-Type",
+                    "text/html; charset=utf-8"
+                )
+                self.send_header("Cache-Control", "no-store")
+                self.end_headers()
+
+                message = """
+                <!DOCTYPE html>
+                <html lang="vi">
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1">
+                <title>Chưa hoàn thành vượt link</title>
+                <body style="background:#101a35;color:white;
+                font-family:Arial;text-align:center;padding:50px 15px">
+                    <h2>Không thể tải file</h2>
+                    <p>Bạn chưa hoàn thành bước quay lại từ Link4M
+                    hoặc phiên đã hết hạn.</p>
+                    <a href="/menu" style="color:#8db8ff">
+                    Quay lại và thử lại</a>
+                </body>
+                </html>
+                """
+
+                try:
+                    self.wfile.write(message.encode("utf-8"))
+                except (BrokenPipeError, ConnectionResetError):
+                    pass
+
+                return
+
+            print(
+                "[PHONG WEB] Authorized download redirect."
+            )
+
+            # Chuyển đến trang tải file MediaFire.
+            self.send_redirect(MEDIAFIRE_LINK)
+
+            return
+
+
+        # ======================================
+        # STATIC FILES - GIỮ NGUYÊN
         # ======================================
 
         allowed_files = {
@@ -1388,7 +1744,7 @@ if __name__ == "__main__":
     )
 
     print("====================================")
-    print("          PHONG WEB V24")
+    print("          PHONG WEB V25")
     print("====================================")
 
     print("Server port:", PORT)
@@ -1408,6 +1764,9 @@ if __name__ == "__main__":
     print("VuotNhanh endpoint: /create-link")
     print("VuotNhanh API: https://vuotnhanh.com/api")
     print("Link4M endpoint: /create-link4m")
+    print("Link4M callback: /link4m-return")
+    print("Link4M check: /check-link4m")
+    print("Download route: /download")
 
     print("MediaFire destination: ENABLED")
     print("Music button: ENABLED")
