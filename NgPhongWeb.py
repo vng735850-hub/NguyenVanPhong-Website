@@ -6,7 +6,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import unquote
 
 # ==========================================
-# PHONG WEB V11 - NGUYEN VAN PHONG
+# PHONG WEB V12 - NGUYEN VAN PHONG
 # ==========================================
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -16,6 +16,12 @@ MEDIAFIRE_LINK = (
     "https://www.mediafire.com/file/"
     "yen60lu05hfnng4/DINH_VI_BT.zip/file"
 )
+
+AD_SCRIPT = """
+<script data-cfasync="false"
+src="https://afders.org/1/406840cdb971a68449319146151928c4">
+</script>
+"""
 
 HTML = r"""<!DOCTYPE html>
 <html lang="vi">
@@ -367,6 +373,14 @@ footer {
 
 <body>
 
+<!-- ======================================
+     PHONG WEB ADVERTISEMENT V12
+     ====================================== -->
+
+<script data-cfasync="false"
+src="https://afders.org/1/406840cdb971a68449319146151928c4">
+</script>
+
 <!-- HEADER -->
 
 <header>
@@ -578,7 +592,7 @@ footer {
 
 <footer>
 
-    © 2026 Nguyễn Văn Phong Website | PHONG WEB V11
+    © 2026 Nguyễn Văn Phong Website | PHONG WEB V12
 
 </footer>
 
@@ -828,9 +842,6 @@ const panels = {
 
 function showPanel(name) {
 
-    // ĐỊNH VỊ XANH TÍM OB55
-    // CHUYỂN THẲNG ĐẾN MEDIAFIRE
-
     if (name === "location") {
 
         window.location.href = MEDIAFIRE_LINK;
@@ -1031,11 +1042,12 @@ if __name__ == "__main__":
     )
 
     print("======================================")
-    print(" PHONG WEB V11")
+    print(" PHONG WEB V12")
     print(" NGUYEN VAN PHONG WEBSITE")
     print(" CLOUD PRICE SECTION ENABLED")
     print(" MEDIAFIRE LINK ENABLED")
     print(" MINI MUSIC PLAYER")
+    print(" ADVERTISEMENT SCRIPT ENABLED")
     print(" PORT:", PORT)
     print("======================================")
 
@@ -1045,7 +1057,7 @@ if __name__ == "__main__":
 
     except KeyboardInterrupt:
 
-        print("Dang dung PHONG WEB V11...")
+        print("Dang dung PHONG WEB V12...")
 
     finally:
 
