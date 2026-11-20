@@ -6,20 +6,15 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import unquote
 
 # ==========================================
-# PHONG WEB V17
-# LINK4M INTERMEDIATE PAGE
+# PHONG WEB V18
+# MUSIC BUTTON MINI CIRCLE
 # ==========================================
 
 BASE_DIR = Path(__file__).resolve().parent
 PORT = int(os.environ.get("PORT", 5000))
 
-MEDIAFIRE_LINK = (
-    "https://www.mediafire.com/file/"
-    "yen60lu05hfnng4/DINH_VI_BT.zip/file"
-)
-
+MEDIAFIRE_LINK = "https://www.mediafire.com/file/yen60lu05hfnng4/DINH_VI_BT.zip/file"
 LINK4M_LINK = "https://link4m.net/lbatN"
-
 
 HTML = r"""
 <!DOCTYPE html>
@@ -31,19 +26,18 @@ HTML = r"""
 <title>NGUYỄN VĂN PHONG WEBSITE</title>
 
 <style>
-
 * {
     box-sizing: border-box;
 }
 
 body {
     margin: 0;
+    min-height: 100vh;
+    padding-bottom: 90px;
     font-family: Arial, sans-serif;
     color: white;
-    background:
-        radial-gradient(circle at top, #253d91, #080d22 70%);
-    min-height: 100vh;
     text-align: center;
+    background: radial-gradient(circle at top, #253d91, #080d22 70%);
 }
 
 header {
@@ -138,7 +132,7 @@ h1 {
     font-size: 13px;
 }
 
-/* INTERMEDIATE PAGE */
+/* LINK4M PAGE */
 
 #linkPage {
     display: none;
@@ -177,7 +171,6 @@ h1 {
     font-weight: bold;
     text-decoration: none;
     box-shadow: 0 5px 20px rgba(0,100,255,0.4);
-    transition: 0.2s;
 }
 
 .cross-link-button:hover {
@@ -192,37 +185,41 @@ h1 {
     font-size: 14px;
 }
 
-.music-control {
+/* MINI MUSIC BUTTON */
+
+.music-mini {
+    position: fixed;
+    bottom: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.8);
+    background: linear-gradient(135deg, #1685ff, #7736d5);
+    color: white;
+    font-size: 25px;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 15px;
-    margin: 35px auto;
-    padding: 15px;
-    max-width: 350px;
-    background: rgba(255,255,255,0.08);
-    border-radius: 15px;
-}
-
-.music-button {
-    width: 48px;
-    height: 48px;
-    border: none;
-    border-radius: 50%;
-    background: #287cff;
-    color: white;
-    font-size: 20px;
     cursor: pointer;
+    z-index: 9999;
+    box-shadow: 0 0 18px rgba(40,120,255,0.6);
+    transition: 0.2s;
+    -webkit-tap-highlight-color: transparent;
 }
 
-.music-status {
-    text-align: left;
-    font-size: 13px;
+.music-mini:active {
+    transform: translateX(-50%) scale(0.9);
 }
 
-.music-status strong {
-    display: block;
-    margin-bottom: 5px;
+.music-mini.playing {
+    background: linear-gradient(135deg, #00c98b, #087dca);
+    box-shadow: 0 0 22px rgba(0,220,160,0.7);
+}
+
+.music-mini .music-icon {
+    pointer-events: none;
 }
 
 footer {
@@ -232,17 +229,12 @@ footer {
 }
 
 @media(max-width: 500px) {
-
     header {
         font-size: 18px;
     }
 
     h1 {
         font-size: 22px;
-    }
-
-    .location-container {
-        aspect-ratio: 7 / 2;
     }
 
     .location-emoji {
@@ -265,8 +257,13 @@ footer {
     #linkPage h2 {
         font-size: 21px;
     }
-}
 
+    .music-mini {
+        width: 54px;
+        height: 54px;
+        bottom: 15px;
+    }
+}
 </style>
 </head>
 
@@ -296,16 +293,11 @@ footer {
 
     <section class="location-container">
 
-        <a
-            class="location-link"
-            href="/dinh-vi"
-        >
+        <a class="location-link" href="/dinh-vi">
 
             <div class="location-card">
 
-                <div class="location-emoji">
-                    📍
-                </div>
+                <div class="location-emoji">📍</div>
 
                 <div class="location-info">
 
@@ -327,14 +319,11 @@ footer {
 
 </div>
 
-
-<!-- LINK4M INTERMEDIATE PAGE -->
+<!-- INTERMEDIATE PAGE -->
 
 <div id="linkPage">
 
-    <div class="link-icon">
-        🔐
-    </div>
+    <div class="link-icon">🔐</div>
 
     <h2>
         BẠN CẦN VƯỢT LINK ĐỂ LẤY FILE MEDIAFIRE
@@ -363,71 +352,47 @@ footer {
 
 </div>
 
+</main>
 
-<!-- MUSIC PLAYER -->
+<!-- MINI MUSIC PLAYER -->
 
-<div class="music-control" id="musicPlayer">
-
-    <button
-        class="music-button"
-        id="mainMusicButton"
-        aria-label="Điều khiển nhạc"
-    >
-        ▶
-    </button>
-
-    <div class="music-status">
-
-        <strong>🎵 THƯƠNG NHAU ĐẾN THẾ</strong>
-
-        <div id="musicStatus">
-            Nhấn để phát nhạc
-        </div>
-
-        <div id="loopStatus">
-            Lặp lại: Tắt
-        </div>
-
-    </div>
-
-</div>
+<button
+    class="music-mini"
+    id="musicButton"
+    aria-label="Bật hoặc tắt nhạc"
+    title="Bật / Tắt nhạc"
+>
+    <span class="music-icon" id="musicIcon">▶</span>
+</button>
 
 <audio id="audio" preload="metadata">
     <source src="/music.mp3" type="audio/mpeg">
 </audio>
 
-</main>
-
-
 <footer>
     © 2026 Nguyễn Văn Phong Website
     <br><br>
-    PHONG WEB V17
+    PHONG WEB V18
 </footer>
-
 
 <script>
 
+// ==========================================
+// PAGE NAVIGATION
+// ==========================================
+
 const homePage = document.getElementById("homePage");
 const linkPage = document.getElementById("linkPage");
-const musicPlayer = document.getElementById("musicPlayer");
 
 function showPage() {
 
     if (window.location.pathname === "/dinh-vi") {
-
         homePage.style.display = "none";
         linkPage.style.display = "block";
-        musicPlayer.style.display = "none";
-
     } else {
-
         homePage.style.display = "block";
         linkPage.style.display = "none";
-        musicPlayer.style.display = "flex";
-
     }
-
 }
 
 window.addEventListener("popstate", showPage);
@@ -441,21 +406,37 @@ document.querySelector(".location-link").addEventListener("click", function(e) {
     showPage();
 
     window.scrollTo(0, 0);
-
 });
 
 showPage();
 
 
-// MUSIC
+// ==========================================
+// MUSIC ON / OFF
+// ON  = PLAY MUSIC + LOOP
+// OFF = STOP MUSIC + DISABLE LOOP
+// ==========================================
 
 const audio = document.getElementById("audio");
-const musicButton = document.getElementById("mainMusicButton");
-const musicStatus = document.getElementById("musicStatus");
-const loopStatus = document.getElementById("loopStatus");
+const musicButton = document.getElementById("musicButton");
+const musicIcon = document.getElementById("musicIcon");
 
 let isPlaying = false;
-let isLoop = false;
+
+function updateMusicButton() {
+
+    if (isPlaying) {
+
+        musicButton.classList.add("playing");
+        musicIcon.textContent = "♫";
+
+    } else {
+
+        musicButton.classList.remove("playing");
+        musicIcon.textContent = "▶";
+
+    }
+}
 
 musicButton.addEventListener("click", async function() {
 
@@ -463,48 +444,55 @@ musicButton.addEventListener("click", async function() {
 
         try {
 
+            // Turn ON music and looping together
+            audio.loop = true;
+
             await audio.play();
 
             isPlaying = true;
-            musicButton.textContent = "❚❚";
-            musicStatus.textContent = "Đang phát nhạc";
 
         } catch(error) {
 
-            musicStatus.textContent = "Không thể phát nhạc";
+            audio.loop = false;
+            isPlaying = false;
+
+            console.log("Music error:", error);
 
         }
 
     } else {
 
+        // Turn OFF music and looping together
         audio.pause();
+        audio.currentTime = 0;
+        audio.loop = false;
 
         isPlaying = false;
-        musicButton.textContent = "▶";
-        musicStatus.textContent = "Đã tạm dừng";
 
+    }
+
+    updateMusicButton();
+
+});
+
+audio.addEventListener("pause", function() {
+
+    if (isPlaying) {
+        isPlaying = false;
+        audio.loop = false;
+        updateMusicButton();
     }
 
 });
 
-audio.addEventListener("ended", function() {
+audio.addEventListener("error", function() {
 
-    if (!isLoop) {
+    isPlaying = false;
+    audio.loop = false;
 
-        isPlaying = false;
-        musicButton.textContent = "▶";
-        musicStatus.textContent = "Đã phát xong";
+    updateMusicButton();
 
-    }
-
-});
-
-loopStatus.addEventListener("click", function() {
-
-    isLoop = !isLoop;
-    audio.loop = isLoop;
-
-    loopStatus.textContent = "Lặp lại: " + (isLoop ? "Bật" : "Tắt");
+    console.log("Không tìm thấy music.mp3");
 
 });
 
@@ -526,24 +514,19 @@ class Website(BaseHTTPRequestHandler):
             content = HTML.encode("utf-8")
 
             self.send_response(200)
-
             self.send_header(
                 "Content-Type",
                 "text/html; charset=utf-8"
             )
-
             self.send_header(
                 "Content-Length",
                 str(len(content))
             )
-
             self.send_header("Cache-Control", "no-cache")
-
             self.end_headers()
 
             try:
                 self.wfile.write(content)
-
             except (BrokenPipeError, ConnectionResetError):
                 pass
 
@@ -556,14 +539,12 @@ class Website(BaseHTTPRequestHandler):
         }
 
         if path not in allowed_files:
-
             self.send_error(404, "File not found")
             return
 
         file_path = BASE_DIR / path.lstrip("/")
 
         if not file_path.is_file():
-
             self.send_error(404, "Asset not found")
             return
 
@@ -576,11 +557,9 @@ class Website(BaseHTTPRequestHandler):
             file_size = file_path.stat().st_size
 
             self.send_response(200)
-
             self.send_header("Content-Type", content_type)
             self.send_header("Content-Length", str(file_size))
             self.send_header("Accept-Ranges", "bytes")
-
             self.end_headers()
 
             with open(file_path, "rb") as file:
@@ -598,11 +577,9 @@ class Website(BaseHTTPRequestHandler):
             pass
 
         except OSError as error:
-
             print("[PHONG WEB] File error:", error)
 
     def log_message(self, format, *args):
-
         print("[PHONG WEB]", format % args)
 
 
@@ -614,23 +591,21 @@ if __name__ == "__main__":
     )
 
     print("====================================")
-    print("          PHONG WEB V17")
+    print("          PHONG WEB V18")
     print("====================================")
     print("Server running on port:", PORT)
     print("Link4m intermediate page: ENABLED")
+    print("Mini circular music button: ENABLED")
+    print("Music looping: AUTO ON/OFF")
     print("Location aspect ratio: 7:2")
-    print("Music player: ENABLED")
-    print("Advertisement scripts: REMOVED")
+    print("Advertisements: REMOVED")
     print("====================================")
 
     try:
-
         server.serve_forever()
 
     except KeyboardInterrupt:
-
         print("\n[PHONG WEB] Server stopped.")
 
     finally:
-
         server.server_close()
