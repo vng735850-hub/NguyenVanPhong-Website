@@ -5,16 +5,19 @@ from pathlib import Path
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import unquote
 
-# ==================================================
-# PHONG WEB V15
-# XOA GIA THUE CLOUD
-# 5 MUC TI LE 3:1
-# ==================================================
+# ==========================================
+# PHONG WEB V16
+# CHI GIU LAI MUC DINH VI
+# TI LE DINH VI 7:2
+# ==========================================
 
 BASE_DIR = Path(__file__).resolve().parent
 PORT = int(os.environ.get("PORT", 5000))
 
-MEDIAFIRE_LINK = "https://www.mediafire.com/file/yen60lu05hfnng4/DINH_VI_BT.zip/file"
+MEDIAFIRE_LINK = (
+    "https://www.mediafire.com/file/"
+    "yen60lu05hfnng4/DINH_VI_BT.zip/file"
+)
 
 HTML = r"""
 <!DOCTYPE html>
@@ -33,16 +36,11 @@ HTML = r"""
     box-sizing: border-box;
 }
 
-:root {
-    --blue: #35d9ff;
-    --purple: #a66bff;
-    --glass: rgba(8, 15, 48, 0.88);
-}
-
 body {
     font-family: Arial, sans-serif;
     color: white;
     min-height: 100vh;
+
     background:
         linear-gradient(
             rgba(0, 0, 25, 0.45),
@@ -64,8 +62,9 @@ header {
     justify-content: center;
     gap: 12px;
     padding: 12px;
+
     background: rgba(0, 0, 30, 0.92);
-    border-bottom: 2px solid var(--blue);
+    border-bottom: 2px solid #35d9ff;
     box-shadow: 0 0 18px #007bff;
 }
 
@@ -74,12 +73,12 @@ header {
     height: 55px;
     object-fit: cover;
     border-radius: 12px;
-    border: 2px solid var(--blue);
-    box-shadow: 0 0 12px var(--blue);
+    border: 2px solid #35d9ff;
+    box-shadow: 0 0 12px #35d9ff;
 }
 
 .header-title {
-    color: var(--blue);
+    color: #35d9ff;
     font-size: clamp(17px, 4vw, 25px);
     font-weight: bold;
     text-shadow: 0 0 12px #008cff;
@@ -105,7 +104,7 @@ header {
 h1 {
     font-size: clamp(23px, 5vw, 34px);
     color: white;
-    text-shadow: 0 0 12px var(--blue);
+    text-shadow: 0 0 12px #35d9ff;
     margin: 10px 0;
 }
 
@@ -116,148 +115,100 @@ h1 {
     color: #d7eaff;
 }
 
-/* FIVE MAIN CARDS */
+/* DINH VI CARD 7:2 */
 
-.cards {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
-    margin-top: 25px;
+.location-container {
+    width: 100%;
+    margin: 25px auto;
 }
 
-.card {
+.location-link {
+    display: block;
     width: 100%;
-    aspect-ratio: 3 / 1;
-    background: var(--glass);
-    border: 1px solid #8b70ff66;
-    border-radius: 14px;
-    padding: 7px;
+    color: white;
+    text-decoration: none;
+}
+
+.location-card {
+    width: 100%;
+    aspect-ratio: 7 / 2;
 
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
     justify-content: center;
-    gap: 3px;
+    gap: 12px;
 
-    text-align: center;
+    padding: 12px;
+    overflow: hidden;
+
+    background: rgba(8, 15, 48, 0.90);
+    border: 2px solid #a66bff;
+    border-radius: 15px;
+
+    box-shadow:
+        0 0 15px #8c38ff,
+        inset 0 0 15px #5e24aa33;
+
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
 
     transition: .25s;
-    overflow: hidden;
 }
 
-.card:hover {
+.location-card:hover {
     transform: translateY(-3px);
-    border-color: var(--blue);
-    box-shadow: 0 0 16px #168cff88;
+    border-color: #35d9ff;
+    box-shadow:
+        0 0 22px #8c38ff,
+        0 0 12px #35d9ff;
 }
 
-.card .emoji {
-    font-size: 21px;
-    line-height: 1.1;
+.location-emoji {
+    font-size: clamp(25px, 6vw, 42px);
+    flex-shrink: 0;
 }
 
-.card h3 {
-    color: #8cddff;
-    font-size: 12px;
-    line-height: 1.2;
-    margin: 0;
-}
-
-.card p {
-    display: none;
-}
-
-.action {
-    margin-top: 3px;
-    padding: 5px 11px;
-    border: none;
-    border-radius: 7px;
-    background: linear-gradient(90deg, #087dff, #8c42ff);
-    color: white;
-    font-size: 11px;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-.action:hover {
-    filter: brightness(1.2);
-}
-
-/* LINKS */
-
-.card-link {
-    display: block;
-    color: white;
-    text-decoration: none;
-    min-width: 0;
-}
-
-.card-link .card {
-    height: 100%;
-}
-
-.card-link.ob55 .card {
-    border-color: #a64dff;
-}
-
-.card-link.setting .card {
-    border-color: #b04cff;
-}
-
-/* INFORMATION PANEL */
-
-.info-panel {
-    display: none;
-    margin-top: 22px;
-    padding: 20px;
-    background: rgba(5, 12, 42, 0.95);
-    border: 1px solid #4d9cff;
-    border-radius: 14px;
-    box-shadow: 0 0 18px #286dff66;
+.location-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 7px;
     text-align: left;
-    animation: appear .25s ease;
 }
 
-.info-panel.show {
-    display: block;
+.location-info h2 {
+    color: #d5a5ff;
+    font-size: clamp(13px, 3vw, 21px);
+    line-height: 1.3;
 }
 
-.info-panel h2 {
-    color: var(--blue);
-    margin-bottom: 12px;
-    font-size: 20px;
+.location-info p {
+    color: #dceaff;
+    font-size: clamp(10px, 2vw, 14px);
 }
 
-.info-panel p {
-    line-height: 1.8;
-    color: #e2eaff;
-    white-space: pre-line;
-}
+.location-button {
+    display: inline-block;
+    margin-top: 2px;
+    padding: 7px 16px;
 
-.close-button {
-    margin-top: 15px;
-    padding: 9px 17px;
-    color: white;
-    background: #653bdb;
     border: none;
     border-radius: 8px;
-    cursor: pointer;
+
+    color: white;
+    background: linear-gradient(
+        90deg,
+        #087dff,
+        #8c42ff
+    );
+
+    font-size: 12px;
+    font-weight: bold;
 }
 
-@keyframes appear {
-    from {
-        opacity: 0;
-        transform: translateY(8px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* MUSIC PLAYER */
+/* MUSIC */
 
 .music-control {
     margin: 28px auto 10px;
@@ -271,9 +222,15 @@ h1 {
     width: 46px;
     height: 46px;
     border-radius: 50%;
-    border: 2px solid var(--blue);
+    border: 2px solid #35d9ff;
     color: white;
-    background: linear-gradient(135deg, #087dff, #8c42ff);
+
+    background: linear-gradient(
+        135deg,
+        #087dff,
+        #8c42ff
+    );
+
     box-shadow: 0 0 15px #168cff99;
     font-size: 19px;
     cursor: pointer;
@@ -290,7 +247,7 @@ h1 {
 }
 
 .music-status strong {
-    color: var(--blue);
+    color: #35d9ff;
 }
 
 /* FOOTER */
@@ -299,8 +256,10 @@ footer {
     margin-top: 35px;
     padding: 20px 10px;
     text-align: center;
+
     background: rgba(0, 0, 20, 0.85);
     border-top: 1px solid #526dff66;
+
     color: #b9dcff;
     font-size: 12px;
     line-height: 1.8;
@@ -313,33 +272,25 @@ footer {
         padding: 22px 12px;
     }
 
-    .cards {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
-    }
-
-    .card {
-        aspect-ratio: 3 / 1;
-        border-radius: 12px;
-        padding: 5px;
-    }
-
-    .card .emoji {
-        font-size: 19px;
-    }
-
-    .card h3 {
-        font-size: 11px;
-    }
-
-    .action {
-        font-size: 10px;
-        padding: 4px 9px;
-    }
-
     .header-logo {
         width: 45px;
         height: 45px;
+    }
+
+    .location-card {
+        aspect-ratio: 7 / 2;
+        gap: 8px;
+        padding: 8px;
+        border-radius: 12px;
+    }
+
+    .location-info {
+        gap: 4px;
+    }
+
+    .location-button {
+        padding: 5px 11px;
+        font-size: 10px;
     }
 }
 </style>
@@ -348,7 +299,12 @@ footer {
 <body>
 
 <header>
-    <img class="header-logo" src="/logo.png" alt="Logo">
+    <img
+        class="header-logo"
+        src="/logo.png"
+        alt="Logo"
+    >
+
     <div class="header-title">
         NGUYỄN VĂN PHONG WEBSITE
     </div>
@@ -356,93 +312,64 @@ footer {
 
 <main class="container">
 
-    <img class="hero-logo" src="/logo.png" alt="PHONG WEB">
+    <img
+        class="hero-logo"
+        src="/logo.png"
+        alt="PHONG WEB"
+    >
 
     <h1>WELCOME TO PHONG WEB</h1>
 
     <div class="subtitle">
         Chào mừng bạn đến với website của Nguyễn Văn Phong.
         <br>
-        Khám phá Gaming, Python và công nghệ tại đây!
+        📍 ĐỊNH VỊ XANH TÍM OB55
     </div>
 
-    <!-- FIVE MAIN CATEGORIES -->
+    <!-- ONLY LOCATION CARD -->
 
-    <section class="cards">
+    <section class="location-container">
 
-        <div class="card">
-            <div class="emoji">🎮</div>
-            <h3>GAMING</h3>
-            <button class="action"
-                onclick="showPanel('gaming')">
-                Khám phá
-            </button>
-        </div>
+        <a
+            class="location-link"
+            href="https://www.mediafire.com/file/yen60lu05hfnng4/DINH_VI_BT.zip/file"
+            target="_blank"
+            rel="noopener noreferrer"
+        >
 
-        <div class="card">
-            <div class="emoji">🐍</div>
-            <h3>PYTHON</h3>
-            <button class="action"
-                onclick="showPanel('python')">
-                Khám phá
-            </button>
-        </div>
+            <div class="location-card">
 
-        <div class="card">
-            <div class="emoji">💻</div>
-            <h3>TECHNOLOGY</h3>
-            <button class="action"
-                onclick="showPanel('technology')">
-                Khám phá
-            </button>
-        </div>
+                <div class="location-emoji">
+                    📍
+                </div>
 
-        <a class="card-link ob55"
-           href="https://www.mediafire.com/file/yen60lu05hfnng4/DINH_VI_BT.zip/file"
-           target="_blank"
-           rel="noopener noreferrer">
+                <div class="location-info">
 
-            <div class="card">
-                <div class="emoji">📍</div>
-                <h3>ĐỊNH VỊ XANH TÍM OB55</h3>
-                <span class="action">Mở Mục</span>
+                    <h2>ĐỊNH VỊ XANH TÍM OB55</h2>
+
+                    <p>Nhấn vào đây để tải xuống</p>
+
+                    <span class="location-button">
+                        MỞ MỤC
+                    </span>
+
+                </div>
+
             </div>
+
         </a>
 
-        <div class="card-link setting"
-             onclick="showPanel('setting')">
-
-            <div class="card">
-                <div class="emoji">⚙️</div>
-                <h3>SETTING</h3>
-                <button class="action" type="button">
-                    Cài đặt
-                </button>
-            </div>
-        </div>
-
     </section>
 
-    <!-- INFORMATION PANEL -->
-
-    <section class="info-panel" id="info">
-        <h2 id="infoTitle"></h2>
-        <p id="infoContent"></p>
-
-        <button class="close-button"
-            onclick="closePanel()">
-            Đóng mục
-        </button>
-    </section>
-
-    <!-- MUSIC -->
+    <!-- MUSIC PLAYER -->
 
     <div class="music-control">
 
         <button
             class="music-button"
             id="mainMusicButton"
-            aria-label="Điều khiển nhạc">
+            aria-label="Điều khiển nhạc"
+        >
             ▶
         </button>
 
@@ -464,75 +391,13 @@ footer {
 <footer>
     © 2026 Nguyễn Văn Phong Website
     <br>
-    PHONG WEB V15
+    PHONG WEB V16
 </footer>
 
 <script>
-
-/* INFORMATION CONTENT */
-
-const panelData = {
-    gaming: {
-        title: "🎮 GAMING",
-        content:
-            "Chào mừng đến với Gaming Zone!\\n\\n" +
-            "Khám phá các nội dung Roblox, Free Fire " +
-            "và những trò chơi hấp dẫn."
-    },
-
-    python: {
-        title: "🐍 PYTHON",
-        content:
-            "Khu vực lập trình Python.\\n\\n" +
-            "Chia sẻ code, dự án Python và các kiến thức " +
-            "lập trình."
-    },
-
-    technology: {
-        title: "💻 TECHNOLOGY",
-        content:
-            "Khám phá công nghệ hiện đại.\\n\\n" +
-            "Cập nhật các kiến thức công nghệ và kỹ thuật số."
-    },
-
-    setting: {
-        title: "⚙️ SETTING",
-        content:
-            "Khu vực cài đặt.\\n\\n" +
-            "Bạn có thể khám phá các nội dung Setting " +
-            "được chia sẻ trên PHONG WEB."
-    }
-};
-
-function showPanel(name) {
-    const data = panelData[name];
-
-    if (!data) return;
-
-    document.getElementById("infoTitle").textContent =
-        data.title;
-
-    document.getElementById("infoContent").textContent =
-        data.content.replace(/\\n/g, "\n");
-
-    const panel = document.getElementById("info");
-
-    panel.classList.add("show");
-
-    panel.scrollIntoView({
-        behavior: "smooth",
-        block: "nearest"
-    });
-}
-
-function closePanel() {
-    document.getElementById("info").classList.remove("show");
-}
-
-/* MUSIC PLAYER */
-
 const audio = document.getElementById("audio");
 const musicButton = document.getElementById("mainMusicButton");
+
 const musicStatus = document.getElementById("musicStatus");
 const loopStatus = document.getElementById("loopStatus");
 
@@ -584,7 +449,7 @@ function stopMusic() {
     musicStatus.textContent = "Đã dừng nhạc";
 }
 
-musicButton.addEventListener("pointerdown", function(event) {
+musicButton.addEventListener("pointerdown", function() {
     isHolding = false;
 
     pressTimer = setTimeout(function() {
@@ -630,7 +495,6 @@ audio.addEventListener("pause", updateMusicUI);
 audio.addEventListener("ended", updateMusicUI);
 
 updateMusicUI();
-
 </script>
 
 </body>
@@ -720,11 +584,12 @@ if __name__ == "__main__":
     )
 
     print("====================================")
-    print("       PHONG WEB V15")
+    print("          PHONG WEB V16")
     print("====================================")
     print("Server running on port:", PORT)
-    print("Cloud pricing section: REMOVED")
-    print("Five main cards: ASPECT RATIO 3:1")
+    print("Only location section remains")
+    print("Location aspect ratio: 7:2")
+    print("Cloud pricing: REMOVED")
     print("Advertisement scripts: REMOVED")
     print("====================================")
 
