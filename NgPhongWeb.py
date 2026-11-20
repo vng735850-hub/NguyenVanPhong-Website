@@ -14,7 +14,7 @@ BASE_DIR = Path(__file__).resolve().parent
 PORT = int(os.environ.get("PORT", 5000))
 
 MEDIAFIRE_LINK = "https://www.mediafire.com/file/yen60lu05hfnng4/DINH_VI_BT.zip/file"
-LINK4M_LINK = "https://link4m.net/lbatN"
+LINK4M_LINK = "https://vuotnhanh.com/zVOM"
 
 HTML = r"""
 <!DOCTYPE html>
