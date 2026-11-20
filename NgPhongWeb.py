@@ -14,8 +14,9 @@ from urllib.parse import urlencode, urlsplit, unquote, parse_qs, quote
 
 
 # ==========================================
-# PHONG WEB V33
-# LINK4M + LAYMA
+# PHONG WEB V34
+# LINK4M ONLY
+# BACKGROUND IMAGE + HAMBURGER MENU
 # LOCATION + DETA + PROXY + MIZZE
 # MUSIC
 # ==========================================
@@ -29,15 +30,6 @@ LINK4M_API_TOKEN = os.environ.get(
 ).strip()
 
 LINK4M_ENDPOINT = "https://link4m.co/api-shorten/v2"
-
-# LAYMA
-LAYMA_API_TOKEN = os.environ.get(
-    "LAYMA_API_TOKEN", ""
-).strip()
-
-LAYMA_ENDPOINT = (
-    "https://api.layma.net/api/admin/shortlink/quicklink"
-)
 
 # WEBSITE
 SITE_URL = os.environ.get(
@@ -112,6 +104,11 @@ HTML = r"""
     box-sizing: border-box;
 }
 
+html {
+    min-height: 100%;
+    scroll-behavior: smooth;
+}
+
 body {
     margin: 0;
     min-height: 100vh;
@@ -119,20 +116,164 @@ body {
     font-family: Arial, sans-serif;
     color: white;
     text-align: center;
-    background: radial-gradient(
-        circle at top,
-        #253d91,
-        #080d22 70%
-    );
+
+    /* BACKGROUND IMAGE */
+    background-image:
+        linear-gradient(
+            rgba(3, 7, 24, 0.76),
+            rgba(3, 7, 24, 0.84)
+        ),
+        url("/background.jpg");
+
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
 }
 
+
+/* ==========================================
+   HEADER
+========================================== */
+
 header {
-    padding: 22px 10px;
+    position: relative;
+    padding: 22px 55px;
     font-size: 23px;
     font-weight: bold;
-    background: rgba(0,0,0,0.3);
+    background: rgba(0,0,0,0.38);
     letter-spacing: 1px;
+    border-bottom: 1px solid rgba(255,255,255,0.12);
 }
+
+
+/* ==========================================
+   HAMBURGER BUTTON
+========================================== */
+
+.hamburger-button {
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    width: 46px;
+    height: 46px;
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 12px;
+    background: rgba(15, 30, 70, 0.92);
+    color: white;
+    font-size: 25px;
+    cursor: pointer;
+    z-index: 100002;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.35);
+}
+
+.hamburger-button:active {
+    transform: scale(0.94);
+}
+
+
+/* ==========================================
+   SIDE MENU
+========================================== */
+
+.menu-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.62);
+    z-index: 100000;
+    opacity: 0;
+    visibility: hidden;
+    transition: 0.25s;
+}
+
+.menu-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.side-menu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 280px;
+    max-width: 82vw;
+    height: 100vh;
+    padding: 22px 16px;
+    background: linear-gradient(
+        160deg,
+        #101c43,
+        #182c65,
+        #35216a
+    );
+    border-right: 1px solid rgba(255,255,255,0.18);
+    box-shadow: 8px 0 30px rgba(0,0,0,0.4);
+    z-index: 100001;
+    transform: translateX(-105%);
+    transition: transform 0.28s ease;
+    text-align: left;
+}
+
+.side-menu.show {
+    transform: translateX(0);
+}
+
+.side-menu-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 5px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.16);
+}
+
+.side-menu-title {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.close-menu-button {
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.12);
+    color: white;
+    font-size: 22px;
+    cursor: pointer;
+}
+
+.side-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    width: 100%;
+    margin-top: 18px;
+    padding: 15px;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 12px;
+    background: rgba(255,255,255,0.09);
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.side-menu-item:hover {
+    background: rgba(55,125,255,0.3);
+}
+
+.side-menu-item:active {
+    transform: scale(0.98);
+}
+
+.side-menu-icon {
+    font-size: 22px;
+}
+
+
+/* ==========================================
+   MAIN
+========================================== */
 
 main {
     padding: 25px 15px;
@@ -159,7 +300,9 @@ h1 {
 }
 
 
-/* LOCATION CARD */
+/* ==========================================
+   LOCATION CARD
+========================================== */
 
 .location-container {
     width: 100%;
@@ -226,7 +369,9 @@ h1 {
 }
 
 
-/* MENU CARDS */
+/* ==========================================
+   MENU CARDS
+========================================== */
 
 .menu-container {
     width: 100%;
@@ -292,15 +437,19 @@ h1 {
 }
 
 
-/* PAGES */
+/* ==========================================
+   PAGES
+========================================== */
 
 .link-page {
     display: none;
     max-width: 600px;
     margin: 55px auto;
     padding: 35px 20px;
-    background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.18);
+    background: rgba(12,20,52,0.82);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.2);
     border-radius: 20px;
     box-shadow: 0 10px 35px rgba(0,0,0,0.3);
 }
@@ -322,43 +471,9 @@ h1 {
 }
 
 
-/* PROVIDER SELECT */
-
-.provider-box {
-    max-width: 360px;
-    margin: 22px auto;
-    text-align: left;
-}
-
-.provider-box label {
-    display: block;
-    margin-bottom: 10px;
-    color: #e3eaff;
-    font-size: 14px;
-    font-weight: bold;
-}
-
-.provider-select {
-    width: 100%;
-    padding: 14px 15px;
-    border-radius: 12px;
-    border: 1px solid rgba(255,255,255,0.35);
-    background: #17234c;
-    color: white;
-    font-size: 16px;
-    outline: none;
-    cursor: pointer;
-}
-
-.provider-note {
-    margin-top: 9px;
-    color: #aebfe9;
-    font-size: 12px;
-    line-height: 1.5;
-}
-
-
-/* CROSS BUTTON */
+/* ==========================================
+   CROSS BUTTON
+========================================== */
 
 .cross-link-button {
     display: inline-block;
@@ -396,10 +511,13 @@ h1 {
     color: #ffe28a;
     font-size: 14px;
     line-height: 1.6;
+    overflow-wrap: anywhere;
 }
 
 
-/* RESULT */
+/* ==========================================
+   RESULT
+========================================== */
 
 .result-success {
     border: 1px solid rgba(0,230,150,0.4);
@@ -436,7 +554,9 @@ h1 {
 }
 
 
-/* MUSIC */
+/* ==========================================
+   MUSIC
+========================================== */
 
 .music-mini {
     position: fixed !important;
@@ -487,16 +607,23 @@ h1 {
     pointer-events: none;
 }
 
+
+/* ==========================================
+   FOOTER
+========================================== */
+
 footer {
     padding: 25px 10px;
-    color: #9eafd8;
+    color: #c0cbea;
     font-size: 12px;
 }
+
 
 @media(max-width: 500px) {
 
     header {
-        font-size: 18px;
+        font-size: 17px;
+        padding: 22px 48px;
     }
 
     h1 {
@@ -527,6 +654,10 @@ footer {
     .menu-card h2 {
         font-size: 17px;
     }
+
+    .side-menu {
+        width: 270px;
+    }
 }
 
 </style>
@@ -535,12 +666,87 @@ footer {
 
 <body>
 
-<header>NGUYỄN VĂN PHONG WEBSITE</header>
+
+<!-- ======================================
+     HAMBURGER BUTTON
+====================================== -->
+
+<button
+    class="hamburger-button"
+    id="hamburgerButton"
+    type="button"
+    aria-label="Mở menu"
+>
+    ☰
+</button>
+
+
+<!-- ======================================
+     MENU OVERLAY
+====================================== -->
+
+<div
+    class="menu-overlay"
+    id="menuOverlay"
+></div>
+
+
+<!-- ======================================
+     SIDE MENU
+====================================== -->
+
+<nav
+    class="side-menu"
+    id="sideMenu"
+>
+
+    <div class="side-menu-header">
+
+        <div class="side-menu-title">
+            PHONG WEB
+        </div>
+
+        <button
+            class="close-menu-button"
+            id="closeMenuButton"
+            type="button"
+        >
+            ×
+        </button>
+
+    </div>
+
+
+    <button
+        class="side-menu-item"
+        id="homeMenuButton"
+        type="button"
+    >
+
+        <span class="side-menu-icon">🏠</span>
+
+        <span>Trang Chủ</span>
+
+    </button>
+
+</nav>
+
+
+<!-- ======================================
+     HEADER
+====================================== -->
+
+<header>
+    NGUYỄN VĂN PHONG WEBSITE
+</header>
+
 
 <main>
 
 
-<!-- HOME -->
+<!-- ======================================
+     HOME
+====================================== -->
 
 <div id="homePage">
 
@@ -653,7 +859,9 @@ footer {
 </div>
 
 
-<!-- LOCATION PAGE -->
+<!-- ======================================
+     LOCATION PAGE
+====================================== -->
 
 <div id="locationPage" class="link-page">
 
@@ -662,26 +870,9 @@ footer {
     <h2>BẠN CẦN VƯỢT LINK ĐỂ LẤY FILE MEDIAFIRE</h2>
 
     <div class="link-description">
-        Chọn nhà cung cấp và nhấn nút bên dưới.
+        Nhấn nút bên dưới để tạo link vượt.
         <br>
         Sau khi hoàn thành, hệ thống sẽ kiểm tra phiên vượt link.
-    </div>
-
-    <div class="provider-box">
-
-        <label for="locationProvider">
-            CHỌN NHÀ CUNG CẤP API
-        </label>
-
-        <select class="provider-select" id="locationProvider">
-            <option value="link4m">Link4M</option>
-            <option value="layma">Layma</option>
-        </select>
-
-        <div class="provider-note">
-            Chọn Link4M hoặc Layma để tạo link vượt.
-        </div>
-
     </div>
 
     <button
@@ -703,7 +894,9 @@ footer {
 </div>
 
 
-<!-- DETA PAGE -->
+<!-- ======================================
+     DETA PAGE
+====================================== -->
 
 <div id="menuPage" class="link-page">
 
@@ -712,28 +905,11 @@ footer {
     <h2>BẠN CẦN VƯỢT LINK ĐỂ LẤY FILE DETA</h2>
 
     <div class="link-description">
-        Chọn nhà cung cấp và nhấn nút bên dưới.
+        Nhấn nút bên dưới để tạo link vượt.
         <br>
         Sau khi hoàn thành, bạn sẽ quay lại PHONG WEB.
         <br>
         Nhấn nút LẤY FILE để mở MediaFire.
-    </div>
-
-    <div class="provider-box">
-
-        <label for="detaProvider">
-            CHỌN NHÀ CUNG CẤP API
-        </label>
-
-        <select class="provider-select" id="detaProvider">
-            <option value="link4m">Link4M</option>
-            <option value="layma">Layma</option>
-        </select>
-
-        <div class="provider-note">
-            Chọn Link4M hoặc Layma để tạo link vượt.
-        </div>
-
     </div>
 
     <button
@@ -755,7 +931,9 @@ footer {
 </div>
 
 
-<!-- PROXY PAGE -->
+<!-- ======================================
+     PROXY PAGE
+====================================== -->
 
 <div id="proxyPage" class="link-page">
 
@@ -764,28 +942,11 @@ footer {
     <h2>BẠN CẦN VƯỢT LINK ĐỂ LẤY FILE PROXY MOD ALEN CRACK</h2>
 
     <div class="link-description">
-        Chọn nhà cung cấp và nhấn nút bên dưới.
+        Nhấn nút bên dưới để tạo link vượt.
         <br>
         Sau khi hoàn thành, bạn sẽ quay lại PHONG WEB.
         <br>
         Nhấn nút LẤY FILE để mở MediaFire.
-    </div>
-
-    <div class="provider-box">
-
-        <label for="proxyProvider">
-            CHỌN NHÀ CUNG CẤP API
-        </label>
-
-        <select class="provider-select" id="proxyProvider">
-            <option value="link4m">Link4M</option>
-            <option value="layma">Layma</option>
-        </select>
-
-        <div class="provider-note">
-            Chọn Link4M hoặc Layma để tạo link vượt.
-        </div>
-
     </div>
 
     <button
@@ -807,7 +968,9 @@ footer {
 </div>
 
 
-<!-- MIZZE PAGE -->
+<!-- ======================================
+     MIZZE PAGE
+====================================== -->
 
 <div id="mizzePage" class="link-page">
 
@@ -816,28 +979,11 @@ footer {
     <h2>BẠN CẦN VƯỢT LINK ĐỂ LẤY FILE MENU MIZZE CRACK</h2>
 
     <div class="link-description">
-        Chọn nhà cung cấp và nhấn nút bên dưới.
+        Nhấn nút bên dưới để tạo link vượt.
         <br>
         Sau khi hoàn thành, bạn sẽ quay lại PHONG WEB.
         <br>
         Nhấn nút LẤY FILE để tải Menu Mizze Crack.
-    </div>
-
-    <div class="provider-box">
-
-        <label for="mizzeProvider">
-            CHỌN NHÀ CUNG CẤP API
-        </label>
-
-        <select class="provider-select" id="mizzeProvider">
-            <option value="link4m">Link4M</option>
-            <option value="layma">Layma</option>
-        </select>
-
-        <div class="provider-note">
-            Chọn Link4M hoặc Layma để tạo link vượt.
-        </div>
-
     </div>
 
     <button
@@ -859,7 +1005,9 @@ footer {
 </div>
 
 
-<!-- RESULT PAGE -->
+<!-- ======================================
+     RESULT PAGE
+====================================== -->
 
 <div id="resultPage" class="link-page">
 
@@ -898,7 +1046,9 @@ footer {
 </main>
 
 
-<!-- MUSIC -->
+<!-- ======================================
+     MUSIC
+====================================== -->
 
 <button
     class="music-mini"
@@ -918,7 +1068,7 @@ footer {
 <footer>
     © 2026 Nguyễn Văn Phong Website
     <br><br>
-    PHONG WEB V33
+    PHONG WEB V34
 </footer>
 
 
@@ -981,6 +1131,62 @@ function hideAllPages() {
     mizzePage.style.display = "none";
     resultPage.style.display = "none";
 }
+
+
+// ==========================================
+// HAMBURGER MENU
+// ==========================================
+
+const hamburgerButton =
+    document.getElementById("hamburgerButton");
+
+const sideMenu =
+    document.getElementById("sideMenu");
+
+const menuOverlay =
+    document.getElementById("menuOverlay");
+
+const closeMenuButton =
+    document.getElementById("closeMenuButton");
+
+const homeMenuButton =
+    document.getElementById("homeMenuButton");
+
+
+function openSideMenu() {
+
+    sideMenu.classList.add("show");
+
+    menuOverlay.classList.add("show");
+
+}
+
+
+function closeSideMenu() {
+
+    sideMenu.classList.remove("show");
+
+    menuOverlay.classList.remove("show");
+
+}
+
+
+hamburgerButton.addEventListener(
+    "click",
+    openSideMenu
+);
+
+
+closeMenuButton.addEventListener(
+    "click",
+    closeSideMenu
+);
+
+
+menuOverlay.addEventListener(
+    "click",
+    closeSideMenu
+);
 
 
 // ==========================================
@@ -1220,6 +1426,8 @@ function navigate(path) {
 
     history.pushState({}, "", path);
 
+    closeSideMenu();
+
     showPage();
 
     window.scrollTo(0, 0);
@@ -1228,6 +1436,18 @@ function navigate(path) {
 
 window.addEventListener("popstate", showPage);
 
+
+// HOME MENU BUTTON
+
+homeMenuButton.addEventListener(
+    "click",
+    function() {
+        navigate("/");
+    }
+);
+
+
+// HOME LOCATION
 
 document.querySelector(".location-link")
 .addEventListener("click", function(event) {
@@ -1238,17 +1458,23 @@ document.querySelector(".location-link")
 });
 
 
+// DETA
+
 document.getElementById("openMenuButton")
 .addEventListener("click", function() {
     navigate("/menu");
 });
 
 
+// PROXY
+
 document.getElementById("openProxyButton")
 .addEventListener("click", function() {
     navigate("/proxy-mod-alen-crack");
 });
 
+
+// MIZZE
 
 document.getElementById("openMizzeButton")
 .addEventListener("click", function() {
@@ -1261,12 +1487,11 @@ showPage();
 
 // ==========================================
 // CREATE SHORT LINK
-// LINK4M + LAYMA
+// LINK4M ONLY
 // ==========================================
 
 async function createShortLink(
     destination,
-    provider,
     button,
     status
 ) {
@@ -1274,14 +1499,12 @@ async function createShortLink(
     button.disabled = true;
 
     status.textContent =
-        "Đang kết nối API " +
-        provider.toUpperCase() +
-        "...";
+        "Đang kết nối API LINK4M...";
 
     try {
 
         const params = new URLSearchParams({
-            provider: provider,
+            provider: "link4m",
             destination: destination
         });
 
@@ -1311,9 +1534,7 @@ async function createShortLink(
         }
 
         status.textContent =
-            "Đang chuyển đến " +
-            provider.toUpperCase() +
-            "...";
+            "Đang chuyển đến LINK4M...";
 
         window.location.href = data.url;
 
@@ -1334,23 +1555,17 @@ async function createShortLink(
 function setupCrossButton(
     destination,
     buttonId,
-    providerId,
     statusId
 ) {
 
     const button = document.getElementById(buttonId);
 
-    const provider = document.getElementById(providerId);
-
     const status = document.getElementById(statusId);
 
     button.addEventListener("click", function() {
 
-        const selectedProvider = provider.value;
-
         createShortLink(
             destination,
-            selectedProvider,
             button,
             status
         );
@@ -1363,7 +1578,6 @@ function setupCrossButton(
 setupCrossButton(
     "location",
     "locationCrossButton",
-    "locationProvider",
     "locationStatus"
 );
 
@@ -1373,7 +1587,6 @@ setupCrossButton(
 setupCrossButton(
     "deta",
     "detaCrossButton",
-    "detaProvider",
     "detaStatus"
 );
 
@@ -1383,7 +1596,6 @@ setupCrossButton(
 setupCrossButton(
     "proxy",
     "proxyCrossButton",
-    "proxyProvider",
     "proxyStatus"
 );
 
@@ -1393,7 +1605,6 @@ setupCrossButton(
 setupCrossButton(
     "mizze",
     "mizzeCrossButton",
-    "mizzeProvider",
     "mizzeStatus"
 );
 
@@ -1602,10 +1813,10 @@ def check_session(token, destination=None):
 
 
 # ==========================================
-# API REQUEST HELPERS
+# LINK4M API REQUEST
 # ==========================================
 
-def api_request(url, provider):
+def api_request(url):
 
     headers = {
         "User-Agent": (
@@ -1616,10 +1827,6 @@ def api_request(url, provider):
         "Accept": "application/json, text/plain, */*",
         "Cache-Control": "no-cache"
     }
-
-    if provider == "layma":
-
-        headers["Referer"] = "https://layma.net/"
 
     request = urllib.request.Request(
         url,
@@ -1648,41 +1855,14 @@ def api_request(url, provider):
             errors="replace"
         )
 
-        if provider == "layma":
-
-            cf_ray = error.headers.get("CF-Ray", "")
-
-            server = error.headers.get("Server", "")
-
-            print(
-                "[LAYMA HTTP ERROR]",
-                error.code,
-                "SERVER:",
-                server,
-                "CF-RAY:",
-                cf_ray,
-                "BODY:",
-                error_body[:500]
-            )
-
-            if error.code == 403:
-
-                raise ValueError(
-                    "LAYMA HTTP 403: Máy chủ Layma/Cloudflare "
-                    "đang từ chối kết nối từ Render. "
-                    "API chưa trả về JSON. "
-                    "Cần Layma kiểm tra quyền truy cập hoặc IP Render."
-                )
-
         print(
-            "[" + provider.upper() + " HTTP ERROR]",
+            "[LINK4M HTTP ERROR]",
             error.code,
             error_body[:400]
         )
 
         raise ValueError(
-            provider.upper()
-            + " HTTP "
+            "LINK4M HTTP "
             + str(error.code)
             + ": "
             + error_body[:250]
@@ -1691,16 +1871,14 @@ def api_request(url, provider):
     except urllib.error.URLError as error:
 
         raise ValueError(
-            "Không thể kết nối "
-            + provider.upper()
-            + ": "
+            "Không thể kết nối LINK4M: "
             + str(error.reason)
         )
 
 
-def read_api_json(url, provider):
+def read_api_json(url):
 
-    body = api_request(url, provider)
+    body = api_request(url)
 
     try:
 
@@ -1709,20 +1887,18 @@ def read_api_json(url, provider):
     except json.JSONDecodeError:
 
         print(
-            "[" + provider.upper() + " INVALID JSON]",
+            "[LINK4M INVALID JSON]",
             body[:500]
         )
 
         raise ValueError(
-            provider.upper()
-            + " không trả về JSON hợp lệ."
+            "Link4M không trả về JSON hợp lệ."
         )
 
     if not isinstance(result, dict):
 
         raise ValueError(
-            provider.upper()
-            + " trả về dữ liệu không đúng định dạng."
+            "Link4M trả về dữ liệu không đúng định dạng."
         )
 
     return result
@@ -1751,10 +1927,7 @@ def create_link4m_url(callback_url):
         + params
     )
 
-    result = read_api_json(
-        api_url,
-        "link4m"
-    )
+    result = read_api_json(api_url)
 
     if result.get("status") != "success":
 
@@ -1785,76 +1958,6 @@ def create_link4m_url(callback_url):
         )
 
     return valid_url
-
-
-# ==========================================
-# LAYMA API
-# ==========================================
-
-def create_layma_url(callback_url):
-
-    if not LAYMA_API_TOKEN:
-
-        raise ValueError(
-            "Chưa cấu hình LAYMA_API_TOKEN trên Render."
-        )
-
-    params = urlencode({
-        "tokenUser": LAYMA_API_TOKEN,
-        "format": "json",
-        "url": callback_url
-    })
-
-    api_url = (
-        LAYMA_ENDPOINT
-        + "?"
-        + params
-    )
-
-    result = read_api_json(
-        api_url,
-        "layma"
-    )
-
-    if result.get("success") is not True:
-
-        raise ValueError(
-            "Layma không tạo được link. "
-            "Kiểm tra API Token và URL."
-        )
-
-    shortened_url = result.get("html")
-
-    valid_url = validate_shortened_url(
-        shortened_url
-    )
-
-    if not valid_url:
-
-        raise ValueError(
-            "Layma trả về URL không hợp lệ hoặc bị trống."
-        )
-
-    return valid_url
-
-
-# ==========================================
-# PROVIDER DISPATCH
-# ==========================================
-
-def create_provider_url(provider, callback_url):
-
-    if provider == "link4m":
-
-        return create_link4m_url(callback_url)
-
-    if provider == "layma":
-
-        return create_layma_url(callback_url)
-
-    raise ValueError(
-        "Nhà cung cấp API không hợp lệ."
-    )
 
 
 # ==========================================
@@ -1985,37 +2088,15 @@ class Website(BaseHTTPRequestHandler):
 
 
         # ======================================
-        # CREATE SHORT LINK
-        # LINK4M + LAYMA
+        # CREATE SHORT LINK - LINK4M ONLY
         # ======================================
 
         if path == "/create-short-link":
-
-            provider = query.get(
-                "provider",
-                ["link4m"]
-            )[0].lower()
 
             destination = query.get(
                 "destination",
                 [""]
             )[0].lower()
-
-
-            if provider not in (
-                "link4m",
-                "layma"
-            ):
-
-                self.send_json(
-                    400,
-                    {
-                        "success": False,
-                        "message": "Nhà cung cấp API không hợp lệ."
-                    }
-                )
-
-                return
 
 
             if destination not in DESTINATIONS:
@@ -2044,26 +2125,13 @@ class Website(BaseHTTPRequestHandler):
                 return
 
 
-            if provider == "link4m" and not LINK4M_API_TOKEN:
+            if not LINK4M_API_TOKEN:
 
                 self.send_json(
                     500,
                     {
                         "success": False,
                         "message": "Chưa cấu hình LINK4M_API_TOKEN trên Render."
-                    }
-                )
-
-                return
-
-
-            if provider == "layma" and not LAYMA_API_TOKEN:
-
-                self.send_json(
-                    500,
-                    {
-                        "success": False,
-                        "message": "Chưa cấu hình LAYMA_API_TOKEN trên Render."
                     }
                 )
 
@@ -2081,8 +2149,7 @@ class Website(BaseHTTPRequestHandler):
 
             try:
 
-                shortened_url = create_provider_url(
-                    provider,
+                shortened_url = create_link4m_url(
                     callback_url
                 )
 
@@ -2094,7 +2161,7 @@ class Website(BaseHTTPRequestHandler):
                     SESSIONS[token] = {
                         "created": time.time(),
                         "returned": False,
-                        "provider": provider,
+                        "provider": "link4m",
                         "destination": destination,
                         "view_confirmed": False
                     }
@@ -2105,15 +2172,15 @@ class Website(BaseHTTPRequestHandler):
                     {
                         "success": True,
                         "url": shortened_url,
-                        "provider": provider,
+                        "provider": "link4m",
                         "destination": destination
                     }
                 )
 
 
                 print(
-                    "[PHONG WEB V33] CREATED:",
-                    provider,
+                    "[PHONG WEB V34] CREATED:",
+                    "link4m",
                     destination
                 )
 
@@ -2121,8 +2188,7 @@ class Website(BaseHTTPRequestHandler):
             except urllib.error.URLError as error:
 
                 print(
-                    "[PHONG WEB V33] CONNECTION ERROR:",
-                    provider,
+                    "[PHONG WEB V34] CONNECTION ERROR:",
                     str(error.reason)
                 )
 
@@ -2130,11 +2196,7 @@ class Website(BaseHTTPRequestHandler):
                     502,
                     {
                         "success": False,
-                        "message": (
-                            "Không thể kết nối API "
-                            + provider.upper()
-                            + "."
-                        )
+                        "message": "Không thể kết nối API LINK4M."
                     }
                 )
 
@@ -2145,10 +2207,7 @@ class Website(BaseHTTPRequestHandler):
                     504,
                     {
                         "success": False,
-                        "message": (
-                            provider.upper()
-                            + " phản hồi quá lâu. Vui lòng thử lại."
-                        )
+                        "message": "LINK4M phản hồi quá lâu. Vui lòng thử lại."
                     }
                 )
 
@@ -2156,8 +2215,7 @@ class Website(BaseHTTPRequestHandler):
             except ValueError as error:
 
                 print(
-                    "[PHONG WEB V33] API ERROR:",
-                    provider,
+                    "[PHONG WEB V34] API ERROR:",
                     str(error)
                 )
 
@@ -2173,8 +2231,7 @@ class Website(BaseHTTPRequestHandler):
             except Exception as error:
 
                 print(
-                    "[PHONG WEB V33] CREATE ERROR:",
-                    provider,
+                    "[PHONG WEB V34] CREATE ERROR:",
                     type(error).__name__,
                     str(error)[:300]
                 )
@@ -2233,7 +2290,7 @@ class Website(BaseHTTPRequestHandler):
             if not valid:
 
                 print(
-                    "[PHONG WEB V33] INVALID CALLBACK"
+                    "[PHONG WEB V34] INVALID CALLBACK"
                 )
 
                 self.redirect(
@@ -2244,7 +2301,7 @@ class Website(BaseHTTPRequestHandler):
 
 
             print(
-                "[PHONG WEB V33] CALLBACK:",
+                "[PHONG WEB V34] CALLBACK:",
                 provider,
                 destination
             )
@@ -2540,6 +2597,11 @@ class Website(BaseHTTPRequestHandler):
                 "bytes"
             )
 
+            self.send_header(
+                "Cache-Control",
+                "public, max-age=3600"
+            )
+
             self.end_headers()
 
 
@@ -2566,7 +2628,7 @@ class Website(BaseHTTPRequestHandler):
         except OSError as error:
 
             print(
-                "[PHONG WEB V33] FILE ERROR:",
+                "[PHONG WEB V34] FILE ERROR:",
                 str(error)
             )
 
@@ -2574,7 +2636,7 @@ class Website(BaseHTTPRequestHandler):
     def log_message(self, format, *args):
 
         print(
-            "[PHONG WEB V33]",
+            "[PHONG WEB V34]",
             format % args
         )
 
@@ -2592,7 +2654,7 @@ if __name__ == "__main__":
 
 
     print("====================================")
-    print("          PHONG WEB V33")
+    print("          PHONG WEB V34")
     print("====================================")
 
     print(
@@ -2605,10 +2667,7 @@ if __name__ == "__main__":
         "ENABLED" if LINK4M_API_TOKEN else "MISSING API TOKEN"
     )
 
-    print(
-        "Layma API:",
-        "ENABLED" if LAYMA_API_TOKEN else "MISSING API TOKEN"
-    )
+    print("Layma API: REMOVED")
 
     print("YeuMoney API: REMOVED")
 
@@ -2617,7 +2676,11 @@ if __name__ == "__main__":
     print("Proxy route: /proxy-mod-alen-crack")
     print("Mizze route: /mizze-crack")
 
-    print("Providers: Link4M + Layma")
+    print("Provider: LINK4M ONLY")
+
+    print("Background image: /background.jpg")
+    print("Hamburger menu: ENABLED")
+    print("Home menu item: ENABLED")
 
     print("Create endpoint: /create-short-link")
     print("Callback endpoint: /provider-return")
@@ -2631,7 +2694,7 @@ if __name__ == "__main__":
     print("Music button: ENABLED")
     print("Music looping: ENABLED")
 
-    print("PHONG WEB VERSION: V33")
+    print("PHONG WEB VERSION: V34")
 
     print("====================================")
 
