@@ -10,22 +10,23 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlencode, urlsplit, unquote
 
 # ==========================================
-# PHONG WEB V23
-# VUOTNHANH + LINK4M API
+# PHONG WEB V24
+# VUOTNHANH DEVELOPERS API + LINK4M API
 # ==========================================
 
 BASE_DIR = Path(__file__).resolve().parent
 PORT = int(os.environ.get("PORT", 5000))
 
-# VUOTNHANH API
-API_KEY = os.environ.get(
-    "VUOTNHANH_API_KEY", ""
-).strip()
+# VUOTNHANH DEVELOPERS API
+API_KEY = os.environ.get("VUOTNHANH_API_KEY", "").strip()
+VUOTNHANH_ENDPOINT = "https://vuotnhanh.com/api"
 
 # LINK4M API
 LINK4M_API_TOKEN = os.environ.get(
     "LINK4M_API_TOKEN", ""
 ).strip()
+
+LINK4M_ENDPOINT = "https://link4m.co/api-shorten/v2"
 
 # WEBSITE URL
 SITE_URL = os.environ.get(
@@ -39,14 +40,9 @@ MEDIAFIRE_LINK = (
     "yen60lu05hfnng4/DINH_VI_BT.zip/file"
 )
 
-VUOTNHANH_ENDPOINT = "https://vuotnhanh.com/zVOM"
-
-# Link4M API theo tài liệu đã cung cấp
-LINK4M_ENDPOINT = "https://link4m.co/api-shorten/v2"
-
 
 # ==========================================
-# HTML
+# HTML - GIỮ NGUYÊN GIAO DIỆN V23
 # ==========================================
 
 HTML = r"""
@@ -372,34 +368,22 @@ footer {
         📍 ĐỊNH VỊ XANH TÍM OB55
     </div>
 
-    <!-- LOCATION MENU -->
-
     <section class="location-container">
         <a class="location-link" href="/dinh-vi">
-
             <div class="location-card">
-
                 <div class="location-emoji">📍</div>
-
                 <div class="location-info">
                     <h2>ĐỊNH VỊ XANH TÍM OB55</h2>
                     <p>Nhấn vào đây để tiếp tục</p>
                     <span class="location-button">MỞ MỤC</span>
                 </div>
-
             </div>
-
         </a>
     </section>
 
-    <!-- DETA MENU -->
-
     <section class="menu-container">
-
         <div class="menu-card">
-
             <h2>🔐 DETA IPA CRACK NOKЕY</h2>
-
             <button
                 class="open-menu-button"
                 id="openMenuButton"
@@ -407,13 +391,10 @@ footer {
             >
                 MỞ MENU
             </button>
-
         </div>
-
     </section>
 
 </div>
-
 
 <!-- VUOTNHANH PAGE -->
 
@@ -448,7 +429,6 @@ footer {
     </a>
 
 </div>
-
 
 <!-- LINK4M PAGE -->
 
@@ -486,7 +466,6 @@ footer {
 
 </main>
 
-
 <!-- MUSIC BUTTON -->
 
 <button
@@ -503,13 +482,11 @@ footer {
     <source src="/music.mp3" type="audio/mpeg">
 </audio>
 
-
 <footer>
     © 2026 Nguyễn Văn Phong Website
     <br><br>
-    PHONG WEB V23
+    PHONG WEB V24
 </footer>
-
 
 <script>
 
@@ -562,7 +539,7 @@ showPage();
 
 
 // ==========================================
-// VUOTNHANH API - GIỮ NGUYÊN
+// VUOTNHANH DEVELOPERS API
 // ==========================================
 
 const vuotNhanhButton =
@@ -576,7 +553,7 @@ vuotNhanhButton.addEventListener("click", async function() {
     vuotNhanhButton.disabled = true;
 
     locationStatus.textContent =
-        "Đang tạo đường dẫn Vượt Nhanh...";
+        "Đang tạo đường dẫn Vượt Nhanh Developers API...";
 
     try {
 
@@ -589,7 +566,7 @@ vuotNhanhButton.addEventListener("click", async function() {
 
         if (!response.ok || !data.success) {
             throw new Error(
-                data.message || "Không thể tạo link."
+                data.message || "Không thể tạo link Vượt Nhanh."
             );
         }
 
@@ -610,7 +587,7 @@ vuotNhanhButton.addEventListener("click", async function() {
 
 
 // ==========================================
-// LINK4M API
+// LINK4M API - GIỮ NGUYÊN
 // ==========================================
 
 const link4mButton =
@@ -658,7 +635,7 @@ link4mButton.addEventListener("click", async function() {
 
 
 // ==========================================
-// MUSIC CONTROL
+// MUSIC CONTROL - GIỮ NGUYÊN
 // ==========================================
 
 const audio = document.getElementById("audio");
@@ -732,7 +709,7 @@ audio.addEventListener("error", function() {
 
 
 # ==========================================
-# HELPER: VALIDATE LINK4M RESULT
+# HELPER: VALIDATE SHORTENED URL
 # ==========================================
 
 def validate_shortened_url(value):
@@ -749,6 +726,7 @@ def validate_shortened_url(value):
         return None
 
     try:
+
         parsed = urlsplit(value)
 
         if parsed.scheme not in ("https", "http"):
@@ -815,7 +793,6 @@ class Website(BaseHTTPRequestHandler):
 
         path = unquote(urlsplit(self.path).path)
 
-
         # HOME AND PAGES
 
         if path in (
@@ -853,7 +830,7 @@ class Website(BaseHTTPRequestHandler):
 
 
         # ======================================
-        # VUOTNHANH API - GIỮ NGUYÊN
+        # VUOTNHANH DEVELOPERS API - V24
         # ======================================
 
         if path == "/create-link":
@@ -862,7 +839,7 @@ class Website(BaseHTTPRequestHandler):
 
                 self.send_json(500, {
                     "success": False,
-                    "message": "Chưa cấu hình Vượt Nhanh API Key trên Render."
+                    "message": "Chưa cấu hình VUOTNHANH_API_KEY trên Render."
                 })
 
                 return
@@ -876,21 +853,208 @@ class Website(BaseHTTPRequestHandler):
 
                 return
 
+            # Sau khi vượt link sẽ quay về website
             return_url = SITE_URL + "/complete"
 
-            query = urlencode({
-                "api": API_KEY,
-                "url": return_url
-            })
+            try:
 
-            quick_link = VUOTNHANH_ENDPOINT + "?" + query
+                # DEVELOPERS API:
+                # https://vuotnhanh.com/api
+                # ?api=API_KEY
+                # &url=RETURN_URL
 
-            self.send_json(200, {
-                "success": True,
-                "url": quick_link
-            })
+                params = urlencode({
+                    "api": API_KEY,
+                    "url": return_url
+                })
 
-            print("[PHONG WEB] VuotNhanh link created")
+                api_url = VUOTNHANH_ENDPOINT + "?" + params
+
+                request = urllib.request.Request(
+                    api_url,
+                    headers={
+                        "User-Agent": "Mozilla/5.0 PHONG-WEB/24",
+                        "Accept": "application/json"
+                    },
+                    method="GET"
+                )
+
+                with urllib.request.urlopen(
+                    request,
+                    timeout=25
+                ) as response:
+
+                    response_body = response.read().decode(
+                        "utf-8",
+                        errors="replace"
+                    )
+
+                    http_status = response.status
+
+                print(
+                    "[PHONG WEB] VuotNhanh Developers HTTP:",
+                    http_status
+                )
+
+                # PARSE JSON
+
+                try:
+
+                    result = json.loads(response_body)
+
+                except json.JSONDecodeError:
+
+                    print(
+                        "[PHONG WEB] VuotNhanh invalid JSON:",
+                        response_body[:500]
+                    )
+
+                    self.send_json(502, {
+                        "success": False,
+                        "message": "Vượt Nhanh không trả về JSON hợp lệ."
+                    })
+
+                    return
+
+                if not isinstance(result, dict):
+
+                    self.send_json(502, {
+                        "success": False,
+                        "message": "Dữ liệu Developers API không đúng định dạng."
+                    })
+
+                    return
+
+                # CHECK STATUS
+
+                api_status = result.get("status")
+
+                if api_status != "success":
+
+                    error_message = result.get(
+                        "message",
+                        "Vượt Nhanh không xác nhận tạo link thành công."
+                    )
+
+                    print(
+                        "[PHONG WEB] VuotNhanh rejected:",
+                        str(error_message)[:300]
+                    )
+
+                    self.send_json(502, {
+                        "success": False,
+                        "message": "Vượt Nhanh: " + str(error_message)[:300]
+                    })
+
+                    return
+
+                # GET SHORTENED URL
+
+                shortened_url = result.get("shortenedUrl")
+
+                valid_url = validate_shortened_url(
+                    shortened_url
+                )
+
+                if not valid_url:
+
+                    print(
+                        "[PHONG WEB] VuotNhanh invalid shortenedUrl."
+                    )
+
+                    self.send_json(502, {
+                        "success": False,
+                        "message": "Developers API báo thành công nhưng shortenedUrl không hợp lệ."
+                    })
+
+                    return
+
+                # SUCCESS
+
+                self.send_json(200, {
+                    "success": True,
+                    "url": valid_url
+                })
+
+                print(
+                    "[PHONG WEB] VuotNhanh Developers link created."
+                )
+
+            except urllib.error.HTTPError as error:
+
+                error_body = error.read().decode(
+                    "utf-8",
+                    errors="replace"
+                )
+
+                print(
+                    "[PHONG WEB] VuotNhanh HTTP error:",
+                    error.code
+                )
+
+                try:
+
+                    error_data = json.loads(error_body)
+
+                    if isinstance(error_data, dict):
+                        error_message = error_data.get(
+                            "message",
+                            error_body[:300]
+                        )
+                    else:
+                        error_message = error_body[:300]
+
+                except json.JSONDecodeError:
+
+                    error_message = error_body[:300]
+
+                if not error_message:
+                    error_message = "API từ chối yêu cầu."
+
+                self.send_json(502, {
+                    "success": False,
+                    "message": (
+                        "Vượt Nhanh HTTP "
+                        + str(error.code)
+                        + ": "
+                        + str(error_message)[:300]
+                    )
+                })
+
+            except urllib.error.URLError as error:
+
+                print(
+                    "[PHONG WEB] VuotNhanh connection error:",
+                    str(error.reason)
+                )
+
+                self.send_json(502, {
+                    "success": False,
+                    "message": "Không thể kết nối máy chủ Vượt Nhanh."
+                })
+
+            except TimeoutError:
+
+                print("[PHONG WEB] VuotNhanh timeout")
+
+                self.send_json(504, {
+                    "success": False,
+                    "message": "Vượt Nhanh phản hồi quá lâu. Vui lòng thử lại."
+                })
+
+            except Exception as error:
+
+                print(
+                    "[PHONG WEB] VuotNhanh internal error:",
+                    type(error).__name__,
+                    str(error)[:300]
+                )
+
+                self.send_json(500, {
+                    "success": False,
+                    "message": "Lỗi xử lý Vượt Nhanh: "
+                    + type(error).__name__
+                })
 
             return
 
@@ -918,7 +1082,7 @@ class Website(BaseHTTPRequestHandler):
 
 
         # ======================================
-        # LINK4M API - V23
+        # LINK4M API - GIỮ NGUYÊN V23
         # ======================================
 
         if path == "/create-link4m":
@@ -934,8 +1098,6 @@ class Website(BaseHTTPRequestHandler):
 
             try:
 
-                # TẠO API REQUEST
-
                 params = urlencode({
                     "api": LINK4M_API_TOKEN,
                     "url": MEDIAFIRE_LINK
@@ -946,7 +1108,7 @@ class Website(BaseHTTPRequestHandler):
                 request = urllib.request.Request(
                     api_url,
                     headers={
-                        "User-Agent": "Mozilla/5.0 PHONG-WEB/23",
+                        "User-Agent": "Mozilla/5.0 PHONG-WEB/24",
                         "Accept": "application/json"
                     },
                     method="GET"
@@ -969,9 +1131,8 @@ class Website(BaseHTTPRequestHandler):
                     http_status
                 )
 
-                # PARSE JSON
-
                 try:
+
                     result = json.loads(response_body)
 
                 except json.JSONDecodeError:
@@ -1002,18 +1163,11 @@ class Website(BaseHTTPRequestHandler):
                     result.get("status", "unknown")
                 )
 
-                # CHECK API STATUS
-
                 if result.get("status") != "success":
 
                     error_message = result.get(
                         "message",
                         "Link4M không xác nhận tạo link thành công."
-                    )
-
-                    print(
-                        "[PHONG WEB] Link4M rejected:",
-                        str(error_message)[:300]
                     )
 
                     self.send_json(502, {
@@ -1023,8 +1177,6 @@ class Website(BaseHTTPRequestHandler):
 
                     return
 
-                # GET SHORT URL
-
                 shortened_url = result.get("shortenedUrl")
 
                 if not shortened_url:
@@ -1033,24 +1185,14 @@ class Website(BaseHTTPRequestHandler):
                 if not shortened_url:
                     shortened_url = result.get("short_url")
 
-                # VALIDATE URL WITHOUT FIXED DOMAIN
-
                 valid_url = validate_shortened_url(
                     shortened_url
                 )
 
                 if not valid_url:
 
-                    # Không in token hoặc URL API có chứa token.
-                    # Chỉ ghi thông tin không nhạy cảm.
-
                     print(
                         "[PHONG WEB] Link4M returned invalid URL format."
-                    )
-
-                    print(
-                        "[PHONG WEB] Returned field type:",
-                        type(shortened_url).__name__
                     )
 
                     self.send_json(502, {
@@ -1059,8 +1201,6 @@ class Website(BaseHTTPRequestHandler):
                     })
 
                     return
-
-                # SUCCESS
 
                 self.send_json(200, {
                     "success": True,
@@ -1248,13 +1388,13 @@ if __name__ == "__main__":
     )
 
     print("====================================")
-    print("          PHONG WEB V23")
+    print("          PHONG WEB V24")
     print("====================================")
 
     print("Server port:", PORT)
 
     print(
-        "VuotNhanh API:",
+        "VuotNhanh Developers API:",
         "ENABLED" if API_KEY else "MISSING API KEY"
     )
 
@@ -1266,6 +1406,7 @@ if __name__ == "__main__":
     print("Location route: /dinh-vi")
     print("Menu route: /menu")
     print("VuotNhanh endpoint: /create-link")
+    print("VuotNhanh API: https://vuotnhanh.com/api")
     print("Link4M endpoint: /create-link4m")
 
     print("MediaFire destination: ENABLED")
