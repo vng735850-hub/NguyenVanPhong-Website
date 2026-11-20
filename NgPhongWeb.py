@@ -12,9 +12,10 @@ from pathlib import Path
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlencode, urlsplit, unquote, parse_qs, quote
 
+
 # ==========================================
-# PHONG WEB V32
-# LINK4M + LAYMA API
+# PHONG WEB V33
+# LINK4M + LAYMA
 # LOCATION + DETA + PROXY + MIZZE
 # MUSIC
 # ==========================================
@@ -22,18 +23,32 @@ from urllib.parse import urlencode, urlsplit, unquote, parse_qs, quote
 BASE_DIR = Path(__file__).resolve().parent
 PORT = int(os.environ.get("PORT", 5000))
 
-LINK4M_API_TOKEN = os.environ.get("LINK4M_API_TOKEN", "").strip()
+# LINK4M
+LINK4M_API_TOKEN = os.environ.get(
+    "LINK4M_API_TOKEN", ""
+).strip()
+
 LINK4M_ENDPOINT = "https://link4m.co/api-shorten/v2"
 
-LAYMA_API_TOKEN = os.environ.get("LAYMA_API_TOKEN", "").strip()
+# LAYMA
+LAYMA_API_TOKEN = os.environ.get(
+    "LAYMA_API_TOKEN", ""
+).strip()
+
 LAYMA_ENDPOINT = (
     "https://api.layma.net/api/admin/shortlink/quicklink"
 )
 
+# WEBSITE
 SITE_URL = os.environ.get(
     "SITE_URL",
     "https://nvp-com.onrender.com"
 ).strip().rstrip("/")
+
+
+# ==========================================
+# MEDIAFIRE LINKS
+# ==========================================
 
 MEDIAFIRE_LINK = (
     "https://www.mediafire.com/file/"
@@ -55,6 +70,7 @@ MIZZE_MEDIAFIRE_LINK = (
     "2plraqmzcl7gk4m/mizze+crack+adr+chs+ff+india.zip/file"
 )
 
+
 DESTINATIONS = {
     "location": MEDIAFIRE_LINK,
     "deta": DETA_MEDIAFIRE_LINK,
@@ -62,12 +78,14 @@ DESTINATIONS = {
     "mizze": MIZZE_MEDIAFIRE_LINK
 }
 
+
 DESTINATION_NAMES = {
     "location": "Định Vị",
     "deta": "Deta",
     "proxy": "Proxy Mod Alen Crack",
     "mizze": "Menu Mizze Crack"
 }
+
 
 SESSIONS = {}
 SESSIONS_LOCK = threading.Lock()
@@ -81,13 +99,18 @@ SESSION_TTL = 30 * 60
 HTML = r"""
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>NGUYỄN VĂN PHONG WEBSITE</title>
 
 <style>
-* { box-sizing: border-box; }
+
+* {
+    box-sizing: border-box;
+}
 
 body {
     margin: 0;
@@ -96,7 +119,11 @@ body {
     font-family: Arial, sans-serif;
     color: white;
     text-align: center;
-    background: radial-gradient(circle at top, #253d91, #080d22 70%);
+    background: radial-gradient(
+        circle at top,
+        #253d91,
+        #080d22 70%
+    );
 }
 
 header {
@@ -107,7 +134,9 @@ header {
     letter-spacing: 1px;
 }
 
-main { padding: 25px 15px; }
+main {
+    padding: 25px 15px;
+}
 
 .hero-logo {
     width: 130px;
@@ -117,7 +146,10 @@ main { padding: 25px 15px; }
     margin-top: 15px;
 }
 
-h1 { font-size: 27px; margin-top: 20px; }
+h1 {
+    font-size: 27px;
+    margin-top: 20px;
+}
 
 .subtitle {
     color: #cbd8ff;
@@ -125,6 +157,9 @@ h1 { font-size: 27px; margin-top: 20px; }
     margin: 15px auto 30px;
     max-width: 600px;
 }
+
+
+/* LOCATION CARD */
 
 .location-container {
     width: 100%;
@@ -150,7 +185,11 @@ h1 { font-size: 27px; margin-top: 20px; }
     gap: 18px;
     padding: 15px;
     border-radius: 18px;
-    background: linear-gradient(135deg, #1769e0, #7736c8);
+    background: linear-gradient(
+        135deg,
+        #1769e0,
+        #7736c8
+    );
     border: 1px solid rgba(255,255,255,0.25);
     box-shadow: 0 8px 25px rgba(0,0,0,0.3);
     transition: 0.25s;
@@ -161,7 +200,9 @@ h1 { font-size: 27px; margin-top: 20px; }
     box-shadow: 0 0 25px #488dff;
 }
 
-.location-emoji { font-size: 45px; }
+.location-emoji {
+    font-size: 45px;
+}
 
 .location-info h2 {
     font-size: 19px;
@@ -184,6 +225,9 @@ h1 { font-size: 27px; margin-top: 20px; }
     font-size: 13px;
 }
 
+
+/* MENU CARDS */
+
 .menu-container {
     width: 100%;
     max-width: 700px;
@@ -193,7 +237,11 @@ h1 { font-size: 27px; margin-top: 20px; }
 .menu-card {
     padding: 25px 15px;
     border-radius: 18px;
-    background: linear-gradient(135deg, #252b65, #532b91);
+    background: linear-gradient(
+        135deg,
+        #252b65,
+        #532b91
+    );
     border: 1px solid rgba(255,255,255,0.2);
     box-shadow: 0 8px 25px rgba(0,0,0,0.3);
 }
@@ -220,16 +268,29 @@ h1 { font-size: 27px; margin-top: 20px; }
 }
 
 .proxy-card {
-    background: linear-gradient(135deg, #075b70, #263c91);
+    background: linear-gradient(
+        135deg,
+        #075b70,
+        #263c91
+    );
 }
 
-.proxy-card .open-menu-button { color: #075b70; }
+.proxy-card .open-menu-button {
+    color: #075b70;
+}
 
 .mizze-card {
-    background: linear-gradient(135deg, #8b267c, #402b91);
+    background: linear-gradient(
+        135deg,
+        #8b267c,
+        #402b91
+    );
 }
 
-.mizze-card .open-menu-button { color: #742b9a; }
+.mizze-card .open-menu-button {
+    color: #742b9a;
+}
+
 
 /* PAGES */
 
@@ -244,7 +305,9 @@ h1 { font-size: 27px; margin-top: 20px; }
     box-shadow: 0 10px 35px rgba(0,0,0,0.3);
 }
 
-.link-icon { font-size: 65px; }
+.link-icon {
+    font-size: 65px;
+}
 
 .link-page h2 {
     font-size: 25px;
@@ -258,26 +321,8 @@ h1 { font-size: 27px; margin-top: 20px; }
     margin-bottom: 25px;
 }
 
-.cross-link-button {
-    display: inline-block;
-    padding: 15px 45px;
-    border: none;
-    border-radius: 30px;
-    background: linear-gradient(135deg, #1685ff, #7139df);
-    color: white;
-    font-size: 18px;
-    font-weight: bold;
-    text-decoration: none;
-    box-shadow: 0 5px 20px rgba(0,100,255,0.4);
-    cursor: pointer;
-}
 
-.cross-link-button:disabled {
-    opacity: 0.6;
-    cursor: wait;
-}
-
-/* API SELECTOR */
+/* PROVIDER SELECT */
 
 .provider-box {
     max-width: 360px;
@@ -312,6 +357,32 @@ h1 { font-size: 27px; margin-top: 20px; }
     line-height: 1.5;
 }
 
+
+/* CROSS BUTTON */
+
+.cross-link-button {
+    display: inline-block;
+    padding: 15px 45px;
+    border: none;
+    border-radius: 30px;
+    background: linear-gradient(
+        135deg,
+        #1685ff,
+        #7139df
+    );
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    text-decoration: none;
+    box-shadow: 0 5px 20px rgba(0,100,255,0.4);
+    cursor: pointer;
+}
+
+.cross-link-button:disabled {
+    opacity: 0.6;
+    cursor: wait;
+}
+
 .back-button {
     display: inline-block;
     margin-top: 25px;
@@ -327,6 +398,9 @@ h1 { font-size: 27px; margin-top: 20px; }
     line-height: 1.6;
 }
 
+
+/* RESULT */
+
 .result-success {
     border: 1px solid rgba(0,230,150,0.4);
     box-shadow: 0 0 25px rgba(0,220,150,0.12);
@@ -337,16 +411,30 @@ h1 { font-size: 27px; margin-top: 20px; }
     box-shadow: 0 0 25px rgba(255,50,70,0.12);
 }
 
-.result-success .link-icon { color: #00e69a; }
-.result-failed .link-icon { color: #ff5365; }
+.result-success .link-icon {
+    color: #00e69a;
+}
+
+.result-failed .link-icon {
+    color: #ff5365;
+}
 
 .result-success .cross-link-button {
-    background: linear-gradient(135deg, #00b879, #087dca);
+    background: linear-gradient(
+        135deg,
+        #00b879,
+        #087dca
+    );
 }
 
 .result-failed .cross-link-button {
-    background: linear-gradient(135deg, #ff5365, #c52c65);
+    background: linear-gradient(
+        135deg,
+        #ff5365,
+        #c52c65
+    );
 }
+
 
 /* MUSIC */
 
@@ -364,7 +452,11 @@ h1 { font-size: 27px; margin-top: 20px; }
     min-height: 55px;
     border-radius: 50%;
     border: 2px solid rgba(255,255,255,0.8);
-    background: linear-gradient(135deg, #1685ff, #7736d5);
+    background: linear-gradient(
+        135deg,
+        #1685ff,
+        #7736d5
+    );
     color: white;
     font-size: 25px;
     display: flex;
@@ -383,11 +475,17 @@ h1 { font-size: 27px; margin-top: 20px; }
 }
 
 .music-mini.playing {
-    background: linear-gradient(135deg, #00c98b, #087dca);
+    background: linear-gradient(
+        135deg,
+        #00c98b,
+        #087dca
+    );
     box-shadow: 0 0 22px rgba(0,220,160,0.7);
 }
 
-.music-mini .music-icon { pointer-events: none; }
+.music-mini .music-icon {
+    pointer-events: none;
+}
 
 footer {
     padding: 25px 10px;
@@ -396,17 +494,44 @@ footer {
 }
 
 @media(max-width: 500px) {
-    header { font-size: 18px; }
-    h1 { font-size: 22px; }
-    .location-emoji { font-size: 30px; }
-    .location-info h2 { font-size: 14px; }
-    .location-info p { font-size: 10px; }
-    .location-button { padding: 6px 15px; font-size: 11px; }
-    .link-page h2 { font-size: 21px; }
-    .menu-card h2 { font-size: 17px; }
+
+    header {
+        font-size: 18px;
+    }
+
+    h1 {
+        font-size: 22px;
+    }
+
+    .location-emoji {
+        font-size: 30px;
+    }
+
+    .location-info h2 {
+        font-size: 14px;
+    }
+
+    .location-info p {
+        font-size: 10px;
+    }
+
+    .location-button {
+        padding: 6px 15px;
+        font-size: 11px;
+    }
+
+    .link-page h2 {
+        font-size: 21px;
+    }
+
+    .menu-card h2 {
+        font-size: 17px;
+    }
 }
+
 </style>
 </head>
+
 
 <body>
 
@@ -414,9 +539,16 @@ footer {
 
 <main>
 
+
+<!-- HOME -->
+
 <div id="homePage">
 
-    <img class="hero-logo" src="/logo.png" alt="PHONG WEB">
+    <img
+        class="hero-logo"
+        src="/logo.png"
+        alt="PHONG WEB"
+    >
 
     <h1>WELCOME TO PHONG WEB</h1>
 
@@ -426,44 +558,96 @@ footer {
         📍 ĐỊNH VỊ XANH TÍM OB55
     </div>
 
+
+    <!-- LOCATION -->
+
     <section class="location-container">
+
         <a class="location-link" href="/dinh-vi">
+
             <div class="location-card">
+
                 <div class="location-emoji">📍</div>
+
                 <div class="location-info">
+
                     <h2>ĐỊNH VỊ XANH TÍM OB55</h2>
+
                     <p>Nhấn vào đây để tiếp tục</p>
-                    <span class="location-button">MỞ MỤC</span>
+
+                    <span class="location-button">
+                        MỞ MỤC
+                    </span>
+
                 </div>
+
             </div>
+
         </a>
+
     </section>
 
+
+    <!-- DETA -->
+
     <section class="menu-container">
+
         <div class="menu-card">
+
             <h2>🔐 DETA IPA CRACK NOKЕY</h2>
-            <button class="open-menu-button" id="openMenuButton" type="button">
+
+            <button
+                class="open-menu-button"
+                id="openMenuButton"
+                type="button"
+            >
                 MỞ MENU
             </button>
+
         </div>
+
     </section>
 
+
+    <!-- PROXY -->
+
     <section class="menu-container">
+
         <div class="menu-card proxy-card">
+
             <h2>🌐 PROXY MOD ALEN CRACK</h2>
-            <button class="open-menu-button" id="openProxyButton" type="button">
+
+            <button
+                class="open-menu-button"
+                id="openProxyButton"
+                type="button"
+            >
                 MỞ MỤC
             </button>
+
         </div>
+
     </section>
 
+
+    <!-- MIZZE -->
+
     <section class="menu-container">
+
         <div class="menu-card mizze-card">
+
             <h2>🎮 MENU MIZZE CRACK</h2>
-            <button class="open-menu-button" id="openMizzeButton" type="button">
+
+            <button
+                class="open-menu-button"
+                id="openMizzeButton"
+                type="button"
+            >
                 MỞ MỤC
             </button>
+
         </div>
+
     </section>
 
 </div>
@@ -472,132 +656,257 @@ footer {
 <!-- LOCATION PAGE -->
 
 <div id="locationPage" class="link-page">
+
     <div class="link-icon">📍</div>
+
     <h2>BẠN CẦN VƯỢT LINK ĐỂ LẤY FILE MEDIAFIRE</h2>
 
     <div class="link-description">
-        Chọn nhà cung cấp API và nhấn nút bên dưới để tạo link vượt.
+        Chọn nhà cung cấp và nhấn nút bên dưới.
         <br>
-        Sau khi hoàn thành, hệ thống sẽ kiểm tra trạng thái xác nhận.
+        Sau khi hoàn thành, hệ thống sẽ kiểm tra phiên vượt link.
     </div>
 
-    <div class="provider-box" id="locationProviderBox"></div>
+    <div class="provider-box">
 
-    <button class="cross-link-button" id="locationCrossButton" type="button">
+        <label for="locationProvider">
+            CHỌN NHÀ CUNG CẤP API
+        </label>
+
+        <select class="provider-select" id="locationProvider">
+            <option value="link4m">Link4M</option>
+            <option value="layma">Layma</option>
+        </select>
+
+        <div class="provider-note">
+            Chọn Link4M hoặc Layma để tạo link vượt.
+        </div>
+
+    </div>
+
+    <button
+        class="cross-link-button"
+        id="locationCrossButton"
+        type="button"
+    >
         🔓 VƯỢT LINK
     </button>
 
     <div class="status" id="locationStatus"></div>
 
     <br>
-    <a class="back-button" href="/">← QUAY LẠI TRANG CHỦ</a>
+
+    <a class="back-button" href="/">
+        ← QUAY LẠI TRANG CHỦ
+    </a>
+
 </div>
 
 
 <!-- DETA PAGE -->
 
 <div id="menuPage" class="link-page">
+
     <div class="link-icon">🔐</div>
+
     <h2>BẠN CẦN VƯỢT LINK ĐỂ LẤY FILE DETA</h2>
 
     <div class="link-description">
-        Chọn nhà cung cấp API và nhấn nút bên dưới để tạo link vượt.
+        Chọn nhà cung cấp và nhấn nút bên dưới.
         <br>
         Sau khi hoàn thành, bạn sẽ quay lại PHONG WEB.
         <br>
         Nhấn nút LẤY FILE để mở MediaFire.
     </div>
 
-    <div class="provider-box" id="detaProviderBox"></div>
+    <div class="provider-box">
 
-    <button class="cross-link-button" id="detaCrossButton" type="button">
+        <label for="detaProvider">
+            CHỌN NHÀ CUNG CẤP API
+        </label>
+
+        <select class="provider-select" id="detaProvider">
+            <option value="link4m">Link4M</option>
+            <option value="layma">Layma</option>
+        </select>
+
+        <div class="provider-note">
+            Chọn Link4M hoặc Layma để tạo link vượt.
+        </div>
+
+    </div>
+
+    <button
+        class="cross-link-button"
+        id="detaCrossButton"
+        type="button"
+    >
         🔓 VƯỢT LINK
     </button>
 
     <div class="status" id="detaStatus"></div>
 
     <br>
-    <a class="back-button" href="/">← QUAY LẠI TRANG CHỦ</a>
+
+    <a class="back-button" href="/">
+        ← QUAY LẠI TRANG CHỦ
+    </a>
+
 </div>
 
 
 <!-- PROXY PAGE -->
 
 <div id="proxyPage" class="link-page">
+
     <div class="link-icon">🌐</div>
+
     <h2>BẠN CẦN VƯỢT LINK ĐỂ LẤY FILE PROXY MOD ALEN CRACK</h2>
 
     <div class="link-description">
-        Chọn nhà cung cấp API và nhấn nút bên dưới để tạo link vượt.
+        Chọn nhà cung cấp và nhấn nút bên dưới.
         <br>
         Sau khi hoàn thành, bạn sẽ quay lại PHONG WEB.
         <br>
         Nhấn nút LẤY FILE để mở MediaFire.
     </div>
 
-    <div class="provider-box" id="proxyProviderBox"></div>
+    <div class="provider-box">
 
-    <button class="cross-link-button" id="proxyCrossButton" type="button">
+        <label for="proxyProvider">
+            CHỌN NHÀ CUNG CẤP API
+        </label>
+
+        <select class="provider-select" id="proxyProvider">
+            <option value="link4m">Link4M</option>
+            <option value="layma">Layma</option>
+        </select>
+
+        <div class="provider-note">
+            Chọn Link4M hoặc Layma để tạo link vượt.
+        </div>
+
+    </div>
+
+    <button
+        class="cross-link-button"
+        id="proxyCrossButton"
+        type="button"
+    >
         🔓 VƯỢT LINK
     </button>
 
     <div class="status" id="proxyStatus"></div>
 
     <br>
-    <a class="back-button" href="/">← QUAY LẠI TRANG CHỦ</a>
+
+    <a class="back-button" href="/">
+        ← QUAY LẠI TRANG CHỦ
+    </a>
+
 </div>
 
 
 <!-- MIZZE PAGE -->
 
 <div id="mizzePage" class="link-page">
+
     <div class="link-icon">🎮</div>
+
     <h2>BẠN CẦN VƯỢT LINK ĐỂ LẤY FILE MENU MIZZE CRACK</h2>
 
     <div class="link-description">
-        Chọn nhà cung cấp API và nhấn nút bên dưới để tạo link vượt.
+        Chọn nhà cung cấp và nhấn nút bên dưới.
         <br>
         Sau khi hoàn thành, bạn sẽ quay lại PHONG WEB.
         <br>
         Nhấn nút LẤY FILE để tải Menu Mizze Crack.
     </div>
 
-    <div class="provider-box" id="mizzeProviderBox"></div>
+    <div class="provider-box">
 
-    <button class="cross-link-button" id="mizzeCrossButton" type="button">
+        <label for="mizzeProvider">
+            CHỌN NHÀ CUNG CẤP API
+        </label>
+
+        <select class="provider-select" id="mizzeProvider">
+            <option value="link4m">Link4M</option>
+            <option value="layma">Layma</option>
+        </select>
+
+        <div class="provider-note">
+            Chọn Link4M hoặc Layma để tạo link vượt.
+        </div>
+
+    </div>
+
+    <button
+        class="cross-link-button"
+        id="mizzeCrossButton"
+        type="button"
+    >
         🔓 VƯỢT LINK
     </button>
 
     <div class="status" id="mizzeStatus"></div>
 
     <br>
-    <a class="back-button" href="/">← QUAY LẠI TRANG CHỦ</a>
+
+    <a class="back-button" href="/">
+        ← QUAY LẠI TRANG CHỦ
+    </a>
+
 </div>
 
 
 <!-- RESULT PAGE -->
 
 <div id="resultPage" class="link-page">
-    <div class="link-icon" id="resultIcon">✅</div>
-    <h2 id="resultTitle">Vượt Link</h2>
-    <div class="link-description" id="resultDescription"></div>
 
-    <a class="cross-link-button" id="resultAction" href="/">
+    <div class="link-icon" id="resultIcon">✅</div>
+
+    <h2 id="resultTitle">Vượt Link</h2>
+
+    <div
+        class="link-description"
+        id="resultDescription"
+    ></div>
+
+    <a
+        class="cross-link-button"
+        id="resultAction"
+        href="/"
+    >
         LẤY FILE
     </a>
 
     <div class="status" id="resultStatus"></div>
 
     <br>
-    <a class="back-button" id="resultBack" href="/">← QUAY LẠI</a>
+
+    <a
+        class="back-button"
+        id="resultBack"
+        href="/"
+    >
+        ← QUAY LẠI
+    </a>
+
 </div>
+
 
 </main>
 
 
-<button class="music-mini" id="musicButton"
+<!-- MUSIC -->
+
+<button
+    class="music-mini"
+    id="musicButton"
     aria-label="Bật hoặc tắt nhạc"
-    title="Bật / Tắt nhạc" type="button">
+    title="Bật / Tắt nhạc"
+    type="button"
+>
     <span class="music-icon" id="musicIcon">▶</span>
 </button>
 
@@ -605,10 +914,11 @@ footer {
     <source src="/music.mp3" type="audio/mpeg">
 </audio>
 
+
 <footer>
     © 2026 Nguyễn Văn Phong Website
     <br><br>
-    PHONG WEB V32
+    PHONG WEB V33
 </footer>
 
 
@@ -632,6 +942,7 @@ const resultStatus = document.getElementById("resultStatus");
 const resultIcon = document.getElementById("resultIcon");
 const resultBack = document.getElementById("resultBack");
 
+
 const PAGE_PATHS = {
     location: "/dinh-vi",
     deta: "/menu",
@@ -639,12 +950,6 @@ const PAGE_PATHS = {
     mizze: "/mizze-crack"
 };
 
-const DESTINATION_NAMES = {
-    location: "Định Vị",
-    deta: "Deta",
-    proxy: "Proxy Mod Alen Crack",
-    mizze: "Menu Mizze Crack"
-};
 
 const DOWNLOAD_PATHS = {
     location: "/download-location",
@@ -653,11 +958,22 @@ const DOWNLOAD_PATHS = {
     mizze: "/download-mizze"
 };
 
+
+const DESTINATION_NAMES = {
+    location: "Định Vị",
+    deta: "Deta",
+    proxy: "Proxy Mod Alen Crack",
+    mizze: "Menu Mizze Crack"
+};
+
+
 function destinationPage(destination) {
     return PAGE_PATHS[destination] || "/";
 }
 
+
 function hideAllPages() {
+
     homePage.style.display = "none";
     locationPage.style.display = "none";
     menuPage.style.display = "none";
@@ -668,66 +984,21 @@ function hideAllPages() {
 
 
 // ==========================================
-// PROVIDER SELECTORS
-// ==========================================
-
-const PROVIDERS = ["link4m", "layma"];
-
-const PROVIDER_LABELS = {
-    link4m: "Link4M",
-    layma: "Layma.net"
-};
-
-function createProviderSelectors() {
-
-    for (const destination of Object.keys(PAGE_PATHS)) {
-
-        const container = document.getElementById(
-            destination + "ProviderBox"
-        );
-
-        if (!container) continue;
-
-        const label = document.createElement("label");
-        label.textContent = "CHỌN NHÀ CUNG CẤP VƯỢT LINK";
-
-        const select = document.createElement("select");
-        select.className = "provider-select";
-        select.id = destination + "Provider";
-
-        for (const provider of PROVIDERS) {
-
-            const option = document.createElement("option");
-            option.value = provider;
-            option.textContent = PROVIDER_LABELS[provider];
-
-            select.appendChild(option);
-        }
-
-        const note = document.createElement("div");
-        note.className = "provider-note";
-        note.textContent =
-            "Bạn có thể chọn Link4M hoặc Layma.net trước khi vượt link.";
-
-        container.appendChild(label);
-        container.appendChild(select);
-        container.appendChild(note);
-    }
-}
-
-createProviderSelectors();
-
-
-// ==========================================
 // RESULT PAGE
 // ==========================================
 
 async function showResultPage() {
 
-    const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(
+        window.location.search
+    );
+
     const state = params.get("result");
 
-    if (state !== "success" && state !== "failed") {
+    if (
+        state !== "success" &&
+        state !== "failed"
+    ) {
         return false;
     }
 
@@ -739,18 +1010,27 @@ async function showResultPage() {
     }
 
     hideAllPages();
+
     resultPage.style.display = "block";
 
     resultBack.href = destinationPage(destination);
 
-    resultPage.classList.remove("result-success", "result-failed");
+    resultPage.classList.remove(
+        "result-success",
+        "result-failed"
+    );
+
+
+    // LOCATION
 
     if (destination === "location") {
 
         let sessionReturned = false;
 
         if (token) {
+
             try {
+
                 const response = await fetch(
                     "/check-session?token=" +
                     encodeURIComponent(token),
@@ -766,43 +1046,63 @@ async function showResultPage() {
                     data.returned === true;
 
             } catch (error) {
+
                 sessionReturned = false;
             }
         }
 
         resultPage.classList.add("result-failed");
-        resultIcon.textContent = "❌";
-        resultTitle.textContent = "Vượt Link Không Thành Công!";
 
-        resultDescription.textContent = sessionReturned
-            ? "Bạn đã quay lại website, nhưng hiện chưa có API xác nhận View tăng. Vui lòng thử lại."
+        resultIcon.textContent = "❌";
+
+        resultTitle.textContent =
+            "Vượt Link Chưa Xác Nhận View!";
+
+        resultDescription.textContent =
+            sessionReturned
+            ? "Bạn đã quay lại website, nhưng hệ thống chưa có API xác nhận View tăng. Vui lòng thử lại."
             : "Không xác nhận được phiên vượt link. Vui lòng thử lại.";
 
         resultAction.href = "/dinh-vi";
+
         resultAction.textContent = "↻ VƯỢT LẠI LINK";
+
         resultBack.href = "/";
+
         resultStatus.textContent = "";
 
         return true;
     }
 
+
+    // FAILED
+
     if (state === "failed") {
 
         resultPage.classList.add("result-failed");
+
         resultIcon.textContent = "❌";
-        resultTitle.textContent = "Vượt Link Chưa Thành Công";
+
+        resultTitle.textContent =
+            "Vượt Link Chưa Thành Công";
 
         resultDescription.textContent =
             "Không xác nhận được phiên vượt link. Vui lòng thử lại.";
 
         resultAction.href = destinationPage(destination);
+
         resultAction.textContent = "↻ VƯỢT LẠI LINK";
+
         resultStatus.textContent = "";
 
         return true;
     }
 
-    resultStatus.textContent = "Đang xác nhận phiên vượt link...";
+
+    // SUCCESS
+
+    resultStatus.textContent =
+        "Đang xác nhận phiên vượt link...";
 
     try {
 
@@ -828,34 +1128,46 @@ async function showResultPage() {
         }
 
         resultPage.classList.add("result-success");
+
         resultIcon.textContent = "✅";
-        resultTitle.textContent = "Vượt Link Thành Công!";
+
+        resultTitle.textContent =
+            "Vượt Link Thành Công!";
 
         resultDescription.textContent =
             "Bạn đã hoàn thành bước vượt link " +
             DESTINATION_NAMES[destination] +
             ". Nhấn nút bên dưới để lấy file.";
 
-        resultAction.textContent = "⬇ LẤY FILE " +
+        resultAction.textContent =
+            "⬇ LẤY FILE " +
             DESTINATION_NAMES[destination].toUpperCase();
 
         resultAction.href =
             DOWNLOAD_PATHS[destination] +
-            "?token=" + encodeURIComponent(token);
+            "?token=" +
+            encodeURIComponent(token);
 
         resultStatus.textContent = "";
 
     } catch (error) {
 
         resultPage.classList.add("result-failed");
+
         resultIcon.textContent = "❌";
-        resultTitle.textContent = "Xác Nhận Thất Bại";
+
+        resultTitle.textContent =
+            "Xác Nhận Thất Bại";
 
         resultDescription.textContent =
             "Phiên vượt link không hợp lệ hoặc đã hết hạn. Vui lòng thử lại.";
 
-        resultAction.href = destinationPage(destination);
-        resultAction.textContent = "↻ VƯỢT LẠI LINK";
+        resultAction.href =
+            destinationPage(destination);
+
+        resultAction.textContent =
+            "↻ VƯỢT LẠI LINK";
+
         resultStatus.textContent = "";
     }
 
@@ -874,15 +1186,19 @@ async function showPage() {
     hideAllPages();
 
     if (path === "/dinh-vi") {
+
         locationPage.style.display = "block";
 
     } else if (path === "/menu") {
+
         menuPage.style.display = "block";
 
     } else if (path === "/proxy-mod-alen-crack") {
+
         proxyPage.style.display = "block";
 
     } else if (path === "/mizze-crack") {
+
         mizzePage.style.display = "block";
 
     } else if (path === "/") {
@@ -894,38 +1210,51 @@ async function showPage() {
         }
 
     } else {
+
         homePage.style.display = "block";
     }
 }
 
+
 function navigate(path) {
+
     history.pushState({}, "", path);
+
     showPage();
+
     window.scrollTo(0, 0);
 }
 
+
 window.addEventListener("popstate", showPage);
 
+
 document.querySelector(".location-link")
-.addEventListener("click", function(e) {
-    e.preventDefault();
+.addEventListener("click", function(event) {
+
+    event.preventDefault();
+
     navigate("/dinh-vi");
 });
+
 
 document.getElementById("openMenuButton")
 .addEventListener("click", function() {
     navigate("/menu");
 });
 
+
 document.getElementById("openProxyButton")
 .addEventListener("click", function() {
     navigate("/proxy-mod-alen-crack");
 });
 
+
 document.getElementById("openMizzeButton")
 .addEventListener("click", function() {
     navigate("/mizze-crack");
 });
+
 
 showPage();
 
@@ -935,22 +1264,19 @@ showPage();
 // LINK4M + LAYMA
 // ==========================================
 
-async function createShortLink(destination, button, status) {
+async function createShortLink(
+    destination,
+    provider,
+    button,
+    status
+) {
 
     button.disabled = true;
 
-    const providerSelect = document.getElementById(
-        destination + "Provider"
-    );
-
-    const provider = providerSelect
-        ? providerSelect.value
-        : "link4m";
-
-    const providerName = PROVIDER_LABELS[provider] || provider;
-
     status.textContent =
-        "Đang sử dụng API " + providerName + " để tạo link...";
+        "Đang kết nối API " +
+        provider.toUpperCase() +
+        "...";
 
     try {
 
@@ -960,7 +1286,8 @@ async function createShortLink(destination, button, status) {
         });
 
         const response = await fetch(
-            "/create-short-link?" + params.toString(),
+            "/create-short-link?" +
+            params.toString(),
             {
                 method: "GET",
                 cache: "no-store"
@@ -970,92 +1297,105 @@ async function createShortLink(destination, button, status) {
         const data = await response.json();
 
         if (!response.ok || !data.success) {
-            throw new Error(data.message || "Không thể tạo link.");
+
+            throw new Error(
+                data.message || "Không thể tạo link."
+            );
         }
 
         if (!data.url) {
-            throw new Error("API không trả về đường dẫn hợp lệ.");
+
+            throw new Error(
+                "API không trả về đường dẫn hợp lệ."
+            );
         }
 
         status.textContent =
-            "Đang chuyển đến " + providerName + "...";
+            "Đang chuyển đến " +
+            provider.toUpperCase() +
+            "...";
 
         window.location.href = data.url;
 
     } catch (error) {
 
-        status.textContent = "Lỗi: " + error.message;
+        status.textContent =
+            "Lỗi: " + error.message;
+
         button.disabled = false;
     }
 }
 
 
-// LOCATION BUTTON
+// ==========================================
+// BUTTON HELPER
+// ==========================================
 
-const locationCrossButton =
-    document.getElementById("locationCrossButton");
+function setupCrossButton(
+    destination,
+    buttonId,
+    providerId,
+    statusId
+) {
 
-const locationStatus =
-    document.getElementById("locationStatus");
+    const button = document.getElementById(buttonId);
 
-locationCrossButton.addEventListener("click", function() {
-    createShortLink(
-        "location",
-        locationCrossButton,
-        locationStatus
-    );
-});
+    const provider = document.getElementById(providerId);
 
+    const status = document.getElementById(statusId);
 
-// DETA BUTTON
+    button.addEventListener("click", function() {
 
-const detaCrossButton =
-    document.getElementById("detaCrossButton");
+        const selectedProvider = provider.value;
 
-const detaStatus =
-    document.getElementById("detaStatus");
-
-detaCrossButton.addEventListener("click", function() {
-    createShortLink(
-        "deta",
-        detaCrossButton,
-        detaStatus
-    );
-});
+        createShortLink(
+            destination,
+            selectedProvider,
+            button,
+            status
+        );
+    });
+}
 
 
-// PROXY BUTTON
+// LOCATION
 
-const proxyCrossButton =
-    document.getElementById("proxyCrossButton");
-
-const proxyStatus =
-    document.getElementById("proxyStatus");
-
-proxyCrossButton.addEventListener("click", function() {
-    createShortLink(
-        "proxy",
-        proxyCrossButton,
-        proxyStatus
-    );
-});
+setupCrossButton(
+    "location",
+    "locationCrossButton",
+    "locationProvider",
+    "locationStatus"
+);
 
 
-// MIZZE BUTTON
+// DETA
 
-const mizzeCrossButton =
-    document.getElementById("mizzeCrossButton");
+setupCrossButton(
+    "deta",
+    "detaCrossButton",
+    "detaProvider",
+    "detaStatus"
+);
 
-const mizzeStatus =
-    document.getElementById("mizzeStatus");
 
-mizzeCrossButton.addEventListener("click", function() {
-    createShortLink(
-        "mizze",
-        mizzeCrossButton,
-        mizzeStatus
-    );
-});
+// PROXY
+
+setupCrossButton(
+    "proxy",
+    "proxyCrossButton",
+    "proxyProvider",
+    "proxyStatus"
+);
+
+
+// MIZZE
+
+setupCrossButton(
+    "mizze",
+    "mizzeCrossButton",
+    "mizzeProvider",
+    "mizzeStatus"
+);
 
 
 // ==========================================
@@ -1063,61 +1403,88 @@ mizzeCrossButton.addEventListener("click", function() {
 // ==========================================
 
 const audio = document.getElementById("audio");
-const musicButton = document.getElementById("musicButton");
-const musicIcon = document.getElementById("musicIcon");
+
+const musicButton =
+    document.getElementById("musicButton");
+
+const musicIcon =
+    document.getElementById("musicIcon");
 
 let isPlaying = false;
+
 
 function updateMusicButton() {
 
     if (isPlaying) {
+
         musicButton.classList.add("playing");
+
         musicIcon.textContent = "♫";
+
     } else {
+
         musicButton.classList.remove("playing");
+
         musicIcon.textContent = "▶";
     }
 }
+
 
 musicButton.addEventListener("click", async function() {
 
     if (!isPlaying) {
 
         try {
+
             audio.loop = true;
+
             await audio.play();
+
             isPlaying = true;
 
         } catch(error) {
+
             audio.loop = false;
+
             isPlaying = false;
+
             console.log("Music error:", error);
         }
 
     } else {
 
         audio.pause();
+
         audio.currentTime = 0;
+
         audio.loop = false;
+
         isPlaying = false;
     }
 
     updateMusicButton();
 });
 
+
 audio.addEventListener("pause", function() {
 
     if (isPlaying) {
+
         isPlaying = false;
+
         audio.loop = false;
+
         updateMusicButton();
     }
 });
 
+
 audio.addEventListener("error", function() {
 
     isPlaying = false;
+
     audio.loop = false;
+
     updateMusicButton();
 
     console.log("Không tìm thấy music.mp3");
@@ -1148,6 +1515,7 @@ def validate_shortened_url(value):
         return None
 
     try:
+
         parsed = urlsplit(value)
 
         if parsed.scheme not in ("https", "http"):
@@ -1167,6 +1535,7 @@ def validate_shortened_url(value):
         return value
 
     except ValueError:
+
         return None
 
 
@@ -1205,7 +1574,9 @@ def get_session(token):
             return None
 
         if now - session["created"] > SESSION_TTL:
+
             SESSIONS.pop(token, None)
+
             return None
 
         return dict(session)
@@ -1221,7 +1592,10 @@ def check_session(token, destination=None):
     if not session.get("returned"):
         return False
 
-    if destination and session.get("destination") != destination:
+    if (
+        destination
+        and session.get("destination") != destination
+    ):
         return False
 
     return True
@@ -1231,31 +1605,125 @@ def check_session(token, destination=None):
 # API REQUEST HELPERS
 # ==========================================
 
-def read_api_json(url, user_agent):
+def api_request(url, provider):
+
+    headers = {
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/131.0.0.0 Safari/537.36"
+        ),
+        "Accept": "application/json, text/plain, */*",
+        "Cache-Control": "no-cache"
+    }
+
+    if provider == "layma":
+
+        headers["Referer"] = "https://layma.net/"
 
     request = urllib.request.Request(
         url,
-        headers={
-            "User-Agent": user_agent,
-            "Accept": "application/json"
-        },
+        headers=headers,
         method="GET"
     )
 
-    with urllib.request.urlopen(request, timeout=25) as response:
-        body = response.read().decode(
+    try:
+
+        with urllib.request.urlopen(
+            request,
+            timeout=30
+        ) as response:
+
+            body = response.read().decode(
+                "utf-8",
+                errors="replace"
+            )
+
+            return body
+
+    except urllib.error.HTTPError as error:
+
+        error_body = error.read().decode(
             "utf-8",
             errors="replace"
         )
 
+        if provider == "layma":
+
+            cf_ray = error.headers.get("CF-Ray", "")
+
+            server = error.headers.get("Server", "")
+
+            print(
+                "[LAYMA HTTP ERROR]",
+                error.code,
+                "SERVER:",
+                server,
+                "CF-RAY:",
+                cf_ray,
+                "BODY:",
+                error_body[:500]
+            )
+
+            if error.code == 403:
+
+                raise ValueError(
+                    "LAYMA HTTP 403: Máy chủ Layma/Cloudflare "
+                    "đang từ chối kết nối từ Render. "
+                    "API chưa trả về JSON. "
+                    "Cần Layma kiểm tra quyền truy cập hoặc IP Render."
+                )
+
+        print(
+            "[" + provider.upper() + " HTTP ERROR]",
+            error.code,
+            error_body[:400]
+        )
+
+        raise ValueError(
+            provider.upper()
+            + " HTTP "
+            + str(error.code)
+            + ": "
+            + error_body[:250]
+        )
+
+    except urllib.error.URLError as error:
+
+        raise ValueError(
+            "Không thể kết nối "
+            + provider.upper()
+            + ": "
+            + str(error.reason)
+        )
+
+
+def read_api_json(url, provider):
+
+    body = api_request(url, provider)
+
     try:
+
         result = json.loads(body)
 
     except json.JSONDecodeError:
-        raise ValueError("API không trả về JSON hợp lệ.")
+
+        print(
+            "[" + provider.upper() + " INVALID JSON]",
+            body[:500]
+        )
+
+        raise ValueError(
+            provider.upper()
+            + " không trả về JSON hợp lệ."
+        )
 
     if not isinstance(result, dict):
-        raise ValueError("Dữ liệu API không đúng định dạng.")
+
+        raise ValueError(
+            provider.upper()
+            + " trả về dữ liệu không đúng định dạng."
+        )
 
     return result
 
@@ -1267,6 +1735,7 @@ def read_api_json(url, user_agent):
 def create_link4m_url(callback_url):
 
     if not LINK4M_API_TOKEN:
+
         raise ValueError(
             "Chưa cấu hình LINK4M_API_TOKEN trên Render."
         )
@@ -1276,17 +1745,22 @@ def create_link4m_url(callback_url):
         "url": callback_url
     })
 
-    api_url = LINK4M_ENDPOINT + "?" + params
+    api_url = (
+        LINK4M_ENDPOINT
+        + "?"
+        + params
+    )
 
     result = read_api_json(
         api_url,
-        "Mozilla/5.0 PHONG-WEB/32"
+        "link4m"
     )
 
     if result.get("status") != "success":
 
         raise ValueError(
-            "Link4M: " + str(
+            "Link4M: "
+            + str(
                 result.get(
                     "message",
                     "Không xác nhận tạo link thành công."
@@ -1300,9 +1774,12 @@ def create_link4m_url(callback_url):
         or result.get("short_url")
     )
 
-    valid_url = validate_shortened_url(shortened_url)
+    valid_url = validate_shortened_url(
+        shortened_url
+    )
 
     if not valid_url:
+
         raise ValueError(
             "Link4M không trả về URL HTTP/HTTPS hợp lệ."
         )
@@ -1317,6 +1794,7 @@ def create_link4m_url(callback_url):
 def create_layma_url(callback_url):
 
     if not LAYMA_API_TOKEN:
+
         raise ValueError(
             "Chưa cấu hình LAYMA_API_TOKEN trên Render."
         )
@@ -1327,25 +1805,32 @@ def create_layma_url(callback_url):
         "url": callback_url
     })
 
-    api_url = LAYMA_ENDPOINT + "?" + params
+    api_url = (
+        LAYMA_ENDPOINT
+        + "?"
+        + params
+    )
 
     result = read_api_json(
         api_url,
-        "Mozilla/5.0 PHONG-WEB/32"
+        "layma"
     )
 
     if result.get("success") is not True:
 
         raise ValueError(
             "Layma không tạo được link. "
-            "Vui lòng kiểm tra API Token hoặc thử lại."
+            "Kiểm tra API Token và URL."
         )
 
     shortened_url = result.get("html")
 
-    valid_url = validate_shortened_url(shortened_url)
+    valid_url = validate_shortened_url(
+        shortened_url
+    )
 
     if not valid_url:
+
         raise ValueError(
             "Layma trả về URL không hợp lệ hoặc bị trống."
         )
@@ -1354,18 +1839,22 @@ def create_layma_url(callback_url):
 
 
 # ==========================================
-# API PROVIDER DISPATCHER
+# PROVIDER DISPATCH
 # ==========================================
 
 def create_provider_url(provider, callback_url):
 
     if provider == "link4m":
+
         return create_link4m_url(callback_url)
 
     if provider == "layma":
+
         return create_layma_url(callback_url)
 
-    raise ValueError("Nhà cung cấp API không hợp lệ.")
+    raise ValueError(
+        "Nhà cung cấp API không hợp lệ."
+    )
 
 
 # ==========================================
@@ -1382,18 +1871,33 @@ class Website(BaseHTTPRequestHandler):
         ).encode("utf-8")
 
         self.send_response(status)
+
         self.send_header(
             "Content-Type",
             "application/json; charset=utf-8"
         )
-        self.send_header("Content-Length", str(len(content)))
-        self.send_header("Cache-Control", "no-store")
+
+        self.send_header(
+            "Content-Length",
+            str(len(content))
+        )
+
+        self.send_header(
+            "Cache-Control",
+            "no-store"
+        )
+
         self.end_headers()
 
         try:
+
             self.wfile.write(content)
 
-        except (BrokenPipeError, ConnectionResetError):
+        except (
+            BrokenPipeError,
+            ConnectionResetError
+        ):
+
             pass
 
 
@@ -1402,26 +1906,50 @@ class Website(BaseHTTPRequestHandler):
         content = HTML.encode("utf-8")
 
         self.send_response(status)
+
         self.send_header(
             "Content-Type",
             "text/html; charset=utf-8"
         )
-        self.send_header("Content-Length", str(len(content)))
-        self.send_header("Cache-Control", "no-cache")
+
+        self.send_header(
+            "Content-Length",
+            str(len(content))
+        )
+
+        self.send_header(
+            "Cache-Control",
+            "no-cache"
+        )
+
         self.end_headers()
 
         try:
+
             self.wfile.write(content)
 
-        except (BrokenPipeError, ConnectionResetError):
+        except (
+            BrokenPipeError,
+            ConnectionResetError
+        ):
+
             pass
 
 
     def redirect(self, location):
 
         self.send_response(302)
-        self.send_header("Location", location)
-        self.send_header("Cache-Control", "no-store")
+
+        self.send_header(
+            "Location",
+            location
+        )
+
+        self.send_header(
+            "Cache-Control",
+            "no-store"
+        )
+
         self.end_headers()
 
 
@@ -1432,8 +1960,13 @@ class Website(BaseHTTPRequestHandler):
     def do_GET(self):
 
         parsed_request = urlsplit(self.path)
+
         path = unquote(parsed_request.path)
-        query = parse_qs(parsed_request.query)
+
+        query = parse_qs(
+            parsed_request.query
+        )
+
 
         # HOME AND PAGES
 
@@ -1445,7 +1978,9 @@ class Website(BaseHTTPRequestHandler):
             "/proxy-mod-alen-crack",
             "/mizze-crack"
         ):
+
             self.send_html_page()
+
             return
 
 
@@ -1466,50 +2001,74 @@ class Website(BaseHTTPRequestHandler):
                 [""]
             )[0].lower()
 
-            if provider not in ("link4m", "layma"):
 
-                self.send_json(400, {
-                    "success": False,
-                    "message": "Nhà cung cấp API không hợp lệ."
-                })
+            if provider not in (
+                "link4m",
+                "layma"
+            ):
+
+                self.send_json(
+                    400,
+                    {
+                        "success": False,
+                        "message": "Nhà cung cấp API không hợp lệ."
+                    }
+                )
 
                 return
+
 
             if destination not in DESTINATIONS:
 
-                self.send_json(400, {
-                    "success": False,
-                    "message": "Mục đích vượt link không hợp lệ."
-                })
+                self.send_json(
+                    400,
+                    {
+                        "success": False,
+                        "message": "Mục đích vượt link không hợp lệ."
+                    }
+                )
 
                 return
+
 
             if not SITE_URL.startswith("https://"):
 
-                self.send_json(500, {
-                    "success": False,
-                    "message": "SITE_URL phải là địa chỉ HTTPS."
-                })
+                self.send_json(
+                    500,
+                    {
+                        "success": False,
+                        "message": "SITE_URL phải là địa chỉ HTTPS."
+                    }
+                )
 
                 return
+
 
             if provider == "link4m" and not LINK4M_API_TOKEN:
 
-                self.send_json(500, {
-                    "success": False,
-                    "message": "Chưa cấu hình LINK4M_API_TOKEN trên Render."
-                })
+                self.send_json(
+                    500,
+                    {
+                        "success": False,
+                        "message": "Chưa cấu hình LINK4M_API_TOKEN trên Render."
+                    }
+                )
 
                 return
+
 
             if provider == "layma" and not LAYMA_API_TOKEN:
 
-                self.send_json(500, {
-                    "success": False,
-                    "message": "Chưa cấu hình LAYMA_API_TOKEN trên Render."
-                })
+                self.send_json(
+                    500,
+                    {
+                        "success": False,
+                        "message": "Chưa cấu hình LAYMA_API_TOKEN trên Render."
+                    }
+                )
 
                 return
+
 
             token = secrets.token_urlsafe(32)
 
@@ -1519,12 +2078,14 @@ class Website(BaseHTTPRequestHandler):
                 + quote(token, safe="")
             )
 
+
             try:
 
                 shortened_url = create_provider_url(
                     provider,
                     callback_url
                 )
+
 
                 cleanup_sessions()
 
@@ -1538,112 +2099,96 @@ class Website(BaseHTTPRequestHandler):
                         "view_confirmed": False
                     }
 
-                self.send_json(200, {
-                    "success": True,
-                    "url": shortened_url,
-                    "provider": provider,
-                    "destination": destination
-                })
+
+                self.send_json(
+                    200,
+                    {
+                        "success": True,
+                        "url": shortened_url,
+                        "provider": provider,
+                        "destination": destination
+                    }
+                )
+
 
                 print(
-                    "[PHONG WEB V32] Created:",
+                    "[PHONG WEB V33] CREATED:",
                     provider,
                     destination
                 )
 
-            except urllib.error.HTTPError as error:
-
-                error_body = error.read().decode(
-                    "utf-8",
-                    errors="replace"
-                )
-
-                print(
-                    "[PHONG WEB V32] API HTTP error:",
-                    provider,
-                    error.code,
-                    error_body[:400]
-                )
-
-                try:
-
-                    error_data = json.loads(error_body)
-
-                    message = (
-                        error_data.get("message", error_body[:250])
-                        if isinstance(error_data, dict)
-                        else error_body[:250]
-                    )
-
-                except json.JSONDecodeError:
-                    message = error_body[:250]
-
-                self.send_json(502, {
-                    "success": False,
-                    "message": (
-                        provider.upper()
-                        + " HTTP "
-                        + str(error.code)
-                        + ": "
-                        + str(message)[:250]
-                    )
-                })
 
             except urllib.error.URLError as error:
 
                 print(
-                    "[PHONG WEB V32] Connection error:",
+                    "[PHONG WEB V33] CONNECTION ERROR:",
                     provider,
                     str(error.reason)
                 )
 
-                self.send_json(502, {
-                    "success": False,
-                    "message": (
-                        "Không thể kết nối máy chủ "
-                        + provider.upper()
-                        + "."
-                    )
-                })
-
-            except (TimeoutError, OSError) as error:
-
-                print(
-                    "[PHONG WEB V32] Network error:",
-                    provider,
-                    str(error)[:250]
+                self.send_json(
+                    502,
+                    {
+                        "success": False,
+                        "message": (
+                            "Không thể kết nối API "
+                            + provider.upper()
+                            + "."
+                        )
+                    }
                 )
 
-                self.send_json(504, {
-                    "success": False,
-                    "message": (
-                        provider.upper()
-                        + " phản hồi quá lâu hoặc mất kết nối."
-                    )
-                })
+
+            except TimeoutError:
+
+                self.send_json(
+                    504,
+                    {
+                        "success": False,
+                        "message": (
+                            provider.upper()
+                            + " phản hồi quá lâu. Vui lòng thử lại."
+                        )
+                    }
+                )
+
 
             except ValueError as error:
 
-                self.send_json(502, {
-                    "success": False,
-                    "message": str(error)
-                })
+                print(
+                    "[PHONG WEB V33] API ERROR:",
+                    provider,
+                    str(error)
+                )
+
+                self.send_json(
+                    502,
+                    {
+                        "success": False,
+                        "message": str(error)
+                    }
+                )
+
 
             except Exception as error:
 
                 print(
-                    "[PHONG WEB V32] Create link error:",
+                    "[PHONG WEB V33] CREATE ERROR:",
+                    provider,
                     type(error).__name__,
                     str(error)[:300]
                 )
 
-                self.send_json(500, {
-                    "success": False,
-                    "message": (
-                        "Lỗi xử lý API: "
-                        + type(error).__name__
-                    )
-                })
+                self.send_json(
+                    500,
+                    {
+                        "success": False,
+                        "message": (
+                            "Lỗi xử lý API: "
+                            + type(error).__name__
+                        )
+                    }
+                )
 
             return
 
@@ -1654,7 +2199,10 @@ class Website(BaseHTTPRequestHandler):
 
         if path == "/provider-return":
 
-            token = query.get("token", [""])[0]
+            token = query.get(
+                "token",
+                [""]
+            )[0]
 
             cleanup_sessions()
 
@@ -1662,19 +2210,31 @@ class Website(BaseHTTPRequestHandler):
             provider = None
             valid = False
 
+
             with SESSIONS_LOCK:
 
                 session = SESSIONS.get(token)
 
                 if session:
+
                     session["returned"] = True
-                    destination = session.get("destination")
-                    provider = session.get("provider")
+
+                    destination = session.get(
+                        "destination"
+                    )
+
+                    provider = session.get(
+                        "provider"
+                    )
+
                     valid = True
+
 
             if not valid:
 
-                print("[PHONG WEB V32] Invalid callback")
+                print(
+                    "[PHONG WEB V33] INVALID CALLBACK"
+                )
 
                 self.redirect(
                     "/?result=failed&destination=deta"
@@ -1682,13 +2242,16 @@ class Website(BaseHTTPRequestHandler):
 
                 return
 
+
             print(
-                "[PHONG WEB V32] Callback received:",
+                "[PHONG WEB V33] CALLBACK:",
                 provider,
                 destination
             )
 
-            # LOCATION: Chưa có API xác nhận View tăng.
+
+            # LOCATION: CHƯA CÓ API XÁC NHẬN VIEW
+
             if destination == "location":
 
                 self.redirect(
@@ -1699,6 +2262,7 @@ class Website(BaseHTTPRequestHandler):
                 )
 
                 return
+
 
             # DETA / PROXY / MIZZE
 
@@ -1719,30 +2283,48 @@ class Website(BaseHTTPRequestHandler):
 
         if path == "/check-session":
 
-            token = query.get("token", [""])[0]
+            token = query.get(
+                "token",
+                [""]
+            )[0]
+
             session = get_session(token)
+
 
             if session and session.get("returned"):
 
-                self.send_json(200, {
-                    "success": True,
-                    "returned": True,
-                    "view_confirmed": bool(
-                        session.get("view_confirmed", False)
-                    ),
-                    "destination": session.get("destination"),
-                    "provider": session.get("provider"),
-                    "message": "Đã nhận callback từ nhà cung cấp."
-                })
+                self.send_json(
+                    200,
+                    {
+                        "success": True,
+                        "returned": True,
+                        "view_confirmed": bool(
+                            session.get(
+                                "view_confirmed",
+                                False
+                            )
+                        ),
+                        "destination": session.get(
+                            "destination"
+                        ),
+                        "provider": session.get(
+                            "provider"
+                        ),
+                        "message": "Đã nhận callback từ nhà cung cấp."
+                    }
+                )
 
             else:
 
-                self.send_json(403, {
-                    "success": False,
-                    "returned": False,
-                    "view_confirmed": False,
-                    "message": "Phiên vượt link không hợp lệ hoặc đã hết hạn."
-                })
+                self.send_json(
+                    403,
+                    {
+                        "success": False,
+                        "returned": False,
+                        "view_confirmed": False,
+                        "message": "Phiên vượt link không hợp lệ hoặc đã hết hạn."
+                    }
+                )
 
             return
 
@@ -1758,12 +2340,19 @@ class Website(BaseHTTPRequestHandler):
             "/download-mizze": "mizze"
         }
 
+
         if path in download_routes:
 
             destination = download_routes[path]
-            token = query.get("token", [""])[0]
 
-            # Location vẫn yêu cầu xác nhận View.
+            token = query.get(
+                "token",
+                [""]
+            )[0]
+
+
+            # LOCATION: REQUIRE VIEW CONFIRMATION
+
             if destination == "location":
 
                 session = get_session(token)
@@ -1775,28 +2364,44 @@ class Website(BaseHTTPRequestHandler):
                     or not session.get("view_confirmed", False)
                 ):
 
-                    self.send_json(403, {
-                        "success": False,
-                        "message": (
-                            "Chưa có xác nhận View thành công từ nhà cung cấp."
-                        )
-                    })
+                    self.send_json(
+                        403,
+                        {
+                            "success": False,
+                            "message": (
+                                "Chưa có xác nhận View thành công "
+                                "từ nhà cung cấp."
+                            )
+                        }
+                    )
 
                     return
 
-            elif not check_session(token, destination):
 
-                self.send_json(403, {
-                    "success": False,
-                    "message": (
-                        "Bạn chưa hoàn thành bước vượt link "
-                        + DESTINATION_NAMES[destination]
-                    )
-                })
+            elif not check_session(
+                token,
+                destination
+            ):
+
+                self.send_json(
+                    403,
+                    {
+                        "success": False,
+                        "message": (
+                            "Bạn chưa hoàn thành bước vượt link "
+                            + DESTINATION_NAMES[destination]
+                            + "."
+                        )
+                    }
+                )
 
                 return
 
-            self.redirect(DESTINATIONS[destination])
+
+            self.redirect(
+                DESTINATIONS[destination]
+            )
+
             return
 
 
@@ -1807,45 +2412,65 @@ class Website(BaseHTTPRequestHandler):
         if path == "/create-link":
 
             self.redirect("/dinh-vi")
+
             return
+
 
         if path == "/create-link4m":
 
             self.redirect("/menu")
+
             return
+
 
         if path == "/complete":
 
             self.redirect(MEDIAFIRE_LINK)
+
             return
+
 
         if path == "/link4m-return":
 
-            token = query.get("token", [""])[0]
+            token = query.get(
+                "token",
+                [""]
+            )[0]
 
             self.redirect(
-                "/provider-return?token=" + quote(token, safe="")
+                "/provider-return?token="
+                + quote(token, safe="")
             )
 
             return
 
+
         if path == "/check-link4m":
 
-            token = query.get("token", [""])[0]
+            token = query.get(
+                "token",
+                [""]
+            )[0]
 
             if check_session(token, "deta"):
 
-                self.send_json(200, {
-                    "success": True,
-                    "message": "Đã xác nhận phiên."
-                })
+                self.send_json(
+                    200,
+                    {
+                        "success": True,
+                        "message": "Đã xác nhận phiên."
+                    }
+                )
 
             else:
 
-                self.send_json(403, {
-                    "success": False,
-                    "message": "Phiên không hợp lệ."
-                })
+                self.send_json(
+                    403,
+                    {
+                        "success": False,
+                        "message": "Phiên không hợp lệ."
+                    }
+                )
 
             return
 
@@ -1860,31 +2485,63 @@ class Website(BaseHTTPRequestHandler):
             "/music.mp3"
         }
 
+
         if path not in allowed_files:
 
-            self.send_error(404, "File not found")
+            self.send_error(
+                404,
+                "File not found"
+            )
+
             return
 
-        file_path = BASE_DIR / path.lstrip("/")
+
+        file_path = (
+            BASE_DIR / path.lstrip("/")
+        )
+
 
         if not file_path.is_file():
 
-            self.send_error(404, "Asset not found")
+            self.send_error(
+                404,
+                "Asset not found"
+            )
+
             return
 
-        content_type = mimetypes.guess_type(
-            str(file_path)
-        )[0] or "application/octet-stream"
+
+        content_type = (
+            mimetypes.guess_type(
+                str(file_path)
+            )[0]
+            or "application/octet-stream"
+        )
+
 
         try:
 
             file_size = file_path.stat().st_size
 
             self.send_response(200)
-            self.send_header("Content-Type", content_type)
-            self.send_header("Content-Length", str(file_size))
-            self.send_header("Accept-Ranges", "bytes")
+
+            self.send_header(
+                "Content-Type",
+                content_type
+            )
+
+            self.send_header(
+                "Content-Length",
+                str(file_size)
+            )
+
+            self.send_header(
+                "Accept-Ranges",
+                "bytes"
+            )
+
             self.end_headers()
+
 
             with open(file_path, "rb") as file:
 
@@ -1897,13 +2554,19 @@ class Website(BaseHTTPRequestHandler):
 
                     self.wfile.write(chunk)
 
-        except (BrokenPipeError, ConnectionResetError):
+
+        except (
+            BrokenPipeError,
+            ConnectionResetError
+        ):
+
             pass
+
 
         except OSError as error:
 
             print(
-                "[PHONG WEB V32] File error:",
+                "[PHONG WEB V33] FILE ERROR:",
                 str(error)
             )
 
@@ -1911,7 +2574,7 @@ class Website(BaseHTTPRequestHandler):
     def log_message(self, format, *args):
 
         print(
-            "[PHONG WEB V32]",
+            "[PHONG WEB V33]",
             format % args
         )
 
@@ -1927,11 +2590,15 @@ if __name__ == "__main__":
         Website
     )
 
+
     print("====================================")
-    print("          PHONG WEB V32")
+    print("          PHONG WEB V33")
     print("====================================")
 
-    print("Server port:", PORT)
+    print(
+        "Server port:",
+        PORT
+    )
 
     print(
         "Link4M API:",
@@ -1943,12 +2610,15 @@ if __name__ == "__main__":
         "ENABLED" if LAYMA_API_TOKEN else "MISSING API TOKEN"
     )
 
+    print("YeuMoney API: REMOVED")
+
     print("Location route: /dinh-vi")
     print("Deta route: /menu")
     print("Proxy route: /proxy-mod-alen-crack")
     print("Mizze route: /mizze-crack")
 
     print("Providers: Link4M + Layma")
+
     print("Create endpoint: /create-short-link")
     print("Callback endpoint: /provider-return")
     print("Session check: /check-session")
@@ -1960,9 +2630,11 @@ if __name__ == "__main__":
 
     print("Music button: ENABLED")
     print("Music looping: ENABLED")
-    print("PHONG WEB VERSION: V32")
+
+    print("PHONG WEB VERSION: V33")
 
     print("====================================")
+
 
     try:
 
@@ -1970,7 +2642,9 @@ if __name__ == "__main__":
 
     except KeyboardInterrupt:
 
-        print("\n[PHONG WEB] Server stopped.")
+        print(
+            "\n[PHONG WEB] Server stopped."
+        )
 
     finally:
 
