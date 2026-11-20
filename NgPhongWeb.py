@@ -28,7 +28,7 @@ MEDIAFIRE_LINK = (
     "yen60lu05hfnng4/DINH_VI_BT.zip/file"
 )
 
-VUOTNHANH_ENDPOINT = "https://vuotnhanh.com/st"
+VUOTNHANH_ENDPOINT = "https://vuotnhanh.com/zVOM"
 
 HTML = r"""
 <!DOCTYPE html>
