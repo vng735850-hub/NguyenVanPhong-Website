@@ -4,19 +4,20 @@ import json
 import mimetypes
 import urllib.request
 import urllib.error
+
 from pathlib import Path
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlencode, urlsplit, unquote
 
 # ==========================================
-# PHONG WEB V22
+# PHONG WEB V23
 # VUOTNHANH + LINK4M API
 # ==========================================
 
 BASE_DIR = Path(__file__).resolve().parent
 PORT = int(os.environ.get("PORT", 5000))
 
-# VUOTNHANH API - GIỮ NGUYÊN
+# VUOTNHANH API
 API_KEY = os.environ.get(
     "VUOTNHANH_API_KEY", ""
 ).strip()
@@ -26,12 +27,13 @@ LINK4M_API_TOKEN = os.environ.get(
     "LINK4M_API_TOKEN", ""
 ).strip()
 
-# Địa chỉ website thực tế
+# WEBSITE URL
 SITE_URL = os.environ.get(
     "SITE_URL",
     "https://nvp-com.onrender.com"
 ).strip().rstrip("/")
 
+# MEDIAFIRE
 MEDIAFIRE_LINK = (
     "https://www.mediafire.com/file/"
     "yen60lu05hfnng4/DINH_VI_BT.zip/file"
@@ -39,7 +41,7 @@ MEDIAFIRE_LINK = (
 
 VUOTNHANH_ENDPOINT = "https://vuotnhanh.com/zVOM"
 
-# ENDPOINT THEO TÀI LIỆU LINK4M BẠN ĐÃ CUNG CẤP
+# Link4M API theo tài liệu đã cung cấp
 LINK4M_ENDPOINT = "https://link4m.co/api-shorten/v2"
 
 
@@ -360,11 +362,7 @@ footer {
 
 <div id="homePage">
 
-    <img
-        class="hero-logo"
-        src="/logo.png"
-        alt="PHONG WEB"
-    >
+    <img class="hero-logo" src="/logo.png" alt="PHONG WEB">
 
     <h1>WELCOME TO PHONG WEB</h1>
 
@@ -374,9 +372,13 @@ footer {
         📍 ĐỊNH VỊ XANH TÍM OB55
     </div>
 
+    <!-- LOCATION MENU -->
+
     <section class="location-container">
         <a class="location-link" href="/dinh-vi">
+
             <div class="location-card">
+
                 <div class="location-emoji">📍</div>
 
                 <div class="location-info">
@@ -384,12 +386,18 @@ footer {
                     <p>Nhấn vào đây để tiếp tục</p>
                     <span class="location-button">MỞ MỤC</span>
                 </div>
+
             </div>
+
         </a>
     </section>
 
+    <!-- DETA MENU -->
+
     <section class="menu-container">
+
         <div class="menu-card">
+
             <h2>🔐 DETA IPA CRACK NOKЕY</h2>
 
             <button
@@ -399,7 +407,9 @@ footer {
             >
                 MỞ MENU
             </button>
+
         </div>
+
     </section>
 
 </div>
@@ -453,7 +463,7 @@ footer {
     <div class="link-description">
         Nhấn nút bên dưới để tạo đường dẫn Link4M.
         <br>
-        Sau khi hoàn thành, bạn sẽ được chuyển đến file MediaFire.
+        Sau khi hoàn thành, bạn sẽ được chuyển đến link rút gọn.
     </div>
 
     <button
@@ -477,7 +487,7 @@ footer {
 </main>
 
 
-<!-- MUSIC -->
+<!-- MUSIC BUTTON -->
 
 <button
     class="music-mini"
@@ -497,7 +507,7 @@ footer {
 <footer>
     © 2026 Nguyễn Văn Phong Website
     <br><br>
-    PHONG WEB V22
+    PHONG WEB V23
 </footer>
 
 
@@ -512,6 +522,7 @@ const locationPage = document.getElementById("locationPage");
 const menuPage = document.getElementById("menuPage");
 
 function showPage() {
+
     const path = window.location.pathname;
 
     homePage.style.display = "none";
@@ -528,6 +539,7 @@ function showPage() {
 }
 
 function navigate(path) {
+
     history.pushState({}, "", path);
     showPage();
     window.scrollTo(0, 0);
@@ -562,10 +574,12 @@ document.getElementById("locationStatus");
 vuotNhanhButton.addEventListener("click", async function() {
 
     vuotNhanhButton.disabled = true;
+
     locationStatus.textContent =
         "Đang tạo đường dẫn Vượt Nhanh...";
 
     try {
+
         const response = await fetch("/create-link", {
             method: "GET",
             cache: "no-store"
@@ -585,11 +599,13 @@ vuotNhanhButton.addEventListener("click", async function() {
         window.location.href = data.url;
 
     } catch(error) {
+
         locationStatus.textContent =
             "Lỗi: " + error.message;
 
         vuotNhanhButton.disabled = false;
     }
+
 });
 
 
@@ -606,10 +622,12 @@ document.getElementById("link4mStatus");
 link4mButton.addEventListener("click", async function() {
 
     link4mButton.disabled = true;
+
     link4mStatus.textContent =
         "Đang tạo đường dẫn Link4M...";
 
     try {
+
         const response = await fetch("/create-link4m", {
             method: "GET",
             cache: "no-store"
@@ -629,11 +647,13 @@ link4mButton.addEventListener("click", async function() {
         window.location.href = data.url;
 
     } catch(error) {
+
         link4mStatus.textContent =
             "Lỗi: " + error.message;
 
         link4mButton.disabled = false;
     }
+
 });
 
 
@@ -648,6 +668,7 @@ const musicIcon = document.getElementById("musicIcon");
 let isPlaying = false;
 
 function updateMusicButton() {
+
     if (isPlaying) {
         musicButton.classList.add("playing");
         musicIcon.textContent = "♫";
@@ -660,16 +681,20 @@ function updateMusicButton() {
 musicButton.addEventListener("click", async function() {
 
     if (!isPlaying) {
+
         try {
             audio.loop = true;
             await audio.play();
             isPlaying = true;
+
         } catch(error) {
             audio.loop = false;
             isPlaying = false;
             console.log("Music error:", error);
         }
+
     } else {
+
         audio.pause();
         audio.currentTime = 0;
         audio.loop = false;
@@ -680,18 +705,23 @@ musicButton.addEventListener("click", async function() {
 });
 
 audio.addEventListener("pause", function() {
+
     if (isPlaying) {
         isPlaying = false;
         audio.loop = false;
         updateMusicButton();
     }
+
 });
 
 audio.addEventListener("error", function() {
+
     isPlaying = false;
     audio.loop = false;
     updateMusicButton();
+
     console.log("Không tìm thấy music.mp3");
+
 });
 
 </script>
@@ -699,6 +729,46 @@ audio.addEventListener("error", function() {
 </body>
 </html>
 """
+
+
+# ==========================================
+# HELPER: VALIDATE LINK4M RESULT
+# ==========================================
+
+def validate_shortened_url(value):
+
+    if not isinstance(value, str):
+        return None
+
+    value = value.strip()
+
+    if not value or len(value) > 4096:
+        return None
+
+    if any(char.isspace() for char in value):
+        return None
+
+    try:
+        parsed = urlsplit(value)
+
+        if parsed.scheme not in ("https", "http"):
+            return None
+
+        if not parsed.hostname:
+            return None
+
+        if parsed.username or parsed.password:
+            return None
+
+        if parsed.port is not None and not (
+            1 <= parsed.port <= 65535
+        ):
+            return None
+
+        return value
+
+    except ValueError:
+        return None
 
 
 # ==========================================
@@ -727,21 +797,26 @@ class Website(BaseHTTPRequestHandler):
         )
 
         self.send_header("Cache-Control", "no-store")
+
         self.end_headers()
 
         try:
             self.wfile.write(content)
+
         except (BrokenPipeError, ConnectionResetError):
             pass
 
 
     # ======================================
-    # HOME AND PAGES
+    # MAIN ROUTES
     # ======================================
 
     def do_GET(self):
 
         path = unquote(urlsplit(self.path).path)
+
+
+        # HOME AND PAGES
 
         if path in (
             "/",
@@ -765,10 +840,12 @@ class Website(BaseHTTPRequestHandler):
             )
 
             self.send_header("Cache-Control", "no-cache")
+
             self.end_headers()
 
             try:
                 self.wfile.write(content)
+
             except (BrokenPipeError, ConnectionResetError):
                 pass
 
@@ -782,17 +859,21 @@ class Website(BaseHTTPRequestHandler):
         if path == "/create-link":
 
             if not API_KEY:
+
                 self.send_json(500, {
                     "success": False,
                     "message": "Chưa cấu hình Vượt Nhanh API Key trên Render."
                 })
+
                 return
 
             if not SITE_URL.startswith("https://"):
+
                 self.send_json(500, {
                     "success": False,
                     "message": "SITE_URL phải là địa chỉ HTTPS."
                 })
+
                 return
 
             return_url = SITE_URL + "/complete"
@@ -810,6 +891,7 @@ class Website(BaseHTTPRequestHandler):
             })
 
             print("[PHONG WEB] VuotNhanh link created")
+
             return
 
 
@@ -827,28 +909,33 @@ class Website(BaseHTTPRequestHandler):
             )
 
             self.send_header("Cache-Control", "no-store")
+
             self.end_headers()
 
             print("[PHONG WEB] VuotNhanh return")
+
             return
 
 
         # ======================================
-        # LINK4M API - ĐÃ SỬA
+        # LINK4M API - V23
         # ======================================
 
         if path == "/create-link4m":
 
             if not LINK4M_API_TOKEN:
+
                 self.send_json(500, {
                     "success": False,
                     "message": "Chưa cấu hình LINK4M_API_TOKEN trên Render."
                 })
+
                 return
 
             try:
 
-                # Tạo query theo tài liệu API Link4M
+                # TẠO API REQUEST
+
                 params = urlencode({
                     "api": LINK4M_API_TOKEN,
                     "url": MEDIAFIRE_LINK
@@ -859,7 +946,7 @@ class Website(BaseHTTPRequestHandler):
                 request = urllib.request.Request(
                     api_url,
                     headers={
-                        "User-Agent": "Mozilla/5.0 PHONG-WEB/22",
+                        "User-Agent": "Mozilla/5.0 PHONG-WEB/23",
                         "Accept": "application/json"
                     },
                     method="GET"
@@ -882,31 +969,40 @@ class Website(BaseHTTPRequestHandler):
                     http_status
                 )
 
+                # PARSE JSON
+
                 try:
                     result = json.loads(response_body)
+
                 except json.JSONDecodeError:
+
                     print(
-                        "[PHONG WEB] Link4M invalid response:",
+                        "[PHONG WEB] Link4M invalid JSON:",
                         response_body[:500]
                     )
 
                     self.send_json(502, {
                         "success": False,
-                        "message": "Link4M không trả về JSON hợp lệ. Hãy kiểm tra API endpoint hoặc tài khoản API."
+                        "message": "Link4M không trả về JSON hợp lệ."
                     })
+
+                    return
+
+                if not isinstance(result, dict):
+
+                    self.send_json(502, {
+                        "success": False,
+                        "message": "Dữ liệu Link4M không đúng định dạng."
+                    })
+
                     return
 
                 print(
-                    "[PHONG WEB] Link4M API status:",
+                    "[PHONG WEB] Link4M status:",
                     result.get("status", "unknown")
                 )
 
-                if not isinstance(result, dict):
-                    self.send_json(502, {
-                        "success": False,
-                        "message": "Dữ liệu Link4M trả về không đúng định dạng."
-                    })
-                    return
+                # CHECK API STATUS
 
                 if result.get("status") != "success":
 
@@ -916,55 +1012,63 @@ class Website(BaseHTTPRequestHandler):
                     )
 
                     print(
-                        "[PHONG WEB] Link4M API rejected:",
-                        str(error_message)[:500]
+                        "[PHONG WEB] Link4M rejected:",
+                        str(error_message)[:300]
                     )
 
                     self.send_json(502, {
                         "success": False,
                         "message": "Link4M: " + str(error_message)[:300]
                     })
+
                     return
 
-                shortened_url = result.get(
-                    "shortenedUrl",
-                    ""
+                # GET SHORT URL
+
+                shortened_url = result.get("shortenedUrl")
+
+                if not shortened_url:
+                    shortened_url = result.get("shortened_url")
+
+                if not shortened_url:
+                    shortened_url = result.get("short_url")
+
+                # VALIDATE URL WITHOUT FIXED DOMAIN
+
+                valid_url = validate_shortened_url(
+                    shortened_url
                 )
 
-                if not isinstance(shortened_url, str):
-                    shortened_url = ""
+                if not valid_url:
 
-                parsed_url = urlsplit(shortened_url)
-
-                # Chỉ chấp nhận URL HTTPS từ tên miền Link4M
-                allowed_hosts = {
-                    "link4m.com",
-                    "www.link4m.com"
-                }
-
-                if (
-                    parsed_url.scheme != "https"
-                    or parsed_url.hostname not in allowed_hosts
-                    or not parsed_url.path
-                ):
+                    # Không in token hoặc URL API có chứa token.
+                    # Chỉ ghi thông tin không nhạy cảm.
 
                     print(
-                        "[PHONG WEB] Link4M returned invalid URL"
+                        "[PHONG WEB] Link4M returned invalid URL format."
+                    )
+
+                    print(
+                        "[PHONG WEB] Returned field type:",
+                        type(shortened_url).__name__
                     )
 
                     self.send_json(502, {
                         "success": False,
-                        "message": "Link4M trả về URL không hợp lệ hoặc không đúng tên miền."
+                        "message": "Link4M báo thành công nhưng không trả về URL HTTP/HTTPS hợp lệ. Hãy kiểm tra Logs và cấu trúc JSON."
                     })
+
                     return
+
+                # SUCCESS
 
                 self.send_json(200, {
                     "success": True,
-                    "url": shortened_url
+                    "url": valid_url
                 })
 
                 print(
-                    "[PHONG WEB] Link4M link created successfully"
+                    "[PHONG WEB] Link4M link created successfully."
                 )
 
             except urllib.error.HTTPError as error:
@@ -980,11 +1084,12 @@ class Website(BaseHTTPRequestHandler):
                 )
 
                 print(
-                    "[PHONG WEB] Link4M error response:",
+                    "[PHONG WEB] Link4M response:",
                     error_body[:500]
                 )
 
                 try:
+
                     error_data = json.loads(error_body)
 
                     if isinstance(error_data, dict):
@@ -996,6 +1101,7 @@ class Website(BaseHTTPRequestHandler):
                         error_message = error_body[:300]
 
                 except json.JSONDecodeError:
+
                     error_message = error_body[:300]
 
                 if not error_message:
@@ -1020,7 +1126,7 @@ class Website(BaseHTTPRequestHandler):
 
                 self.send_json(502, {
                     "success": False,
-                    "message": "Không thể kết nối máy chủ Link4M. Hãy thử lại sau."
+                    "message": "Không thể kết nối máy chủ Link4M."
                 })
 
             except TimeoutError:
@@ -1042,7 +1148,8 @@ class Website(BaseHTTPRequestHandler):
 
                 self.send_json(500, {
                     "success": False,
-                    "message": "Lỗi xử lý Link4M: " + type(error).__name__
+                    "message": "Lỗi xử lý Link4M: "
+                    + type(error).__name__
                 })
 
             return
@@ -1059,13 +1166,17 @@ class Website(BaseHTTPRequestHandler):
         }
 
         if path not in allowed_files:
+
             self.send_error(404, "File not found")
+
             return
 
         file_path = BASE_DIR / path.lstrip("/")
 
         if not file_path.is_file():
+
             self.send_error(404, "Asset not found")
+
             return
 
         content_type = mimetypes.guess_type(
@@ -1088,12 +1199,17 @@ class Website(BaseHTTPRequestHandler):
                 str(file_size)
             )
 
-            self.send_header("Accept-Ranges", "bytes")
+            self.send_header(
+                "Accept-Ranges",
+                "bytes"
+            )
+
             self.end_headers()
 
             with open(file_path, "rb") as file:
 
                 while True:
+
                     chunk = file.read(64 * 1024)
 
                     if not chunk:
@@ -1132,7 +1248,7 @@ if __name__ == "__main__":
     )
 
     print("====================================")
-    print("          PHONG WEB V22")
+    print("          PHONG WEB V23")
     print("====================================")
 
     print("Server port:", PORT)
@@ -1161,10 +1277,13 @@ if __name__ == "__main__":
     print("====================================")
 
     try:
+
         server.serve_forever()
 
     except KeyboardInterrupt:
+
         print("\n[PHONG WEB] Server stopped.")
 
     finally:
+
         server.server_close()
