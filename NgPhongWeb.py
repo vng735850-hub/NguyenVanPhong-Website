@@ -13,8 +13,8 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlencode, urlsplit, unquote, parse_qs, quote
 
 # ==========================================
-# PHONG WEB V26
-# LINK4M + VUOTNHANH SELECTOR
+# PHONG WEB V27
+# LINK4M + VUOTNHANH + YEUMONEY
 # DETA DOWNLOAD + LOCATION
 # ==========================================
 
@@ -24,9 +24,11 @@ PORT = int(os.environ.get("PORT", 5000))
 # API CONFIGURATION
 API_KEY = os.environ.get("VUOTNHANH_API_KEY", "").strip()
 LINK4M_API_TOKEN = os.environ.get("LINK4M_API_TOKEN", "").strip()
+YEUMONEY_API_TOKEN = os.environ.get("YEUMONEY_API_TOKEN", "").strip()
 
 VUOTNHANH_ENDPOINT = "https://vuotnhanh.com/api"
 LINK4M_ENDPOINT = "https://link4m.co/api-shorten/v2"
+YEUMONEY_ENDPOINT = "https://yeumoney.com/QL_api.php"
 
 SITE_URL = os.environ.get(
     "SITE_URL",
@@ -423,6 +425,7 @@ footer {
         <select class="provider-select" id="locationProvider">
             <option value="link4m">Link4M</option>
             <option value="vuotnhanh">VuotNhanh</option>
+            <option value="yeumoney">YeuMoney</option>
         </select>
         <div class="provider-note">
             Bạn có thể thay đổi dịch vụ trước khi nhấn Vượt Link.
@@ -462,6 +465,7 @@ footer {
         <select class="provider-select" id="detaProvider">
             <option value="link4m">Link4M</option>
             <option value="vuotnhanh">VuotNhanh</option>
+            <option value="yeumoney">YeuMoney</option>
         </select>
         <div class="provider-note">
             Bạn có thể thay đổi dịch vụ trước khi nhấn Vượt Link.
@@ -521,7 +525,7 @@ footer {
 <footer>
     © 2026 Nguyễn Văn Phong Website
     <br><br>
-    PHONG WEB V26
+    PHONG WEB V27
 </footer>
 
 <script>
@@ -672,16 +676,20 @@ showPage();
 
 // ==========================================
 // GENERIC LINK CREATION
-// CHỌN LINK4M HOẶC VUOTNHANH
+// LINK4M + VUOTNHANH + YEUMONEY
 // ==========================================
 
 async function createShortLink(provider, destination, button, status) {
 
     button.disabled = true;
 
-    const providerName = provider === "link4m"
-        ? "Link4M"
-        : "VuotNhanh";
+    const providerNames = {
+        link4m: "Link4M",
+        vuotnhanh: "VuotNhanh",
+        yeumoney: "YeuMoney"
+    };
+
+    const providerName = providerNames[provider] || provider;
 
     status.textContent = "Đang sử dụng API " + providerName + " để tạo link...";
 
@@ -961,7 +969,7 @@ def create_vuotnhanh_url(callback_url):
 
     result = read_api_json(
         api_url,
-        "Mozilla/5.0 PHONG-WEB/26"
+        "Mozilla/5.0 PHONG-WEB/27"
     )
 
     if result.get("status") != "success":
@@ -1002,7 +1010,7 @@ def create_link4m_url(callback_url):
 
     result = read_api_json(
         api_url,
-        "Mozilla/5.0 PHONG-WEB/26"
+        "Mozilla/5.0 PHONG-WEB/27"
     )
 
     if result.get("status") != "success":
@@ -1026,6 +1034,49 @@ def create_link4m_url(callback_url):
     if not valid_url:
         raise ValueError(
             "Link4M không trả về URL HTTP/HTTPS hợp lệ."
+        )
+
+    return valid_url
+
+
+def create_yeumoney_url(callback_url):
+
+    if not YEUMONEY_API_TOKEN:
+        raise ValueError(
+            "Chưa cấu hình YEUMONEY_API_TOKEN trên Render."
+        )
+
+    params = urlencode({
+        "token": YEUMONEY_API_TOKEN,
+        "format": "json",
+        "url": callback_url
+    })
+
+    api_url = YEUMONEY_ENDPOINT + "?" + params
+
+    result = read_api_json(
+        api_url,
+        "Mozilla/5.0 PHONG-WEB/27"
+    )
+
+    if result.get("status") != "success":
+        error_message = (
+            result.get("message")
+            or result.get("status")
+            or "Không xác nhận tạo link thành công."
+        )
+
+        raise ValueError(
+            "YeuMoney: " + str(error_message)[:250]
+        )
+
+    valid_url = validate_shortened_url(
+        result.get("shortenedUrl")
+    )
+
+    if not valid_url:
+        raise ValueError(
+            "YeuMoney không trả về shortenedUrl HTTP/HTTPS hợp lệ."
         )
 
     return valid_url
@@ -1105,7 +1156,7 @@ class Website(BaseHTTPRequestHandler):
             return
 
         # ======================================
-        # CREATE SHORT LINK - V26
+        # CREATE SHORT LINK - V27
         # ======================================
 
         if path == "/create-short-link":
@@ -1113,7 +1164,11 @@ class Website(BaseHTTPRequestHandler):
             provider = query.get("provider", [""])[0].lower()
             destination = query.get("destination", [""])[0].lower()
 
-            if provider not in ("link4m", "vuotnhanh"):
+            if provider not in (
+                "link4m",
+                "vuotnhanh",
+                "yeumoney"
+            ):
                 self.send_json(400, {
                     "success": False,
                     "message": "Dịch vụ vượt link không hợp lệ."
@@ -1145,8 +1200,12 @@ class Website(BaseHTTPRequestHandler):
             try:
                 if provider == "link4m":
                     shortened_url = create_link4m_url(callback_url)
-                else:
+
+                elif provider == "vuotnhanh":
                     shortened_url = create_vuotnhanh_url(callback_url)
+
+                elif provider == "yeumoney":
+                    shortened_url = create_yeumoney_url(callback_url)
 
                 cleanup_sessions()
 
@@ -1166,7 +1225,7 @@ class Website(BaseHTTPRequestHandler):
                 })
 
                 print(
-                    "[PHONG WEB V26] Created:",
+                    "[PHONG WEB V27] Created:",
                     provider,
                     destination
                 )
@@ -1179,7 +1238,7 @@ class Website(BaseHTTPRequestHandler):
                 )
 
                 print(
-                    "[PHONG WEB V26] API HTTP error:",
+                    "[PHONG WEB V27] API HTTP error:",
                     provider,
                     error.code,
                     error_body[:400]
@@ -1187,11 +1246,13 @@ class Website(BaseHTTPRequestHandler):
 
                 try:
                     error_data = json.loads(error_body)
+
                     message = (
                         error_data.get("message", error_body[:250])
                         if isinstance(error_data, dict)
                         else error_body[:250]
                     )
+
                 except json.JSONDecodeError:
                     message = error_body[:250]
 
@@ -1209,7 +1270,7 @@ class Website(BaseHTTPRequestHandler):
             except urllib.error.URLError as error:
 
                 print(
-                    "[PHONG WEB V26] Connection error:",
+                    "[PHONG WEB V27] Connection error:",
                     provider,
                     str(error.reason)
                 )
@@ -1219,7 +1280,7 @@ class Website(BaseHTTPRequestHandler):
                     "message": "Không thể kết nối máy chủ " + provider + "."
                 })
 
-            except TimeoutError:
+            except (TimeoutError, urllib.error.URLError):
 
                 self.send_json(504, {
                     "success": False,
@@ -1236,7 +1297,7 @@ class Website(BaseHTTPRequestHandler):
             except Exception as error:
 
                 print(
-                    "[PHONG WEB V26] Create link error:",
+                    "[PHONG WEB V27] Create link error:",
                     type(error).__name__,
                     str(error)[:300]
                 )
@@ -1250,7 +1311,7 @@ class Website(BaseHTTPRequestHandler):
 
         # ======================================
         # PROVIDER CALLBACK
-        # LINK4M + VUOTNHANH
+        # LINK4M + VUOTNHANH + YEUMONEY
         # ======================================
 
         if path == "/provider-return":
@@ -1271,12 +1332,12 @@ class Website(BaseHTTPRequestHandler):
                     valid = True
 
             if not valid:
-                print("[PHONG WEB V26] Invalid callback")
+                print("[PHONG WEB V27] Invalid callback")
                 self.redirect("/?result=failed")
                 return
 
             print(
-                "[PHONG WEB V26] Callback success:",
+                "[PHONG WEB V27] Callback success:",
                 destination
             )
 
@@ -1333,7 +1394,7 @@ class Website(BaseHTTPRequestHandler):
                 })
                 return
 
-            print("[PHONG WEB V26] Location download redirect")
+            print("[PHONG WEB V27] Location download redirect")
             self.redirect(MEDIAFIRE_LINK)
             return
 
@@ -1352,7 +1413,7 @@ class Website(BaseHTTPRequestHandler):
                 })
                 return
 
-            print("[PHONG WEB V26] Deta download redirect")
+            print("[PHONG WEB V27] Deta download redirect")
             self.redirect(DETA_MEDIAFIRE_LINK)
             return
 
@@ -1447,10 +1508,10 @@ class Website(BaseHTTPRequestHandler):
             pass
 
         except OSError as error:
-            print("[PHONG WEB V26] File error:", str(error))
+            print("[PHONG WEB V27] File error:", str(error))
 
     def log_message(self, format, *args):
-        print("[PHONG WEB V26]", format % args)
+        print("[PHONG WEB V27]", format % args)
 
 
 # ==========================================
@@ -1465,7 +1526,7 @@ if __name__ == "__main__":
     )
 
     print("====================================")
-    print("          PHONG WEB V26")
+    print("          PHONG WEB V27")
     print("====================================")
 
     print("Server port:", PORT)
@@ -1480,9 +1541,14 @@ if __name__ == "__main__":
         "ENABLED" if LINK4M_API_TOKEN else "MISSING API TOKEN"
     )
 
+    print(
+        "YeuMoney Developers API:",
+        "ENABLED" if YEUMONEY_API_TOKEN else "MISSING API TOKEN"
+    )
+
     print("Location route: /dinh-vi")
     print("Deta route: /menu")
-    print("Provider selector: Link4M / VuotNhanh")
+    print("Provider selector: Link4M / VuotNhanh / YeuMoney")
     print("Create endpoint: /create-short-link")
     print("Callback endpoint: /provider-return")
     print("Session check: /check-session")
