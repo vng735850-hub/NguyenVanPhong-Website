@@ -13,8 +13,8 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlencode, urlsplit, unquote, parse_qs, quote
 
 # ==========================================
-# PHONG WEB V31
-# LINK4M ONLY
+# PHONG WEB V32
+# LINK4M + LAYMA API
 # LOCATION + DETA + PROXY + MIZZE
 # MUSIC
 # ==========================================
@@ -24,6 +24,11 @@ PORT = int(os.environ.get("PORT", 5000))
 
 LINK4M_API_TOKEN = os.environ.get("LINK4M_API_TOKEN", "").strip()
 LINK4M_ENDPOINT = "https://link4m.co/api-shorten/v2"
+
+LAYMA_API_TOKEN = os.environ.get("LAYMA_API_TOKEN", "").strip()
+LAYMA_ENDPOINT = (
+    "https://api.layma.net/api/admin/shortlink/quicklink"
+)
 
 SITE_URL = os.environ.get(
     "SITE_URL",
@@ -55,6 +60,13 @@ DESTINATIONS = {
     "deta": DETA_MEDIAFIRE_LINK,
     "proxy": PROXY_MEDIAFIRE_LINK,
     "mizze": MIZZE_MEDIAFIRE_LINK
+}
+
+DESTINATION_NAMES = {
+    "location": "Định Vị",
+    "deta": "Deta",
+    "proxy": "Proxy Mod Alen Crack",
+    "mizze": "Menu Mizze Crack"
 }
 
 SESSIONS = {}
@@ -265,6 +277,8 @@ h1 { font-size: 27px; margin-top: 20px; }
     cursor: wait;
 }
 
+/* API SELECTOR */
+
 .provider-box {
     max-width: 360px;
     margin: 22px auto;
@@ -412,8 +426,6 @@ footer {
         📍 ĐỊNH VỊ XANH TÍM OB55
     </div>
 
-    <!-- LOCATION CARD -->
-
     <section class="location-container">
         <a class="location-link" href="/dinh-vi">
             <div class="location-card">
@@ -427,8 +439,6 @@ footer {
         </a>
     </section>
 
-    <!-- DETA CARD -->
-
     <section class="menu-container">
         <div class="menu-card">
             <h2>🔐 DETA IPA CRACK NOKЕY</h2>
@@ -438,8 +448,6 @@ footer {
         </div>
     </section>
 
-    <!-- PROXY CARD -->
-
     <section class="menu-container">
         <div class="menu-card proxy-card">
             <h2>🌐 PROXY MOD ALEN CRACK</h2>
@@ -448,8 +456,6 @@ footer {
             </button>
         </div>
     </section>
-
-    <!-- MIZZE CARD -->
 
     <section class="menu-container">
         <div class="menu-card mizze-card">
@@ -466,16 +472,16 @@ footer {
 <!-- LOCATION PAGE -->
 
 <div id="locationPage" class="link-page">
-
     <div class="link-icon">📍</div>
-
     <h2>BẠN CẦN VƯỢT LINK ĐỂ LẤY FILE MEDIAFIRE</h2>
 
     <div class="link-description">
-        Nhấn nút bên dưới để tạo link vượt Link4M.
+        Chọn nhà cung cấp API và nhấn nút bên dưới để tạo link vượt.
         <br>
         Sau khi hoàn thành, hệ thống sẽ kiểm tra trạng thái xác nhận.
     </div>
+
+    <div class="provider-box" id="locationProviderBox"></div>
 
     <button class="cross-link-button" id="locationCrossButton" type="button">
         🔓 VƯỢT LINK
@@ -485,25 +491,24 @@ footer {
 
     <br>
     <a class="back-button" href="/">← QUAY LẠI TRANG CHỦ</a>
-
 </div>
 
 
 <!-- DETA PAGE -->
 
 <div id="menuPage" class="link-page">
-
     <div class="link-icon">🔐</div>
-
     <h2>BẠN CẦN VƯỢT LINK ĐỂ LẤY FILE DETA</h2>
 
     <div class="link-description">
-        Nhấn nút bên dưới để tạo link vượt Link4M.
+        Chọn nhà cung cấp API và nhấn nút bên dưới để tạo link vượt.
         <br>
         Sau khi hoàn thành, bạn sẽ quay lại PHONG WEB.
         <br>
         Nhấn nút LẤY FILE để mở MediaFire.
     </div>
+
+    <div class="provider-box" id="detaProviderBox"></div>
 
     <button class="cross-link-button" id="detaCrossButton" type="button">
         🔓 VƯỢT LINK
@@ -513,25 +518,24 @@ footer {
 
     <br>
     <a class="back-button" href="/">← QUAY LẠI TRANG CHỦ</a>
-
 </div>
 
 
 <!-- PROXY PAGE -->
 
 <div id="proxyPage" class="link-page">
-
     <div class="link-icon">🌐</div>
-
     <h2>BẠN CẦN VƯỢT LINK ĐỂ LẤY FILE PROXY MOD ALEN CRACK</h2>
 
     <div class="link-description">
-        Nhấn nút bên dưới để tạo link vượt Link4M.
+        Chọn nhà cung cấp API và nhấn nút bên dưới để tạo link vượt.
         <br>
         Sau khi hoàn thành, bạn sẽ quay lại PHONG WEB.
         <br>
         Nhấn nút LẤY FILE để mở MediaFire.
     </div>
+
+    <div class="provider-box" id="proxyProviderBox"></div>
 
     <button class="cross-link-button" id="proxyCrossButton" type="button">
         🔓 VƯỢT LINK
@@ -541,25 +545,24 @@ footer {
 
     <br>
     <a class="back-button" href="/">← QUAY LẠI TRANG CHỦ</a>
-
 </div>
 
 
 <!-- MIZZE PAGE -->
 
 <div id="mizzePage" class="link-page">
-
     <div class="link-icon">🎮</div>
-
     <h2>BẠN CẦN VƯỢT LINK ĐỂ LẤY FILE MENU MIZZE CRACK</h2>
 
     <div class="link-description">
-        Nhấn nút bên dưới để tạo link vượt Link4M.
+        Chọn nhà cung cấp API và nhấn nút bên dưới để tạo link vượt.
         <br>
         Sau khi hoàn thành, bạn sẽ quay lại PHONG WEB.
         <br>
         Nhấn nút LẤY FILE để tải Menu Mizze Crack.
     </div>
+
+    <div class="provider-box" id="mizzeProviderBox"></div>
 
     <button class="cross-link-button" id="mizzeCrossButton" type="button">
         🔓 VƯỢT LINK
@@ -569,18 +572,14 @@ footer {
 
     <br>
     <a class="back-button" href="/">← QUAY LẠI TRANG CHỦ</a>
-
 </div>
 
 
 <!-- RESULT PAGE -->
 
 <div id="resultPage" class="link-page">
-
     <div class="link-icon" id="resultIcon">✅</div>
-
     <h2 id="resultTitle">Vượt Link</h2>
-
     <div class="link-description" id="resultDescription"></div>
 
     <a class="cross-link-button" id="resultAction" href="/">
@@ -591,7 +590,6 @@ footer {
 
     <br>
     <a class="back-button" id="resultBack" href="/">← QUAY LẠI</a>
-
 </div>
 
 </main>
@@ -610,7 +608,7 @@ footer {
 <footer>
     © 2026 Nguyễn Văn Phong Website
     <br><br>
-    PHONG WEB V31
+    PHONG WEB V32
 </footer>
 
 
@@ -670,6 +668,57 @@ function hideAllPages() {
 
 
 // ==========================================
+// PROVIDER SELECTORS
+// ==========================================
+
+const PROVIDERS = ["link4m", "layma"];
+
+const PROVIDER_LABELS = {
+    link4m: "Link4M",
+    layma: "Layma.net"
+};
+
+function createProviderSelectors() {
+
+    for (const destination of Object.keys(PAGE_PATHS)) {
+
+        const container = document.getElementById(
+            destination + "ProviderBox"
+        );
+
+        if (!container) continue;
+
+        const label = document.createElement("label");
+        label.textContent = "CHỌN NHÀ CUNG CẤP VƯỢT LINK";
+
+        const select = document.createElement("select");
+        select.className = "provider-select";
+        select.id = destination + "Provider";
+
+        for (const provider of PROVIDERS) {
+
+            const option = document.createElement("option");
+            option.value = provider;
+            option.textContent = PROVIDER_LABELS[provider];
+
+            select.appendChild(option);
+        }
+
+        const note = document.createElement("div");
+        note.className = "provider-note";
+        note.textContent =
+            "Bạn có thể chọn Link4M hoặc Layma.net trước khi vượt link.";
+
+        container.appendChild(label);
+        container.appendChild(select);
+        container.appendChild(note);
+    }
+}
+
+createProviderSelectors();
+
+
+// ==========================================
 // RESULT PAGE
 // ==========================================
 
@@ -695,8 +744,6 @@ async function showResultPage() {
     resultBack.href = destinationPage(destination);
 
     resultPage.classList.remove("result-success", "result-failed");
-
-    // LOCATION: HIỆN TẠI CHƯA CÓ API XÁC NHẬN VIEW
 
     if (destination === "location") {
 
@@ -884,19 +931,31 @@ showPage();
 
 
 // ==========================================
-// LINK4M LINK CREATION
+// CREATE SHORT LINK
+// LINK4M + LAYMA
 // ==========================================
 
 async function createShortLink(destination, button, status) {
 
     button.disabled = true;
 
-    status.textContent = "Đang sử dụng API Link4M để tạo link...";
+    const providerSelect = document.getElementById(
+        destination + "Provider"
+    );
+
+    const provider = providerSelect
+        ? providerSelect.value
+        : "link4m";
+
+    const providerName = PROVIDER_LABELS[provider] || provider;
+
+    status.textContent =
+        "Đang sử dụng API " + providerName + " để tạo link...";
 
     try {
 
         const params = new URLSearchParams({
-            provider: "link4m",
+            provider: provider,
             destination: destination
         });
 
@@ -918,7 +977,8 @@ async function createShortLink(destination, button, status) {
             throw new Error("API không trả về đường dẫn hợp lệ.");
         }
 
-        status.textContent = "Đang chuyển đến Link4M...";
+        status.textContent =
+            "Đang chuyển đến " + providerName + "...";
 
         window.location.href = data.url;
 
@@ -1200,6 +1260,10 @@ def read_api_json(url, user_agent):
     return result
 
 
+# ==========================================
+# LINK4M API
+# ==========================================
+
 def create_link4m_url(callback_url):
 
     if not LINK4M_API_TOKEN:
@@ -1216,7 +1280,7 @@ def create_link4m_url(callback_url):
 
     result = read_api_json(
         api_url,
-        "Mozilla/5.0 PHONG-WEB/31"
+        "Mozilla/5.0 PHONG-WEB/32"
     )
 
     if result.get("status") != "success":
@@ -1244,6 +1308,64 @@ def create_link4m_url(callback_url):
         )
 
     return valid_url
+
+
+# ==========================================
+# LAYMA API
+# ==========================================
+
+def create_layma_url(callback_url):
+
+    if not LAYMA_API_TOKEN:
+        raise ValueError(
+            "Chưa cấu hình LAYMA_API_TOKEN trên Render."
+        )
+
+    params = urlencode({
+        "tokenUser": LAYMA_API_TOKEN,
+        "format": "json",
+        "url": callback_url
+    })
+
+    api_url = LAYMA_ENDPOINT + "?" + params
+
+    result = read_api_json(
+        api_url,
+        "Mozilla/5.0 PHONG-WEB/32"
+    )
+
+    if result.get("success") is not True:
+
+        raise ValueError(
+            "Layma không tạo được link. "
+            "Vui lòng kiểm tra API Token hoặc thử lại."
+        )
+
+    shortened_url = result.get("html")
+
+    valid_url = validate_shortened_url(shortened_url)
+
+    if not valid_url:
+        raise ValueError(
+            "Layma trả về URL không hợp lệ hoặc bị trống."
+        )
+
+    return valid_url
+
+
+# ==========================================
+# API PROVIDER DISPATCHER
+# ==========================================
+
+def create_provider_url(provider, callback_url):
+
+    if provider == "link4m":
+        return create_link4m_url(callback_url)
+
+    if provider == "layma":
+        return create_layma_url(callback_url)
+
+    raise ValueError("Nhà cung cấp API không hợp lệ.")
 
 
 # ==========================================
@@ -1328,19 +1450,27 @@ class Website(BaseHTTPRequestHandler):
 
 
         # ======================================
-        # CREATE SHORT LINK - LINK4M ONLY
+        # CREATE SHORT LINK
+        # LINK4M + LAYMA
         # ======================================
 
         if path == "/create-short-link":
 
-            provider = query.get("provider", ["link4m"])[0].lower()
-            destination = query.get("destination", [""])[0].lower()
+            provider = query.get(
+                "provider",
+                ["link4m"]
+            )[0].lower()
 
-            if provider != "link4m":
+            destination = query.get(
+                "destination",
+                [""]
+            )[0].lower()
+
+            if provider not in ("link4m", "layma"):
 
                 self.send_json(400, {
                     "success": False,
-                    "message": "Website chỉ hỗ trợ Link4M."
+                    "message": "Nhà cung cấp API không hợp lệ."
                 })
 
                 return
@@ -1363,6 +1493,24 @@ class Website(BaseHTTPRequestHandler):
 
                 return
 
+            if provider == "link4m" and not LINK4M_API_TOKEN:
+
+                self.send_json(500, {
+                    "success": False,
+                    "message": "Chưa cấu hình LINK4M_API_TOKEN trên Render."
+                })
+
+                return
+
+            if provider == "layma" and not LAYMA_API_TOKEN:
+
+                self.send_json(500, {
+                    "success": False,
+                    "message": "Chưa cấu hình LAYMA_API_TOKEN trên Render."
+                })
+
+                return
+
             token = secrets.token_urlsafe(32)
 
             callback_url = (
@@ -1373,7 +1521,10 @@ class Website(BaseHTTPRequestHandler):
 
             try:
 
-                shortened_url = create_link4m_url(callback_url)
+                shortened_url = create_provider_url(
+                    provider,
+                    callback_url
+                )
 
                 cleanup_sessions()
 
@@ -1382,7 +1533,7 @@ class Website(BaseHTTPRequestHandler):
                     SESSIONS[token] = {
                         "created": time.time(),
                         "returned": False,
-                        "provider": "link4m",
+                        "provider": provider,
                         "destination": destination,
                         "view_confirmed": False
                     }
@@ -1390,13 +1541,13 @@ class Website(BaseHTTPRequestHandler):
                 self.send_json(200, {
                     "success": True,
                     "url": shortened_url,
-                    "provider": "link4m",
+                    "provider": provider,
                     "destination": destination
                 })
 
                 print(
-                    "[PHONG WEB V31] Created:",
-                    "link4m",
+                    "[PHONG WEB V32] Created:",
+                    provider,
                     destination
                 )
 
@@ -1408,7 +1559,8 @@ class Website(BaseHTTPRequestHandler):
                 )
 
                 print(
-                    "[PHONG WEB V31] API HTTP error:",
+                    "[PHONG WEB V32] API HTTP error:",
+                    provider,
                     error.code,
                     error_body[:400]
                 )
@@ -1429,7 +1581,8 @@ class Website(BaseHTTPRequestHandler):
                 self.send_json(502, {
                     "success": False,
                     "message": (
-                        "Link4M HTTP "
+                        provider.upper()
+                        + " HTTP "
                         + str(error.code)
                         + ": "
                         + str(message)[:250]
@@ -1439,20 +1592,34 @@ class Website(BaseHTTPRequestHandler):
             except urllib.error.URLError as error:
 
                 print(
-                    "[PHONG WEB V31] Connection error:",
+                    "[PHONG WEB V32] Connection error:",
+                    provider,
                     str(error.reason)
                 )
 
                 self.send_json(502, {
                     "success": False,
-                    "message": "Không thể kết nối máy chủ Link4M."
+                    "message": (
+                        "Không thể kết nối máy chủ "
+                        + provider.upper()
+                        + "."
+                    )
                 })
 
-            except TimeoutError:
+            except (TimeoutError, OSError) as error:
+
+                print(
+                    "[PHONG WEB V32] Network error:",
+                    provider,
+                    str(error)[:250]
+                )
 
                 self.send_json(504, {
                     "success": False,
-                    "message": "Link4M phản hồi quá lâu. Vui lòng thử lại."
+                    "message": (
+                        provider.upper()
+                        + " phản hồi quá lâu hoặc mất kết nối."
+                    )
                 })
 
             except ValueError as error:
@@ -1465,14 +1632,17 @@ class Website(BaseHTTPRequestHandler):
             except Exception as error:
 
                 print(
-                    "[PHONG WEB V31] Create link error:",
+                    "[PHONG WEB V32] Create link error:",
                     type(error).__name__,
                     str(error)[:300]
                 )
 
                 self.send_json(500, {
                     "success": False,
-                    "message": "Lỗi xử lý API: " + type(error).__name__
+                    "message": (
+                        "Lỗi xử lý API: "
+                        + type(error).__name__
+                    )
                 })
 
             return
@@ -1489,6 +1659,7 @@ class Website(BaseHTTPRequestHandler):
             cleanup_sessions()
 
             destination = None
+            provider = None
             valid = False
 
             with SESSIONS_LOCK:
@@ -1498,11 +1669,12 @@ class Website(BaseHTTPRequestHandler):
                 if session:
                     session["returned"] = True
                     destination = session.get("destination")
+                    provider = session.get("provider")
                     valid = True
 
             if not valid:
 
-                print("[PHONG WEB V31] Invalid callback")
+                print("[PHONG WEB V32] Invalid callback")
 
                 self.redirect(
                     "/?result=failed&destination=deta"
@@ -1511,7 +1683,8 @@ class Website(BaseHTTPRequestHandler):
                 return
 
             print(
-                "[PHONG WEB V31] Callback received:",
+                "[PHONG WEB V32] Callback received:",
+                provider,
                 destination
             )
 
@@ -1528,6 +1701,7 @@ class Website(BaseHTTPRequestHandler):
                 return
 
             # DETA / PROXY / MIZZE
+
             self.redirect(
                 "/?result=success"
                 "&destination="
@@ -1557,7 +1731,8 @@ class Website(BaseHTTPRequestHandler):
                         session.get("view_confirmed", False)
                     ),
                     "destination": session.get("destination"),
-                    "message": "Đã nhận callback từ Link4M."
+                    "provider": session.get("provider"),
+                    "message": "Đã nhận callback từ nhà cung cấp."
                 })
 
             else:
@@ -1615,7 +1790,7 @@ class Website(BaseHTTPRequestHandler):
                     "success": False,
                     "message": (
                         "Bạn chưa hoàn thành bước vượt link "
-                        + DESTINATIONS[destination]
+                        + DESTINATION_NAMES[destination]
                     )
                 })
 
@@ -1728,7 +1903,7 @@ class Website(BaseHTTPRequestHandler):
         except OSError as error:
 
             print(
-                "[PHONG WEB V31] File error:",
+                "[PHONG WEB V32] File error:",
                 str(error)
             )
 
@@ -1736,7 +1911,7 @@ class Website(BaseHTTPRequestHandler):
     def log_message(self, format, *args):
 
         print(
-            "[PHONG WEB V31]",
+            "[PHONG WEB V32]",
             format % args
         )
 
@@ -1753,7 +1928,7 @@ if __name__ == "__main__":
     )
 
     print("====================================")
-    print("          PHONG WEB V31")
+    print("          PHONG WEB V32")
     print("====================================")
 
     print("Server port:", PORT)
@@ -1763,14 +1938,17 @@ if __name__ == "__main__":
         "ENABLED" if LINK4M_API_TOKEN else "MISSING API TOKEN"
     )
 
-    print("YeuMoney API: REMOVED")
+    print(
+        "Layma API:",
+        "ENABLED" if LAYMA_API_TOKEN else "MISSING API TOKEN"
+    )
 
     print("Location route: /dinh-vi")
     print("Deta route: /menu")
     print("Proxy route: /proxy-mod-alen-crack")
     print("Mizze route: /mizze-crack")
 
-    print("Provider: Link4M only")
+    print("Providers: Link4M + Layma")
     print("Create endpoint: /create-short-link")
     print("Callback endpoint: /provider-return")
     print("Session check: /check-session")
@@ -1782,7 +1960,7 @@ if __name__ == "__main__":
 
     print("Music button: ENABLED")
     print("Music looping: ENABLED")
-    print("PHONG WEB VERSION: V31")
+    print("PHONG WEB VERSION: V32")
 
     print("====================================")
 
