@@ -16,7 +16,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlencode, urlsplit, quote, parse_qs
 
 # =========================================================
-# PHONG WEB V2.3
+# PHONG WEB V2.3.1
 # LINK4M ONLY | LOCATION + DETA + PROXY + MIZZE
 # ADVANCED ADMIN | JSON ANALYTICS | SECURITY | CSRF
 # =========================================================
@@ -921,14 +921,44 @@ body.light .link-description{color:#274768}
  background:rgba(0,100,220,.2);cursor:pointer;box-shadow:0 0 18px #168cff
 }
 .thank-image-button img{display:block;width:100%;height:auto;object-fit:contain}
-.music-mini{display:flex;justify-content:center;margin:25px auto 15px}
-.music-mini button{
- width:53px;height:53px;border:2px solid #75caff;border-radius:50%;
- color:white;background:linear-gradient(135deg,#086de0,#13b5ff);
- font-size:21px;cursor:pointer;box-shadow:0 0 18px #168cff
+.music-mini{display:flex;justify-content:center;align-items:center;margin:25px auto 15px}
+.music-control{
+ display:flex;align-items:center;justify-content:center;gap:14px;
+ min-width:190px;min-height:58px;padding:8px 17px;
+ border:1px solid #62c5ff;border-radius:13px;
+ background:linear-gradient(120deg,rgba(5,54,119,.96),rgba(4,126,210,.96));
+ box-shadow:0 0 18px rgba(22,140,255,.35);
 }
-.music-mini button.playing{animation:pulse 1.4s infinite}
-@keyframes pulse{50%{box-shadow:0 0 30px #36caff}}
+.music-bars{height:30px;display:flex;align-items:center;justify-content:center;gap:4px}
+.music-bars span{
+ display:block;width:4px;height:6px;border-radius:5px;
+ background:#8ee7ff;box-shadow:0 0 8px #39caff;
+ transform-origin:center;animation:none
+}
+.music-control.playing .music-bars span{animation:musicBeat .65s ease-in-out infinite alternate}
+.music-control.playing .music-bars span:nth-child(1){animation-delay:-.48s}
+.music-control.playing .music-bars span:nth-child(2){animation-delay:-.30s}
+.music-control.playing .music-bars span:nth-child(3){animation-delay:-.12s}
+.music-control.playing .music-bars span:nth-child(4){animation-delay:-.38s}
+@keyframes musicBeat{
+ 0%{height:5px;opacity:.65}
+ 50%{height:19px;opacity:1}
+ 100%{height:29px;opacity:.8}
+}
+.music-toggle{
+ min-width:112px;min-height:40px;padding:9px 14px;
+ border:1px solid #9bdcff;border-radius:9px;
+ color:white;background:linear-gradient(135deg,#0875df,#10aaf5);
+ font-size:14px;font-weight:800;letter-spacing:.4px;
+ cursor:pointer;box-shadow:0 0 12px rgba(40,170,255,.25);
+ transition:transform .18s,filter .18s
+}
+.music-toggle:hover{filter:brightness(1.12);transform:translateY(-1px)}
+.music-toggle:active{transform:scale(.97)}
+.music-toggle:disabled{opacity:.65;cursor:wait}
+.music-control.playing{box-shadow:0 0 24px rgba(30,190,255,.5)}
+body.light .music-control{background:linear-gradient(120deg,#d7efff,#a7dcff)}
+body.light .music-toggle{color:#fff}
 footer{
  padding:18px 10px 22px;text-align:center;color:#c1dcff;
  font-size:13px;line-height:1.9;background:rgba(3,8,23,.9);
@@ -1149,14 +1179,24 @@ footer strong{color:#55baff;letter-spacing:1px}
 </main>
 
 <div class="music-mini">
- <button id="musicButton"><span id="musicIcon">▶</span></button>
+ <div class="music-control" id="musicControl">
+  <div class="music-bars" aria-hidden="true">
+   <span></span><span></span><span></span><span></span>
+  </div>
+  <button class="music-toggle" id="musicButton" type="button"
+          aria-label="Bật nhạc" aria-pressed="false">
+   <span id="musicIcon">▶</span>
+   <span id="musicLabel"> BẬT NHẠC</span>
+  </button>
+ </div>
 </div>
 
-<audio id="backgroundMusic" src="/music.mp3" loop></audio>
+<audio id="backgroundMusic" src="/music.mp3" preload="none"
+       loop playsinline></audio>
 
 <footer>
  © 2026 Nguyễn Văn Phong Website<br>
- <strong>PHONG WEB V2.3</strong>
+ <strong>PHONG WEB V2.3.1</strong>
 </footer>
 
 <script>
@@ -1550,22 +1590,67 @@ document.addEventListener("click",e=>{
  }
 });
 
-// Nhạc nền.
+// Nhạc nền V2.3.1: nút chữ nhật + 4 thanh nhịp + lặp lại bài nhạc.
 const music=document.getElementById("backgroundMusic");
 const musicButton=document.getElementById("musicButton");
+const musicControl=document.getElementById("musicControl");
+const musicIcon=document.getElementById("musicIcon");
+const musicLabel=document.getElementById("musicLabel");
+
+music.loop=true;
+
+function updateMusicUI(isPlaying){
+ musicControl.classList.toggle("playing",isPlaying);
+ musicIcon.textContent=isPlaying?"Ⅱ":"▶";
+ musicLabel.textContent=isPlaying?" TẮT NHẠC":" BẬT NHẠC";
+ musicButton.setAttribute("aria-label",isPlaying?"Tắt nhạc":"Bật nhạc");
+ musicButton.setAttribute("aria-pressed",isPlaying?"true":"false");
+}
+
+music.addEventListener("play",()=>updateMusicUI(true));
+music.addEventListener("pause",()=>updateMusicUI(false));
+music.addEventListener("ended",()=>{
+ // Bảo đảm phát lại từ đầu nếu trình duyệt không tự xử lý loop.
+ if(music.loop){
+  music.currentTime=0;
+  music.play().catch(()=>updateMusicUI(false));
+ }
+});
+music.addEventListener("error",()=>{
+ updateMusicUI(false);
+ toast("Không tải được /music.mp3. Hãy kiểm tra file music.mp3 nằm cùng thư mục app.py.","bad");
+});
+
 musicButton.addEventListener("click",async()=>{
+ if(musicButton.disabled)return;
+
+ if(!music.paused){
+  music.pause();
+  updateMusicUI(false);
+  return;
+ }
+
+ musicButton.disabled=true;
+ musicLabel.textContent=" ĐANG TẢI...";
  try{
-  if(music.paused){
-   await music.play();
-   document.getElementById("musicIcon").textContent="Ⅱ";
-   musicButton.classList.add("playing");
+  // Gọi play trực tiếp từ thao tác chạm/click để tương thích chính sách mobile.
+  await music.play();
+  updateMusicUI(true);
+ }catch(error){
+  updateMusicUI(false);
+  let message="Không thể phát nhạc.";
+  if(error&&error.name==="NotAllowedError"){
+   message="Trình duyệt chặn phát nhạc. Hãy chạm nút BẬT NHẠC lần nữa.";
+  }else if(error&&error.name==="NotSupportedError"){
+   message="File music.mp3 không đúng định dạng hoặc không được hỗ trợ.";
+  }else if(!navigator.onLine){
+   message="Thiết bị đang ngoại tuyến, không tải được nhạc.";
   }else{
-   music.pause();
-   document.getElementById("musicIcon").textContent="▶";
-   musicButton.classList.remove("playing");
+   message="Không phát được nhạc. Kiểm tra file music.mp3 và thử tải lại trang.";
   }
- }catch(e){
-  toast("Không thể phát nhạc. Kiểm tra music.mp3.","bad");
+  toast(message,"bad");
+ }finally{
+  musicButton.disabled=false;
  }
 });
 
@@ -1585,7 +1670,7 @@ ADMIN_HTML = r"""<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>PHONG WEB V2.3 ADMIN</title>
+<title>PHONG WEB V2.3.1 ADMIN</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;padding:15px;background:#071022;color:white;font-family:Arial,sans-serif}
@@ -1633,7 +1718,7 @@ canvas.chart{width:100%;height:230px;background:#07152d;border-radius:10px}
 </head>
 <body>
 <main>
-<h1>⚙️ PHONG WEB V2.3 - ADMIN</h1>
+<h1>⚙️ PHONG WEB V2.3.1 - ADMIN</h1>
 <p class="small">Quản lý website, thống kê, lịch sử và bảo mật.</p>
 
 <section class="panel" id="loginPanel">
@@ -2102,7 +2187,7 @@ checkAdmin();
 
 class Website(BaseHTTPRequestHandler):
 
-    server_version = "PhongWeb/2.3"
+    server_version = "PhongWeb/2.3.1"
     sys_version = ""
 
     def client_ip(self):
@@ -2382,7 +2467,7 @@ class Website(BaseHTTPRequestHandler):
             if provider != "link4m":
                 self.send_json(400, {
                     "success": False,
-                    "message": "PHONG WEB V2.3 chỉ hỗ trợ Link4M."
+                    "message": "PHONG WEB V2.3.1 chỉ hỗ trợ Link4M."
                 })
                 return
 
@@ -2457,7 +2542,7 @@ class Website(BaseHTTPRequestHandler):
                     "Đã tạo liên kết Link4M", ip
                 )
 
-                print("[V2.3] LINK CREATED:", destination)
+                print("[V2.3.1] LINK CREATED:", destination)
 
                 self.send_json(200, {
                     "success": True,
@@ -2520,7 +2605,7 @@ class Website(BaseHTTPRequestHandler):
                     "Callback Link4M được tiếp nhận", self.client_ip()
                 )
 
-            print("[V2.3] CALLBACK:", destination)
+            print("[V2.3.1] CALLBACK:", destination)
 
             self.redirect(
                 "/?result=thanks&destination=" +
@@ -2602,7 +2687,7 @@ class Website(BaseHTTPRequestHandler):
                 "Người dùng nhấn LẤY FILE", self.client_ip()
             )
 
-            print("[V2.3] DOWNLOAD:", destination)
+            print("[V2.3.1] DOWNLOAD:", destination)
             self.redirect(target)
             return
 
@@ -2832,20 +2917,73 @@ class Website(BaseHTTPRequestHandler):
 
         try:
             size = file_path.stat().st_size
+            range_header = self.headers.get("Range", "")
+            start = 0
+            end = size - 1
+            status = 200
 
-            self.send_response(200)
+            # Hỗ trợ HTTP Range để trình duyệt điện thoại tải/seek MP3 ổn định.
+            if path.endswith(".mp3") and range_header.startswith("bytes="):
+                try:
+                    requested = range_header[6:].split(",", 1)[0].strip()
+                    left, right = requested.split("-", 1)
+
+                    if left:
+                        start = int(left)
+                        end = int(right) if right else size - 1
+                    elif right:
+                        suffix_length = int(right)
+                        if suffix_length <= 0:
+                            raise ValueError("Range suffix không hợp lệ.")
+                        start = max(0, size - suffix_length)
+                        end = size - 1
+                    else:
+                        raise ValueError("Range không hợp lệ.")
+
+                    if start < 0 or start >= size or end < start:
+                        self.send_response(416)
+                        self.send_header("Content-Range", "bytes */" + str(size))
+                        self.send_header("Accept-Ranges", "bytes")
+                        self.send_header("Content-Length", "0")
+                        self.send_security_headers()
+                        self.end_headers()
+                        return
+
+                    end = min(end, size - 1)
+                    status = 206
+
+                except (ValueError, TypeError):
+                    self.send_response(416)
+                    self.send_header("Content-Range", "bytes */" + str(size))
+                    self.send_header("Accept-Ranges", "bytes")
+                    self.send_header("Content-Length", "0")
+                    self.send_security_headers()
+                    self.end_headers()
+                    return
+
+            length = max(0, end - start + 1)
+            self.send_response(status)
             self.send_header("Content-Type", content_type)
-            self.send_header("Content-Length", str(size))
+            self.send_header("Content-Length", str(length))
+            self.send_header("Accept-Ranges", "bytes")
             self.send_header("Cache-Control", "public, max-age=3600")
+            if status == 206:
+                self.send_header(
+                    "Content-Range",
+                    f"bytes {start}-{end}/{size}"
+                )
             self.send_security_headers()
             self.end_headers()
 
             with open(file_path, "rb") as file:
-                while True:
-                    chunk = file.read(65536)
+                file.seek(start)
+                remaining = length
+                while remaining > 0:
+                    chunk = file.read(min(65536, remaining))
                     if not chunk:
                         break
                     self.wfile.write(chunk)
+                    remaining -= len(chunk)
 
         except (
             BrokenPipeError,
@@ -3045,7 +3183,7 @@ class Website(BaseHTTPRequestHandler):
                 "Cập nhật cấu hình mục tải file"
             )
 
-            print("[V2.3] ADMIN UPDATED SETTINGS")
+            print("[V2.3.1] ADMIN UPDATED SETTINGS")
 
             self.send_json(200, {
                 "success": True,
@@ -3197,7 +3335,7 @@ class Website(BaseHTTPRequestHandler):
         })
 
     def log_message(self, fmt, *args):
-        print("[PHONG WEB V2.3]", fmt % args)
+        print("[PHONG WEB V2.3.1]", fmt % args)
 
 
 # =========================================================
@@ -3217,7 +3355,7 @@ if __name__ == "__main__":
 
     print("======================================")
     print("       NGUYEN VAN PHONG WEBSITE")
-    print("              V2.3")
+    print("              V2.3.1")
     print("======================================")
 
     print("Port:", PORT)
