@@ -16,7 +16,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlencode, urlsplit, quote, parse_qs
 
 # =========================================================
-# PHONG WEB V2.3.2
+# PHONG WEB V2.4.0
 # LINK4M ONLY | LOCATION + DETA + PROXY + MIZZE
 # ADVANCED ADMIN | JSON ANALYTICS | SECURITY | CSRF
 # =========================================================
@@ -186,12 +186,21 @@ DEFAULT_DATA = {
         "enabled": False,
         "message": "Website đang bảo trì. Vui lòng quay lại sau."
     },
-    "admin_logs": []
+    "admin_logs": [],
+    "music_playlist": [
+        {"name": "Nhạc nền", "src": "/music.mp3"},
+        {"name": "Nhạc 1", "src": "/Nhac1.mp3"},
+        {"name": "Nhạc 2", "src": "/Nhac2.mp3"}
+    ]
 }
 
 for key, value in DEFAULT_DESTINATIONS.items():
     DEFAULT_DATA["settings"]["url_" + key] = value
     DEFAULT_DATA["settings"]["enabled_" + key] = "1"
+
+DEFAULT_DATA["settings"]["site_name"] = "NGUYỄN VĂN PHONG WEBSITE"
+for _tag in ("home", "freefire", "lienquan", "roblox"):
+    DEFAULT_DATA["settings"]["tag_" + _tag] = "1"
 
 for key, value in DEFAULT_FILES.items():
     DEFAULT_DATA["files"][key] = dict(value)
@@ -254,6 +263,16 @@ def load_data_unlocked():
 
     if not isinstance(data.get("admin_logs"), list):
         data["admin_logs"] = []
+    if not isinstance(data.get("music_playlist"), list):
+        data["music_playlist"] = [dict(x) for x in DEFAULT_DATA["music_playlist"]]
+    playlist = []
+    for track in data["music_playlist"][:50]:
+        if isinstance(track, dict):
+            name = safe_text(track.get("name", ""), 80)
+            src = safe_text(track.get("src", ""), 500)
+            if name and src:
+                playlist.append({"name": name, "src": src})
+    data["music_playlist"] = playlist or [dict(x) for x in DEFAULT_DATA["music_playlist"]]
 
     for key, value in DEFAULT_DATA["settings"].items():
         data["settings"].setdefault(key, value)
@@ -950,6 +969,15 @@ body.light .link-description{color:#274768}
  font-size:18px;font-weight:bold;cursor:pointer;box-shadow:0 0 12px #168cff
 }
 .music-mini button:active{transform:scale(.96)}
+.home-search{max-width:650px;margin:22px auto;position:relative;text-align:left}
+.home-search input{width:100%;padding:14px 16px;border:1px solid #45aaff;border-radius:12px;background:rgba(5,22,52,.94);color:#fff;font-size:15px}
+.search-results{position:absolute;z-index:1200;top:calc(100% + 5px);left:0;right:0;padding:8px;background:#071a38;border:1px solid #369eff;border-radius:12px;box-shadow:0 12px 30px #00152e}
+.search-results a{display:block;padding:11px;color:#d9efff;text-decoration:none;border-radius:8px}
+.search-results a:hover{background:#123c70}
+.music-mini{position:fixed;z-index:9000;right:14px;bottom:14px;width:auto;max-width:min(92vw,350px);margin:0;justify-content:flex-start;cursor:grab;touch-action:none}
+.music-mini.dragging{cursor:grabbing;opacity:.9}.music-track-name{max-width:105px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#e3f5ff;font-size:12px;font-weight:bold}
+.music-mini.minimized{display:none!important}.music-restore{position:fixed;z-index:9001;right:16px;bottom:16px;width:52px;height:52px;border-radius:50%;border:1px solid #8bd7ff;color:white;background:linear-gradient(135deg,#086de0,#13b5ff);font-size:25px;box-shadow:0 0 18px #168cff}
+.music-mini .music-minimize{width:28px;height:28px;font-size:15px;border-radius:7px}
 footer{
  padding:18px 10px 22px;text-align:center;color:#c1dcff;
  font-size:13px;line-height:1.9;background:rgba(3,8,23,.9);
@@ -1025,14 +1053,14 @@ footer strong{color:#55baff;letter-spacing:1px}
 
 <header>
  <button class="hamburger-button" id="hamburgerButton">☰</button>
- <div class="header-title">NGUYỄN VĂN PHONG WEBSITE</div>
+ <div class="header-title" id="siteTitle">NGUYỄN VĂN PHONG WEBSITE</div>
  <div class="clock-box"><span id="liveClock">🌙 00:00:00</span></div>
  <button class="theme-button" id="themeButton" title="Đổi giao diện">☀️</button>
  <nav class="side-menu" id="sideMenu">
-  <a href="/" id="homeMenuButton">🏠 TRANG CHỦ</a>
-  <a href="/?category=freefire" id="freeFireMenuButton">🔥 HACK FREE FIRE</a>
-  <a href="/?category=lienquan" id="lienQuanMenuButton">⚔️ HACK LIÊN QUÂN</a>
-  <a href="/?category=roblox" id="robloxMenuButton">🧱 HACK ROBLOX</a>
+  <a href="/" id="homeMenuButton" data-tag="home">🏠 TRANG CHỦ</a>
+  <a href="/?category=freefire" id="freeFireMenuButton" data-tag="freefire">🔥 HACK FREE FIRE</a>
+  <a href="/?category=lienquan" id="lienQuanMenuButton" data-tag="lienquan">⚔️ HACK LIÊN QUÂN</a>
+  <a href="/?category=roblox" id="robloxMenuButton" data-tag="roblox">🧱 HACK ROBLOX</a>
   <a href="/admin">⚙️ QUẢN TRỊ</a>
  </nav>
 </header>
@@ -1050,6 +1078,7 @@ footer strong{color:#55baff;letter-spacing:1px}
   </div>
 
   <div id="announcement" class="announcement hidden"></div>
+  <div class="home-search"><input id="homeSearch" type="search" placeholder="🔎 Tìm nhanh chức năng, danh mục..." autocomplete="off"><div id="searchResults" class="search-results hidden"></div></div>
 
   <div class="stats-bar">
    <span>🟢 Online: <b id="onlineCount">...</b></span>
@@ -1210,16 +1239,18 @@ footer strong{color:#55baff;letter-spacing:1px}
 
 <div class="music-mini" id="musicPlayer" aria-label="Trình phát nhạc">
  <div class="music-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+ <div class="music-track-name" id="musicTrackName">Chưa phát nhạc</div>
  <button id="musicButton" type="button" aria-label="Bật hoặc tắt nhạc">
   <span id="musicIcon">▶</span>
  </button>
+ <button class="music-minimize" id="musicMinimize" type="button" title="Thu nhỏ">−</button>
 </div>
-
+<button id="musicRestore" class="music-restore hidden" type="button" title="Mở trình phát nhạc">♫</button>
 <audio id="backgroundMusic" preload="none"></audio>
 
 <footer>
  © 2026 Nguyễn Văn Phong Website<br>
- <strong>PHONG WEB V2.3.2</strong>
+ <strong id="footerVersion">PHONG WEB V2.4.0</strong>
 </footer>
 
 <script>
@@ -1398,6 +1429,20 @@ async function refreshStats(){
 }
 setInterval(refreshStats,15000);
 refreshStats();
+
+// PHONG WEB V2.4.0: tải tên website, Tag, thông báo và playlist từ cấu hình quản trị.
+async function loadPublicConfig(){
+ try{const r=await fetch("/public-settings",{cache:"no-store"});const d=await r.json();if(!r.ok)return;
+  const name=d.site_name||"NGUYỄN VĂN PHONG WEBSITE";const title=document.getElementById("siteTitle");if(title)title.textContent=name;document.title=name+" | PHONG WEB";
+  document.querySelectorAll("[data-tag]").forEach(el=>el.classList.toggle("hidden",!!(d.tags&&d.tags[el.dataset.tag]===false)));
+  const ann=document.getElementById("announcement");if(ann){if(d.announcement&&d.announcement.enabled&&d.announcement.message){ann.textContent="📢 "+d.announcement.message;ann.classList.remove("hidden")}else ann.classList.add("hidden")}
+  if(Array.isArray(d.music_playlist)&&d.music_playlist.length){musicPlaylist=d.music_playlist;currentMusicIndex=0;updateTrackName()}
+  const m=document.getElementById("maintenanceBox"),n=document.getElementById("normalHome");if(d.maintenance&&d.maintenance.enabled&&m&&n){m.textContent=d.maintenance.message||"Website đang bảo trì.";m.classList.remove("hidden");n.classList.add("hidden")}
+ }catch(e){}
+}
+loadPublicConfig();
+function updateTrackName(){const el=document.getElementById("musicTrackName");if(el)el.textContent=musicPlaylist[currentMusicIndex]?.name||"Không có bài nhạc"}
+(function(){const input=document.getElementById("homeSearch"),box=document.getElementById("searchResults");if(!input||!box)return;const items=[["Trang Chủ","/","🏠"],["Hack Free Fire","/?category=freefire","🔥"],["Hack Liên Quân","/?category=lienquan","⚔️"],["Hack Roblox","/?category=roblox","🧱"],["Định Vị","/dinh-vi","📍"],["Deta","/menu","🔐"],["Proxy Mod Alen","/proxy-mod-alen-crack","🌐"],["Menu Mizze","/mizze-crack","🎮"],["Quản Trị","/admin","⚙️"]];input.addEventListener("input",()=>{const q=input.value.trim().toLocaleLowerCase("vi");box.innerHTML="";if(!q){box.classList.add("hidden");return}const found=items.filter(x=>x[0].toLocaleLowerCase("vi").includes(q));found.forEach(x=>{const a=document.createElement("a");a.href=x[1];a.textContent=x[2]+" "+x[0];box.append(a)});if(!found.length){const d=document.createElement("div");d.className="small";d.textContent="Không tìm thấy chức năng phù hợp.";box.append(d)}box.classList.remove("hidden")});document.addEventListener("click",e=>{if(e.target!==input&&!box.contains(e.target))box.classList.add("hidden")})})();
 
 // Cài đặt và thông báo công khai.
 async function refreshPublic(){
@@ -1648,7 +1693,7 @@ const music=document.getElementById("backgroundMusic");
 const musicButton=document.getElementById("musicButton");
 const musicPlayer=document.getElementById("musicPlayer");
 const musicIcon=document.getElementById("musicIcon");
-const musicPlaylist=[
+let musicPlaylist=[
  {name:"Nhạc nền",src:"/music.mp3"},
  {name:"Nhạc1",src:"/Nhac1.mp3"},
  {name:"Nhạc2",src:"/Nhac2.mp3"}
@@ -1665,6 +1710,7 @@ function setMusicPlaying(playing){
 async function playPlaylistTrack(index){
  currentMusicIndex=(index+musicPlaylist.length)%musicPlaylist.length;
  music.src=musicPlaylist[currentMusicIndex].src;
+ updateTrackName();
  music.load();
  try{
   await music.play();
@@ -1704,6 +1750,10 @@ music.addEventListener("pause",()=>{
  if(music.ended===false)setMusicPlaying(false);
 });
 music.addEventListener("play",()=>setMusicPlaying(true));
+const musicMinimize=document.getElementById("musicMinimize"),musicRestore=document.getElementById("musicRestore");
+musicMinimize.addEventListener("click",e=>{e.stopPropagation();musicPlayer.classList.add("minimized");musicRestore.classList.remove("hidden")});
+musicRestore.addEventListener("click",()=>{musicPlayer.classList.remove("minimized");musicRestore.classList.add("hidden")});
+(function(){let active=false,sx=0,sy=0,l=0,t=0;try{const v=JSON.parse(localStorage.getItem("phong_music_position")||"null");if(v){musicPlayer.style.left=v.left+"px";musicPlayer.style.top=v.top+"px";musicPlayer.style.right="auto";musicPlayer.style.bottom="auto"}}catch(e){}musicPlayer.addEventListener("pointerdown",e=>{if(e.target.closest("button"))return;const r=musicPlayer.getBoundingClientRect();active=true;sx=e.clientX;sy=e.clientY;l=r.left;t=r.top;musicPlayer.classList.add("dragging")});musicPlayer.addEventListener("pointermove",e=>{if(!active)return;const x=Math.max(0,Math.min(innerWidth-musicPlayer.offsetWidth,l+e.clientX-sx)),y=Math.max(0,Math.min(innerHeight-musicPlayer.offsetHeight,t+e.clientY-sy));musicPlayer.style.left=x+"px";musicPlayer.style.top=y+"px";musicPlayer.style.right="auto";musicPlayer.style.bottom="auto"});function end(){if(!active)return;active=false;musicPlayer.classList.remove("dragging");const r=musicPlayer.getBoundingClientRect();try{localStorage.setItem("phong_music_position",JSON.stringify({left:r.left,top:r.top}))}catch(e){}}musicPlayer.addEventListener("pointerup",end);musicPlayer.addEventListener("pointercancel",end)})();
 
 showPage();
 </script>
@@ -1721,7 +1771,7 @@ ADMIN_HTML = r"""<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>PHONG WEB V2.3.2 ADMIN</title>
+<title>PHONG WEB V2.4.0 ADMIN</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;padding:15px;background:#071022;color:white;font-family:Arial,sans-serif}
@@ -1769,7 +1819,7 @@ canvas.chart{width:100%;height:230px;background:#07152d;border-radius:10px}
 </head>
 <body>
 <main>
-<h1>⚙️ PHONG WEB V2.3.2 - ADMIN</h1>
+<h1>⚙️ PHONG WEB V2.4.0 - ADMIN</h1>
 <p class="small">Quản lý website, thống kê, lịch sử và bảo mật.</p>
 
 <section class="panel" id="loginPanel">
@@ -1785,6 +1835,7 @@ canvas.chart{width:100%;height:230px;background:#07152d;border-radius:10px}
  <button onclick="tab('files',this)">📁 Quản lý file</button>
  <button onclick="tab('history',this)">📜 Lịch sử</button>
  <button onclick="tab('notice',this)">📢 Thông báo</button>
+ <button onclick="tab('site',this)">🎵 Nhạc & Giao diện</button>
  <button onclick="tab('security',this)">🔐 Bảo mật</button>
 </div>
 
@@ -1861,6 +1912,17 @@ canvas.chart{width:100%;height:230px;background:#07152d;border-radius:10px}
  </div>
 </section>
 
+<section class="tabpage hidden" id="site">
+ <div class="panel"><h2>🏷️ TÊN WEBSITE & QUẢN LÝ TAG</h2>
+  <label>Tên website<input id="siteName" maxlength="80"></label>
+  <div class="row"><label><input type="checkbox" id="tagHome"> Trang Chủ</label><label><input type="checkbox" id="tagFreefire"> Hack Free Fire</label></div>
+  <div class="row"><label><input type="checkbox" id="tagLienquan"> Hack Liên Quân</label><label><input type="checkbox" id="tagRoblox"> Hack Roblox</label></div>
+  <button class="good" onclick="saveSiteConfig()">LƯU TÊN & TAG</button>
+ </div>
+ <div class="panel"><h2>🎵 QUẢN LÝ NHẠC</h2><p class="small">Nhập tên và đường dẫn MP3 nội bộ hoặc URL HTTPS. Tối đa 50 bài.</p>
+  <div id="musicItems"></div><div class="row"><input id="newMusicName" placeholder="Tên bài nhạc"><input id="newMusicSrc" placeholder="/music.mp3 hoặc URL HTTPS"><button onclick="addMusicTrack()">THÊM BÀI</button></div>
+  <button class="good" onclick="saveSiteConfig()">LƯU DANH SÁCH NHẠC</button></div>
+</section>
 <section class="tabpage hidden" id="security">
  <div class="panel">
   <h2>🔑 ĐỔI MẬT KHẨU ADMIN</h2>
@@ -1897,6 +1959,7 @@ canvas.chart{width:100%;height:230px;background:#07152d;border-radius:10px}
 <script>
 let config={};
 let csrfToken="";
+let musicAdminList=[];
 let adminTimer=null;
 
 function message(text,bad=false){
@@ -1975,9 +2038,14 @@ function logoutLocal(){
 async function loadAll(){
  await Promise.all([
   loadStats(),loadSettings(),loadNotice(),
-  loadHistory(),loadAdminLogs(),loadChart()
+  loadHistory(),loadAdminLogs(),loadChart(),loadSiteConfig()
  ]);
 }
+
+async function loadSiteConfig(){try{const d=await api("/admin/site-config");document.getElementById("siteName").value=d.site_name||"";document.getElementById("tagHome").checked=!!d.tags.home;document.getElementById("tagFreefire").checked=!!d.tags.freefire;document.getElementById("tagLienquan").checked=!!d.tags.lienquan;document.getElementById("tagRoblox").checked=!!d.tags.roblox;musicAdminList=Array.isArray(d.music_playlist)?d.music_playlist:[];renderMusicItems()}catch(e){message(e.message,true)}}
+function renderMusicItems(){const root=document.getElementById("musicItems");root.innerHTML="";musicAdminList.forEach((track,i)=>{const box=document.createElement("div");box.className="item";const name=document.createElement("input");name.value=track.name||"";name.placeholder="Tên bài";name.oninput=()=>musicAdminList[i].name=name.value;const src=document.createElement("input");src.value=track.src||"";src.placeholder="Đường dẫn MP3";src.oninput=()=>musicAdminList[i].src=src.value;const del=document.createElement("button");del.className="danger";del.textContent="XÓA";del.onclick=()=>{musicAdminList.splice(i,1);renderMusicItems()};box.append(name,src,del);root.append(box)})}
+function addMusicTrack(){const name=document.getElementById("newMusicName").value.trim(),src=document.getElementById("newMusicSrc").value.trim();if(!name||!src){message("Hãy nhập tên và đường dẫn bài nhạc.",true);return}if(musicAdminList.length>=50){message("Tối đa 50 bài nhạc.",true);return}musicAdminList.push({name,src});document.getElementById("newMusicName").value="";document.getElementById("newMusicSrc").value="";renderMusicItems()}
+async function saveSiteConfig(){try{const payload={site_name:document.getElementById("siteName").value.trim(),tags:{home:document.getElementById("tagHome").checked,freefire:document.getElementById("tagFreefire").checked,lienquan:document.getElementById("tagLienquan").checked,roblox:document.getElementById("tagRoblox").checked},music_playlist:musicAdminList};const d=await api("/admin/site-config",payload);message(d.message||"Đã lưu.");await loadSiteConfig()}catch(e){message(e.message,true)}}
 
 async function loadStats(){
  const d=await api("/admin/stats");
@@ -2238,7 +2306,7 @@ checkAdmin();
 
 class Website(BaseHTTPRequestHandler):
 
-    server_version = "PhongWeb/2.3.2"
+    server_version = "PhongWeb/2.4.0"
     sys_version = ""
 
     def client_ip(self):
@@ -2263,7 +2331,7 @@ class Website(BaseHTTPRequestHandler):
             "script-src 'self' 'unsafe-inline'; "
             "style-src 'self' 'unsafe-inline'; "
             "img-src 'self' https: data:; "
-            "media-src 'self'; frame-ancestors 'none'"
+            "media-src 'self' https:; frame-ancestors 'none'"
         )
 
     def send_json(self, status, data, extra_headers=None):
@@ -2490,7 +2558,10 @@ class Website(BaseHTTPRequestHandler):
                 },
                 "files": files,
                 "announcement": data["announcement"],
-                "maintenance": data["maintenance"]
+                "maintenance": data["maintenance"],
+                "site_name": data["settings"].get("site_name", "NGUYỄN VĂN PHONG WEBSITE"),
+                "tags": {key: data["settings"].get("tag_" + key, "1") == "1" for key in ("home", "freefire", "lienquan", "roblox")},
+                "music_playlist": data.get("music_playlist", [])
             })
             return
 
@@ -2811,6 +2882,15 @@ class Website(BaseHTTPRequestHandler):
                 "items": items,
                 "files": get_file_settings()
             })
+            return
+
+        if path == "/admin/site-config":
+            if not self.require_admin(): return
+            data = load_data()
+            self.send_json(200, {"success": True,
+                "site_name": data["settings"].get("site_name", "NGUYỄN VĂN PHONG WEBSITE"),
+                "tags": {key: data["settings"].get("tag_" + key, "1") == "1" for key in ("home", "freefire", "lienquan", "roblox")},
+                "music_playlist": data.get("music_playlist", [])})
             return
 
         # Admin history with search and event filter.
@@ -3193,6 +3273,35 @@ class Website(BaseHTTPRequestHandler):
             })
             return
 
+        if path == "/admin/site-config":
+            site_name = safe_text(data.get("site_name", ""), 80)
+            tags = data.get("tags"); playlist = data.get("music_playlist")
+            if not site_name or not isinstance(tags, dict) or not isinstance(playlist, list):
+                self.send_json(400, {"success": False, "message": "Thiếu cấu hình website, Tag hoặc danh sách nhạc."}); return
+            normalized_tags = {}
+            for key in ("home", "freefire", "lienquan", "roblox"):
+                if not isinstance(tags.get(key), bool):
+                    self.send_json(400, {"success": False, "message": "Trạng thái Tag không hợp lệ."}); return
+                normalized_tags[key] = "1" if tags[key] else "0"
+            if not 1 <= len(playlist) <= 50:
+                self.send_json(400, {"success": False, "message": "Danh sách nhạc cần từ 1 đến 50 bài."}); return
+            clean_playlist = []
+            for track in playlist:
+                if not isinstance(track, dict):
+                    self.send_json(400, {"success": False, "message": "Bài nhạc không hợp lệ."}); return
+                name = safe_text(track.get("name", ""), 80); src = safe_text(track.get("src", ""), 500)
+                local_ok = src in ("/music.mp3", "/Nhac1.mp3", "/Nhac2.mp3")
+                remote_ok = validate_http_url(src) and urlsplit(src).scheme == "https"
+                if not name or not (local_ok or remote_ok):
+                    self.send_json(400, {"success": False, "message": "Bài nhạc cần tên và đường dẫn MP3 nội bộ hoặc HTTPS."}); return
+                clean_playlist.append({"name": name, "src": src})
+            with JSON_LOCK:
+                stored = load_data_unlocked(); stored["settings"]["site_name"] = site_name
+                for key, value in normalized_tags.items(): stored["settings"]["tag_" + key] = value
+                stored["music_playlist"] = clean_playlist; save_data_unlocked(stored)
+            add_admin_log("UPDATE_SITE_CONFIG", self.client_ip(), "Cập nhật tên web, Tag và danh sách nhạc")
+            self.send_json(200, {"success": True, "message": "Đã lưu tên website, Tag và danh sách nhạc."}); return
+
         # Update announcements and maintenance.
         if path == "/admin/notice":
             announcement = data.get("announcement")
@@ -3337,7 +3446,7 @@ class Website(BaseHTTPRequestHandler):
         })
 
     def log_message(self, fmt, *args):
-        print("[PHONG WEB V2.3.2]", fmt % args)
+        print("[PHONG WEB V2.4.0]", fmt % args)
 
 
 # =========================================================
