@@ -851,40 +851,6 @@ body.light header{background:rgba(230,244,255,.95);color:#10203c}
 .side-menu.show{display:block;animation:pageIn .2s ease}
 .side-menu a{display:block;padding:13px;color:white;text-decoration:none}
 .side-menu a:hover{background:#087ce5;border-radius:8px}
-.side-menu a{border-bottom:1px solid rgba(120,190,255,.13);font-size:14px}
-.side-menu a:last-child{border-bottom:0}
-.side-menu .menu-tag{display:flex;align-items:center;gap:10px}
-.side-menu .menu-tag .tag-number{
- display:inline-flex;align-items:center;justify-content:center;
- min-width:25px;height:25px;border-radius:8px;
- background:rgba(35,145,255,.2);border:1px solid #43aaff;
- color:#9bdcff;font-size:11px;font-weight:bold
-}
-.side-menu .admin-tag{color:#ffd58a}
-.category-hidden{display:none!important}
-.category-tile{
- margin:18px auto;padding:22px 18px;max-width:620px;
- border:1px solid rgba(75,165,255,.55);border-radius:14px;
- background:linear-gradient(135deg,rgba(4,25,58,.94),rgba(0,76,140,.72));
- box-shadow:0 0 18px rgba(22,140,255,.18);text-align:center
-}
-.category-tile h2{margin:0 0 10px;font-size:18px}
-.category-tile p{color:#c7e5ff;line-height:1.6;margin:0 0 14px}
-.category-tile button{
- border:1px solid #70caff;border-radius:9px;padding:11px 18px;
- color:white;font-weight:bold;background:linear-gradient(120deg,#086de0,#13b5ff);
- cursor:pointer
-}
-.maintenance-game{
- max-width:650px;margin:45px auto;padding:28px 20px;text-align:center;
- border:1px solid #55baff;border-radius:16px;
- background:linear-gradient(145deg,rgba(5,28,65,.96),rgba(0,75,130,.8));
- box-shadow:0 0 24px rgba(22,140,255,.25);line-height:1.8
-}
-.maintenance-game .game-icon{font-size:48px;margin-bottom:12px}
-.maintenance-game h2{color:#8bd7ff;margin:8px 0 12px}
-.maintenance-game p{color:#e0f2ff}
-
 .container{width:min(900px,92%);margin:25px auto;text-align:center}
 .page{display:none;animation:pageIn .38s ease both}
 .page.active{display:block}
@@ -1063,11 +1029,11 @@ footer strong{color:#55baff;letter-spacing:1px}
  <div class="clock-box"><span id="liveClock">🌙 00:00:00</span></div>
  <button class="theme-button" id="themeButton" title="Đổi giao diện">☀️</button>
  <nav class="side-menu" id="sideMenu">
-  <a href="/" class="menu-tag" data-menu-tag="home"><span class="tag-number">01</span> 🏠 TRANG CHỦ</a>
-  <a href="#" class="menu-tag" data-menu-tag="freefire"><span class="tag-number">02</span> 🔥 HACK FREE FIRE</a>
-  <a href="#" class="menu-tag" data-menu-tag="lienquan"><span class="tag-number">03</span> ⚔️ HACK LIÊN QUÂN</a>
-  <a href="#" class="menu-tag" data-menu-tag="roblox"><span class="tag-number">04</span> 🎮 HACK ROBLOX</a>
-  <a href="/admin" class="menu-tag admin-tag"><span class="tag-number">05</span> ⚙️ QUẢN TRỊ</a>
+  <a href="/" id="homeMenuButton">🏠 TRANG CHỦ</a>
+  <a href="/?category=freefire" id="freeFireMenuButton">🔥 HACK FREE FIRE</a>
+  <a href="/?category=lienquan" id="lienQuanMenuButton">⚔️ HACK LIÊN QUÂN</a>
+  <a href="/?category=roblox" id="robloxMenuButton">🧱 HACK ROBLOX</a>
+  <a href="/admin">⚙️ QUẢN TRỊ</a>
  </nav>
 </header>
 
@@ -1098,7 +1064,7 @@ footer strong{color:#55baff;letter-spacing:1px}
    <span>📥 Lượt lấy file: <b id="downloadCount">...</b></span>
   </div>
 
-  <section class="location-container" id="card-location" data-game-category="freefire">
+  <section class="location-container" id="card-location">
    <a class="location-link" href="/dinh-vi">
     <div class="location-card">
      <div class="location-emoji">📍</div>
@@ -1111,45 +1077,60 @@ footer strong{color:#55baff;letter-spacing:1px}
    </a>
   </section>
 
-  <section class="menu-container" id="card-deta" data-game-category="freefire">
+  <section class="menu-container" id="card-deta">
    <div class="menu-card"><h2>🔐 DETA IPA CRACK NOKЕY</h2>
     <button class="open-menu-button" onclick="navigate('/menu')">MỞ MENU</button>
    </div>
   </section>
 
-  <section class="menu-container" id="card-proxy" data-game-category="freefire">
+  <section class="menu-container" id="card-proxy">
    <div class="menu-card"><h2>🌐 PROXY MOD ALEN CRACK</h2>
     <button class="open-menu-button" onclick="navigate('/proxy-mod-alen-crack')">MỞ MỤC</button>
    </div>
   </section>
 
-  <section class="menu-container" id="card-mizze" data-game-category="freefire">
+  <section class="menu-container" id="card-mizze">
    <div class="menu-card"><h2>🎮 MENU MIZZE CRACK</h2>
     <button class="open-menu-button" onclick="navigate('/mizze-crack')">MỞ MỤC</button>
    </div>
   </section>
 
-  <section class="category-tile" id="card-lienquan" data-game-category="lienquan">
-   <h2>⚔️ HACK LIÊN QUÂN</h2>
-   <p>Danh mục đang được cập nhật.</p>
-   <button type="button" onclick="showGameNotice('lienquan')">XEM THÔNG BÁO</button>
+  <section class="menu-container">
+   <div class="menu-card"><h2>⚔️ HACK LIÊN QUÂN</h2>
+    <p class="link-description">Website đang cập nhật. Vui lòng chờ.</p>
+    <button class="open-menu-button" onclick="navigateCategory('lienquan')">XEM THÔNG TIN</button>
+   </div>
   </section>
-
-  <section class="category-tile" id="card-roblox" data-game-category="roblox">
-   <h2>🎮 HACK ROBLOX</h2>
-   <p>Danh mục đang được cập nhật.</p>
-   <button type="button" onclick="showGameNotice('roblox')">XEM THÔNG BÁO</button>
+  <section class="menu-container">
+   <div class="menu-card"><h2>🧱 HACK ROBLOX</h2>
+    <p class="link-description">Website đang cập nhật. Vui lòng chờ.</p>
+    <button class="open-menu-button" onclick="navigateCategory('roblox')">XEM THÔNG TIN</button>
+   </div>
   </section>
  </div>
 </section>
 
-<section class="page" id="gameNoticePage">
- <div class="maintenance-game">
-  <div class="game-icon" id="gameNoticeIcon">🔧</div>
-  <h2 id="gameNoticeTitle">ĐANG CẬP NHẬT</h2>
-  <p id="gameNoticeText">Web đang cập nhật, vui lòng chờ.</p>
-  <button class="back-button" type="button" onclick="showCategory('home')">← QUAY LẠI TRANG CHỦ</button>
+<section class="page" id="freeFirePage">
+ <div class="link-box">
+  <div class="link-icon">🔥</div>
+  <h2>CHÀO BẠN ĐẾN VỚI HACK FREE FIRE</h2>
+  <div class="link-description">Chọn một trong các mục bên dưới để tiếp tục.</div>
  </div>
+ <section class="location-container">
+  <a class="location-link" href="/dinh-vi"><div class="location-card"><div class="location-emoji">📍</div><div class="location-info"><h2>ĐỊNH VỊ XANH TÍM OB55</h2><p>Nhấn vào đây để tiếp tục</p><span class="location-button">MỞ MỤC</span></div></div></a>
+ </section>
+ <section class="menu-container"><div class="menu-card"><h2>🔐 DETA IPA CRACK NOKЕY</h2><button class="open-menu-button" onclick="navigate('/menu')">MỞ MENU</button></div></section>
+ <section class="menu-container"><div class="menu-card"><h2>🌐 PROXY MOD ALEN CRACK</h2><button class="open-menu-button" onclick="navigate('/proxy-mod-alen-crack')">MỞ MỤC</button></div></section>
+ <section class="menu-container"><div class="menu-card"><h2>🎮 MENU MIZZE CRACK</h2><button class="open-menu-button" onclick="navigate('/mizze-crack')">MỞ MỤC</button></div></section>
+ <a class="back-button" href="/" onclick="event.preventDefault();navigateCategory('home')">← TRANG CHỦ</a>
+</section>
+
+<section class="page" id="lienQuanPage">
+ <div class="link-box"><div class="link-icon">⚔️</div><h2>CHÀO BẠN ĐẾN VỚI HACK LIÊN QUÂN</h2><div class="maintenance"><h3>🚧 WEBSITE ĐANG CẬP NHẬT</h3>Vui lòng chờ. Chúng tôi sẽ cập nhật nội dung sớm nhất.</div><a class="back-button" href="/" onclick="event.preventDefault();navigateCategory('home')">← TRANG CHỦ</a></div>
+</section>
+
+<section class="page" id="robloxPage">
+ <div class="link-box"><div class="link-icon">🧱</div><h2>CHÀO BẠN ĐẾN VỚI HACK ROBLOX</h2><div class="maintenance"><h3>🚧 WEBSITE ĐANG CẬP NHẬT</h3>Vui lòng chờ. Chúng tôi sẽ cập nhật nội dung sớm nhất.</div><a class="back-button" href="/" onclick="event.preventDefault();navigateCategory('home')">← TRANG CHỦ</a></div>
 </section>
 
 <section class="page" id="locationPage">
@@ -1244,7 +1225,9 @@ footer strong{color:#55baff;letter-spacing:1px}
 <script>
 const pages={
  home:document.getElementById("homePage"),
- gameNotice:document.getElementById("gameNoticePage"),
+ freefire:document.getElementById("freeFirePage"),
+ lienquan:document.getElementById("lienQuanPage"),
+ roblox:document.getElementById("robloxPage"),
  location:document.getElementById("locationPage"),
  deta:document.getElementById("detaPage"),
  proxy:document.getElementById("proxyPage"),
@@ -1354,10 +1337,28 @@ function navigate(path){
  showPage();
  window.scrollTo(0,0);
 }
+function navigateCategory(category){
+ menu.classList.remove("show");
+ const value=category==="home"?"":"?category="+encodeURIComponent(category);
+ history.pushState({},"","/"+value);
+ showPage();
+ window.scrollTo(0,0);
+}
 function showPage(){
  hideAllPages();
  const q=new URLSearchParams(location.search);
  const result=q.get("result");
+ const category=q.get("category");
+
+ if(category==="freefire"){
+  pages.freefire.classList.add("active");return;
+ }
+ if(category==="lienquan"){
+  pages.lienquan.classList.add("active");return;
+ }
+ if(category==="roblox"){
+  pages.roblox.classList.add("active");return;
+ }
 
  if(result==="thanks"){
   pages.thank.classList.add("active");return;
@@ -1375,7 +1376,6 @@ function showPage(){
  (routes[location.pathname]||pages.home).classList.add("active");
 }
 window.addEventListener("popstate",showPage);
-showCategory("home");
 
 // Thống kê.
 async function refreshStats(){
@@ -1619,49 +1619,23 @@ async function checkResult(){
  }
 }
 
-// Menu V2.3.2: 5 tag danh muc.
+// Menu.
 const hamburger=document.getElementById("hamburgerButton");
 const menu=document.getElementById("sideMenu");
-let activeMenuCategory="home";
-
-function showCategory(category){
- activeMenuCategory=category;
- if(category==="lienquan"||category==="roblox"){
-  hideAllPages();
-  pages.gameNotice.classList.add("active");
-  const lienquan=category==="lienquan";
-  document.getElementById("gameNoticeIcon").textContent=lienquan?"⚔️":"🎮";
-  document.getElementById("gameNoticeTitle").textContent=
-   lienquan?"HACK LIÊN QUÂN ĐANG CẬP NHẬT":"HACK ROBLOX ĐANG CẬP NHẬT";
-  document.getElementById("gameNoticeText").textContent=
-   "Web đang cập nhật, vui lòng chờ.";
- }else{
-  hideAllPages();
-  pages.home.classList.add("active");
-  document.getElementById("normalHome").classList.remove("hidden");
-  document.getElementById("maintenanceBox").classList.add("hidden");
-  document.querySelectorAll("[data-game-category]").forEach(card=>{
-   const cardCategory=card.getAttribute("data-game-category");
-   const visible=category==="home"||cardCategory==="freefire";
-   card.classList.toggle("category-hidden",!visible);
-  });
-  window.scrollTo(0,0);
- }
- menu.classList.remove("show");
-}
-
-function showGameNotice(category){
- showCategory(category);
-}
-
 hamburger.addEventListener("click",e=>{
  e.stopPropagation();menu.classList.toggle("show");
 });
-menu.querySelectorAll("[data-menu-tag]").forEach(link=>{
- link.addEventListener("click",e=>{
-  e.preventDefault();
-  showCategory(link.getAttribute("data-menu-tag"));
- });
+document.getElementById("homeMenuButton").addEventListener("click",e=>{
+ e.preventDefault();navigateCategory("home");
+});
+document.getElementById("freeFireMenuButton").addEventListener("click",e=>{
+ e.preventDefault();navigateCategory("freefire");
+});
+document.getElementById("lienQuanMenuButton").addEventListener("click",e=>{
+ e.preventDefault();navigateCategory("lienquan");
+});
+document.getElementById("robloxMenuButton").addEventListener("click",e=>{
+ e.preventDefault();navigateCategory("roblox");
 });
 document.addEventListener("click",e=>{
  if(!menu.contains(e.target)&&!hamburger.contains(e.target)){
@@ -2264,7 +2238,7 @@ checkAdmin();
 
 class Website(BaseHTTPRequestHandler):
 
-    server_version = "PhongWeb/2.3"
+    server_version = "PhongWeb/2.3.2"
     sys_version = ""
 
     def client_ip(self):
@@ -2619,7 +2593,7 @@ class Website(BaseHTTPRequestHandler):
                     "Đã tạo liên kết Link4M", ip
                 )
 
-                print("[V2.3.2] LINK CREATED:", destination)
+                print("[V2.3] LINK CREATED:", destination)
 
                 self.send_json(200, {
                     "success": True,
@@ -2682,7 +2656,7 @@ class Website(BaseHTTPRequestHandler):
                     "Callback Link4M được tiếp nhận", self.client_ip()
                 )
 
-            print("[V2.3.2] CALLBACK:", destination)
+            print("[V2.3] CALLBACK:", destination)
 
             self.redirect(
                 "/?result=thanks&destination=" +
@@ -2764,7 +2738,7 @@ class Website(BaseHTTPRequestHandler):
                 "Người dùng nhấn LẤY FILE", self.client_ip()
             )
 
-            print("[V2.3.2] DOWNLOAD:", destination)
+            print("[V2.3] DOWNLOAD:", destination)
             self.redirect(target)
             return
 
@@ -3211,7 +3185,7 @@ class Website(BaseHTTPRequestHandler):
                 "Cập nhật cấu hình mục tải file"
             )
 
-            print("[V2.3.2] ADMIN UPDATED SETTINGS")
+            print("[V2.3] ADMIN UPDATED SETTINGS")
 
             self.send_json(200, {
                 "success": True,
@@ -3363,7 +3337,7 @@ class Website(BaseHTTPRequestHandler):
         })
 
     def log_message(self, fmt, *args):
-        print("[PHONG WEB V2.3]", fmt % args)
+        print("[PHONG WEB V2.3.2]", fmt % args)
 
 
 # =========================================================
@@ -3383,7 +3357,7 @@ if __name__ == "__main__":
 
     print("======================================")
     print("       NGUYEN VAN PHONG WEBSITE")
-    print("              V2.3")
+    print("              V2.3.2")
     print("======================================")
 
     print("Port:", PORT)
@@ -3414,6 +3388,7 @@ if __name__ == "__main__":
     print("Session TTL:", SESSION_TTL, "seconds")
     print("Admin TTL:", ADMIN_TTL, "seconds")
 
+    print("Categories: /?category=freefire | lienquan | roblox")
     print("Location: /dinh-vi")
     print("Deta: /menu")
     print("Proxy: /proxy-mod-alen-crack")
