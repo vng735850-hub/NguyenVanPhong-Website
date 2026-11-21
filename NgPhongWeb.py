@@ -1,4 +1,3 @@
-
 import os
 import json
 import time
@@ -15,15 +14,14 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlencode, urlsplit, quote, parse_qs
 
 # =========================================================
-# PHONG WEB V2.2.1
+# PHONG WEB V2.2.2
 # LINK4M ONLY | LOCATION + DETA + PROXY + MIZZE
-# ADMIN | JSON STORAGE | ONLINE STATISTICS | SECURITY
+# ADMIN | JSON STORAGE | ONLINE + DEVICE STATISTICS
 # =========================================================
 
 BASE_DIR = Path(__file__).resolve().parent
 PORT = int(os.environ.get("PORT", 5000))
 
-# JSON STORAGE - KHÔNG CẦN PERSISTENT DISK
 DATA_FILE = BASE_DIR / "data.json"
 
 SITE_URL = os.environ.get(
@@ -104,7 +102,13 @@ JSON_LOCK = threading.RLock()
 
 DEFAULT_DATA = {
     "settings": {},
-    "visitors": {}
+    "visitors": {},
+    "visitor_devices": {},
+    "stats": {
+        "total": 0,
+        "android": 0,
+        "iphone": 0
+    }
 }
 
 for key, value in DEFAULT_DESTINATIONS.items():
@@ -112,11 +116,15 @@ for key, value in DEFAULT_DESTINATIONS.items():
     DEFAULT_DATA["settings"]["enabled_" + key] = "1"
 
 
+def safe_count(value):
+    try:
+        return max(0, int(value))
+    except (ValueError, TypeError, OverflowError):
+        return 0
+
+
 def save_data_unlocked(data):
-    """
-    Ghi JSON an toàn bằng file tạm rồi thay thế file chính.
-    Phải được gọi khi đang giữ JSON_LOCK.
-    """
+    """Ghi JSON an toàn bằng file tạm rồi thay thế file chính."""
     temp_file = DATA_FILE.with_suffix(".tmp")
 
     try:
@@ -142,10 +150,8 @@ def save_data_unlocked(data):
 
 
 def load_data_unlocked():
-    """
-    Đọc dữ liệu JSON.
-    Phải được gọi khi đang giữ JSON_LOCK.
-    """
+    """Đọc JSON. Phải được gọi khi đang giữ JSON_LOCK."""
+
     try:
         if DATA_FILE.is_file():
             with open(DATA_FILE, "r", encoding="utf-8") as file:
@@ -160,19 +166,32 @@ def load_data_unlocked():
             if not isinstance(data.get("visitors"), dict):
                 data["visitors"] = {}
 
-            # Bổ sung thiết lập mặc định nếu thiếu.
+            if not isinstance(data.get("visitor_devices"), dict):
+                data["visitor_devices"] = {}
+
+            if not isinstance(data.get("stats"), dict):
+                data["stats"] = {}
+
+            # Bổ sung thiết lập mặc định.
             for key, value in DEFAULT_DATA["settings"].items():
                 data["settings"].setdefault(key, value)
+
+            # Bổ sung bộ đếm thống kê nếu thiếu.
+            for key, value in DEFAULT_DATA["stats"].items():
+                data["stats"][key] = safe_count(
+                    data["stats"].get(key, value)
+                )
 
             return data
 
     except (OSError, ValueError, json.JSONDecodeError) as error:
         print("[JSON WARNING]", str(error))
 
-    # Tạo dữ liệu mặc định.
     data = {
         "settings": dict(DEFAULT_DATA["settings"]),
-        "visitors": {}
+        "visitors": {},
+        "visitor_devices": {},
+        "stats": dict(DEFAULT_DATA["stats"])
     }
 
     save_data_unlocked(data)
@@ -190,9 +209,8 @@ def save_data(data):
 
 
 def init_data():
-    """
-    Khởi tạo data.json và giữ lại dữ liệu cũ nếu file hợp lệ.
-    """
+    """Khởi tạo data.json và giữ lại dữ liệu cũ nếu file hợp lệ."""
+
     with JSON_LOCK:
         data = load_data_unlocked()
 
@@ -201,6 +219,17 @@ def init_data():
 
         if not isinstance(data.get("visitors"), dict):
             data["visitors"] = {}
+
+        if not isinstance(data.get("visitor_devices"), dict):
+            data["visitor_devices"] = {}
+
+        if not isinstance(data.get("stats"), dict):
+            data["stats"] = {}
+
+        for key, value in DEFAULT_DATA["stats"].items():
+            data["stats"][key] = safe_count(
+                data["stats"].get(key, value)
+            )
 
         save_data_unlocked(data)
 
@@ -232,24 +261,81 @@ def destination_enabled(key):
 
 
 # =========================================================
-# ONLINE STATISTICS
+# DEVICE DETECTION
 # =========================================================
 
-def register_visit(visitor_id):
+def detect_device(user_agent):
     """
-    Cập nhật thời gian hoạt động của khách truy cập.
-    Không lưu tổng lượt truy cập.
+    Nhận diện thiết bị bằng User-Agent.
+    Kết quả: android, iphone hoặc other.
     """
+
+    ua = str(user_agent or "").lower()
+
+    if "iphone" in ua:
+        return "iphone"
+
+    if "android" in ua:
+        return "android"
+
+    return "other"
+
+
+# =========================================================
+# ONLINE + VISITOR STATISTICS
+# =========================================================
+
+def register_visit(visitor_id, user_agent=""):
+    """
+    Cập nhật người đang online.
+
+    Chỉ tính tổng khách một lần cho mỗi visitor cookie:
+    - total: tất cả khách duy nhất.
+    - android: khách Android duy nhất.
+    - iphone: khách iPhone duy nhất.
+    """
+
     if not valid_token(visitor_id):
         return
 
     now = time.time()
+    device = detect_device(user_agent)
 
     with JSON_LOCK:
         data = load_data_unlocked()
-        visitors = data.get("visitors", {})
 
-        # Xóa người đã không hoạt động quá thời gian cho phép.
+        visitors = data.get("visitors", {})
+        visitor_devices = data.get("visitor_devices", {})
+        stats = data.get("stats", {})
+
+        if not isinstance(visitors, dict):
+            visitors = {}
+
+        if not isinstance(visitor_devices, dict):
+            visitor_devices = {}
+
+        if not isinstance(stats, dict):
+            stats = {}
+
+        # Chỉ tăng tổng khi gặp visitor ID lần đầu.
+        if visitor_id not in visitor_devices:
+            visitor_devices[visitor_id] = device
+
+            stats["total"] = safe_count(
+                stats.get("total", 0)
+            ) + 1
+
+            if device == "android":
+                stats["android"] = safe_count(
+                    stats.get("android", 0)
+                ) + 1
+
+            elif device == "iphone":
+                stats["iphone"] = safe_count(
+                    stats.get("iphone", 0)
+                ) + 1
+
+        # Xóa khách đã hết thời gian online.
         expired = []
 
         for visitor, last_seen in visitors.items():
@@ -262,37 +348,57 @@ def register_visit(visitor_id):
         for visitor in expired:
             visitors.pop(visitor, None)
 
+        # Cập nhật hoạt động hiện tại.
         visitors[visitor_id] = now
 
         data["visitors"] = visitors
+        data["visitor_devices"] = visitor_devices
+        data["stats"] = stats
+
         save_data_unlocked(data)
 
 
 def get_statistics():
     """
-    Chỉ trả về số người đang truy cập.
+    Trả về:
+    online  = số khách đang online.
+    total   = tổng khách duy nhất.
+    android = khách Android duy nhất.
+    iphone  = khách iPhone duy nhất.
     """
+
     now = time.time()
 
     with JSON_LOCK:
         data = load_data_unlocked()
+
         visitors = data.get("visitors", {})
+        stats = data.get("stats", {})
 
         online_visitors = {}
 
         for visitor, last_seen in visitors.items():
             try:
-                if now - float(last_seen) <= VISITOR_TIMEOUT:
-                    online_visitors[visitor] = float(last_seen)
+                last_seen = float(last_seen)
+
+                if now - last_seen <= VISITOR_TIMEOUT:
+                    online_visitors[visitor] = last_seen
+
             except (ValueError, TypeError):
                 continue
 
         data["visitors"] = online_visitors
+
+        result = {
+            "online": len(online_visitors),
+            "total": safe_count(stats.get("total", 0)),
+            "android": safe_count(stats.get("android", 0)),
+            "iphone": safe_count(stats.get("iphone", 0))
+        }
+
         save_data_unlocked(data)
 
-        return {
-            "online": len(online_visitors)
-        }
+        return result
 
 
 # =========================================================
@@ -422,7 +528,7 @@ def api_request(url):
     request = urllib.request.Request(
         url,
         headers={
-            "User-Agent": "Mozilla/5.0 PHONG-WEB/2.2.1",
+            "User-Agent": "Mozilla/5.0 PHONG-WEB/2.2.2",
             "Accept": "application/json",
             "Cache-Control": "no-cache"
         },
@@ -652,13 +758,15 @@ footer strong{color:#55baff;letter-spacing:1px}
 #toast.bad{border-color:#ff6565}
 #toast.good{border-color:#48e8a0}
 .stats-bar{
- display:flex;justify-content:center;gap:12px;flex-wrap:wrap;
+ display:flex;justify-content:center;gap:10px;flex-wrap:wrap;
  margin:15px auto;color:#cce8ff;font-size:12px
 }
 .stats-bar span{
- padding:9px 13px;border:1px solid rgba(75,165,255,.5);
- border-radius:9px;background:rgba(4,20,48,.75)
+ padding:10px 13px;border:1px solid rgba(75,165,255,.5);
+ border-radius:9px;background:rgba(4,20,48,.75);
+ min-width:145px
 }
+.stats-bar b{color:#fff;font-size:14px}
 @media(max-width:600px){
  header{grid-template-columns:40px minmax(0,1fr) 95px;gap:6px;padding:8px;min-height:65px}
  .hamburger-button{width:40px;height:43px;font-size:23px}
@@ -667,6 +775,7 @@ footer strong{color:#55baff;letter-spacing:1px}
  .side-menu{top:60px}.location-card{gap:12px}
  .location-info h2{font-size:16px}
  .link-box{margin:22px auto;padding:23px 15px}
+ .stats-bar span{flex:1 1 145px}
 }
 </style>
 </head>
@@ -693,8 +802,12 @@ footer strong{color:#55baff;letter-spacing:1px}
   Chào mừng bạn đến với website của Nguyễn Văn Phong.
   <br>📍 ĐỊNH VỊ XANH TÍM OB55
  </div>
+
  <div class="stats-bar">
   <span>🟢 Đang truy cập: <b id="onlineCount">...</b></span>
+  <span>👁 Tổng số người truy cập: <b id="totalCount">...</b></span>
+  <span>🤖 Android: <b id="androidCount">...</b></span>
+  <span>🍎 iPhone: <b id="iphoneCount">...</b></span>
  </div>
 
  <section class="location-container" id="card-location">
@@ -803,7 +916,7 @@ footer strong{color:#55baff;letter-spacing:1px}
 
 <footer>
  © 2026 Nguyễn Văn Phong Website<br>
- <strong>PHONG WEB V2.2.1</strong>
+ <strong>PHONG WEB V2.2.2</strong>
 </footer>
 
 <script>
@@ -851,7 +964,7 @@ function updateClock(){
   hour:"2-digit",
   minute:"2-digit",
   second:"2-digit",
-  hour12:false
+  hourCycle:"h23"
  }).formatToParts(now);
 
  const values={};
@@ -872,10 +985,8 @@ function updateClock(){
   icon="🌙";
  }
 
- const clockText=
+ document.getElementById("liveClock").textContent=
   icon+" "+values.hour+":"+values.minute+":"+values.second;
-
- document.getElementById("liveClock").textContent=clockText;
 }
 
 updateClock();
@@ -929,7 +1040,7 @@ window.addEventListener("popstate",showPage);
 
 
 // =====================================================
-// ONLINE STATISTICS - ONLY ONLINE
+// ONLINE + TOTAL + DEVICE STATISTICS
 // =====================================================
 
 async function refreshStats(){
@@ -937,8 +1048,21 @@ async function refreshStats(){
   const r=await fetch("/stats",{cache:"no-store"});
   const d=await r.json();
 
+  if(!r.ok||!d.success){
+   return;
+  }
+
   document.getElementById("onlineCount").textContent=
-   Number(d.online||0);
+   Number(d.online||0).toLocaleString("vi-VN");
+
+  document.getElementById("totalCount").textContent=
+   Number(d.total||0).toLocaleString("vi-VN");
+
+  document.getElementById("androidCount").textContent=
+   Number(d.android||0).toLocaleString("vi-VN");
+
+  document.getElementById("iphoneCount").textContent=
+   Number(d.iphone||0).toLocaleString("vi-VN");
 
  }catch(e){}
 }
@@ -1328,12 +1452,27 @@ label{display:block;margin:12px 0}
 .row button{margin:5px 0}
 #message{margin:12px 0;color:#74ffc0;overflow-wrap:anywhere}
 a{color:#7bcaff}
+.stat-grid{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:10px;margin:15px 0
+}
+.stat-card{
+ padding:15px;background:#07152d;
+ border:1px solid #398ddd;border-radius:10px;
+ line-height:1.8
+}
+.stat-card b{display:block;color:#fff;font-size:25px}
+.stat-card span{color:#b9d7f7;font-size:13px}
+@media(max-width:450px){
+ body{padding:10px}
+ .stat-grid{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
 <main>
 
-<h1>⚙️ PHONG WEB V2.2.1 - QUẢN TRỊ</h1>
+<h1>⚙️ PHONG WEB V2.2.2 - QUẢN TRỊ</h1>
 <p class="small">Trang quản trị riêng của Nguyễn Văn Phong.</p>
 
 <section class="panel" id="loginPanel">
@@ -1347,8 +1486,34 @@ a{color:#7bcaff}
 
 <section class="panel">
 <h2>📊 THỐNG KÊ WEBSITE</h2>
-<p>🟢 Đang truy cập: <b id="online">...</b></p>
-<button onclick="loadStats()">LÀM MỚI</button>
+
+<div class="stat-grid">
+ <div class="stat-card">
+  🟢 Đang truy cập
+  <b id="online">...</b>
+  <span>Người đang online</span>
+ </div>
+
+ <div class="stat-card">
+  👁 Tổng số người truy cập
+  <b id="total">...</b>
+  <span>Tổng khách duy nhất</span>
+ </div>
+
+ <div class="stat-card">
+  🤖 Điện thoại Android
+  <b id="android">...</b>
+  <span>Khách Android duy nhất</span>
+ </div>
+
+ <div class="stat-card">
+  🍎 Điện thoại iPhone
+  <b id="iphone">...</b>
+  <span>Khách iPhone duy nhất</span>
+ </div>
+</div>
+
+<button onclick="loadStats()">LÀM MỚI THỐNG KÊ</button>
 </section>
 
 <section class="panel">
@@ -1423,7 +1588,16 @@ async function loadStats(){
  const d=await api("/admin/stats");
 
  document.getElementById("online").textContent=
-  Number(d.online||0);
+  Number(d.online||0).toLocaleString("vi-VN");
+
+ document.getElementById("total").textContent=
+  Number(d.total||0).toLocaleString("vi-VN");
+
+ document.getElementById("android").textContent=
+  Number(d.android||0).toLocaleString("vi-VN");
+
+ document.getElementById("iphone").textContent=
+  Number(d.iphone||0).toLocaleString("vi-VN");
 }
 
 async function loadAll(){
@@ -1494,7 +1668,6 @@ async function logout(){
  location.reload();
 }
 
-// Kiểm tra phiên đăng nhập khi mở trang Admin.
 async function checkAdmin(){
  try{
   const d=await api("/admin/me");
@@ -1520,11 +1693,10 @@ checkAdmin();
 
 class Website(BaseHTTPRequestHandler):
 
-    server_version = "PhongWeb/2.2.1"
+    server_version = "PhongWeb/2.2.2"
     sys_version = ""
 
     def client_ip(self):
-        # Không tin X-Forwarded-For do client tự gửi.
         return self.client_address[0]
 
     def send_security_headers(self):
@@ -1718,7 +1890,10 @@ class Website(BaseHTTPRequestHandler):
                     "; SameSite=Lax; HttpOnly" + secure
                 )
 
-            register_visit(visitor)
+            register_visit(
+                visitor,
+                self.headers.get("User-Agent", "")
+            )
 
             self.send_html_with_cookie(HTML, headers)
             return
@@ -1727,9 +1902,18 @@ class Website(BaseHTTPRequestHandler):
             self.send_html(ADMIN_HTML)
             return
 
-        # -------------------- PUBLIC ONLINE STATS --------------------
+        # -------------------- PUBLIC STATISTICS --------------------
 
         if path == "/stats":
+            # Dùng request thống kê làm heartbeat để duy trì online.
+            visitor = self.get_cookie("ph_visitor")
+
+            if valid_token(visitor):
+                register_visit(
+                    visitor,
+                    self.headers.get("User-Agent", "")
+                )
+
             self.send_json(200, {
                 "success": True,
                 **get_statistics()
@@ -1768,7 +1952,7 @@ class Website(BaseHTTPRequestHandler):
             if provider != "link4m":
                 self.send_json(400, {
                     "success": False,
-                    "message": "PHONG WEB V2.2.1 chỉ hỗ trợ Link4M."
+                    "message": "PHONG WEB V2.2.2 chỉ hỗ trợ Link4M."
                 })
                 return
 
@@ -1819,7 +2003,7 @@ class Website(BaseHTTPRequestHandler):
                     }
 
                 print(
-                    "[V2.2.1] LINK CREATED:",
+                    "[V2.2.2] LINK CREATED:",
                     destination
                 )
 
@@ -1871,7 +2055,7 @@ class Website(BaseHTTPRequestHandler):
                 return
 
             print(
-                "[V2.2.1] CALLBACK:",
+                "[V2.2.2] CALLBACK:",
                 destination
             )
 
@@ -1950,7 +2134,7 @@ class Website(BaseHTTPRequestHandler):
                 return
 
             print(
-                "[V2.2.1] DOWNLOAD:",
+                "[V2.2.2] DOWNLOAD:",
                 destination
             )
 
@@ -1965,7 +2149,7 @@ class Website(BaseHTTPRequestHandler):
             })
             return
 
-        # -------------------- ADMIN ONLINE STATS --------------------
+        # -------------------- ADMIN STATISTICS --------------------
 
         if path == "/admin/stats":
             if not self.require_admin():
@@ -2300,7 +2484,6 @@ class Website(BaseHTTPRequestHandler):
                     })
                     return
 
-            # Lưu tất cả thiết lập vào data.json.
             with JSON_LOCK:
                 stored = load_data_unlocked()
 
@@ -2317,7 +2500,7 @@ class Website(BaseHTTPRequestHandler):
 
                 save_data_unlocked(stored)
 
-            print("[V2.2.1] ADMIN UPDATED JSON SETTINGS")
+            print("[V2.2.2] ADMIN UPDATED JSON SETTINGS")
 
             self.send_json(200, {
                 "success": True,
@@ -2333,7 +2516,7 @@ class Website(BaseHTTPRequestHandler):
 
     def log_message(self, fmt, *args):
         print(
-            "[PHONG WEB V2.2.1]",
+            "[PHONG WEB V2.2.2]",
             fmt % args
         )
 
@@ -2355,7 +2538,7 @@ if __name__ == "__main__":
 
     print("======================================")
     print("       NGUYEN VAN PHONG WEBSITE")
-    print("              V2.2.1")
+    print("              V2.2.2")
     print("======================================")
 
     print("Port:", PORT)
@@ -2373,7 +2556,7 @@ if __name__ == "__main__":
     print("SQLite: DISABLED")
     print("Persistent Disk: NOT REQUIRED")
 
-    print("Statistics: ONLINE ONLY")
+    print("Statistics: ONLINE + TOTAL + ANDROID + IPHONE")
     print("Online timeout:", VISITOR_TIMEOUT, "seconds")
     print("Session TTL:", SESSION_TTL, "seconds")
 
