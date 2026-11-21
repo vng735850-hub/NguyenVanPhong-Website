@@ -22,7 +22,13 @@ from urllib.parse import urlencode, urlsplit, quote, parse_qs
 # =========================================================
 
 BASE_DIR = Path(__file__).resolve().parent
-PORT = int(os.environ.get("PORT", 5000))
+# Render đôi khi truyền PORT rỗng; dùng 5000 làm giá trị dự phòng.
+_port_value = (os.environ.get("PORT") or "").strip()
+try:
+    PORT = int(_port_value) if _port_value else 5000
+except (TypeError, ValueError):
+    PORT = 5000
+
 DATA_FILE = BASE_DIR / "data.json"
 
 SITE_URL = os.environ.get(
