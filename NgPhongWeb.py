@@ -22,11 +22,7 @@ from urllib.parse import urlencode, urlsplit, quote, parse_qs
 # =========================================================
 
 BASE_DIR = Path(__file__).resolve().parent
-# Render có thể truyền PORT rỗng; xử lý an toàn trước khi chuyển sang int.
-_port_env = os.environ.get("PORT", "").strip()
-PORT = int(_port_env) if _port_env.isdigit() else 5000
-if not 1 <= PORT <= 65535:
-    PORT = 5000
+PORT = int(os.environ.get("PORT", 5000))
 DATA_FILE = BASE_DIR / "data.json"
 
 SITE_URL = os.environ.get(
@@ -925,44 +921,29 @@ body.light .link-description{color:#274768}
  background:rgba(0,100,220,.2);cursor:pointer;box-shadow:0 0 18px #168cff
 }
 .thank-image-button img{display:block;width:100%;height:auto;object-fit:contain}
-.music-mini{display:flex;justify-content:center;align-items:center;margin:25px auto 15px}
-.music-control{
- display:flex;align-items:center;justify-content:center;gap:14px;
- min-width:190px;min-height:58px;padding:8px 17px;
- border:1px solid #62c5ff;border-radius:13px;
- background:linear-gradient(120deg,rgba(5,54,119,.96),rgba(4,126,210,.96));
- box-shadow:0 0 18px rgba(22,140,255,.35);
+.music-mini{
+ display:flex;align-items:center;justify-content:center;gap:15px;
+ width:min(230px,90%);min-height:58px;margin:25px auto 15px;
+ padding:9px 15px;border:1px solid #55baff;border-radius:13px;
+ background:linear-gradient(135deg,rgba(5,34,75,.96),rgba(0,91,170,.9));
+ box-shadow:0 0 18px rgba(22,140,255,.35)
 }
-.music-bars{height:30px;display:flex;align-items:center;justify-content:center;gap:4px}
-.music-bars span{
- display:block;width:4px;height:6px;border-radius:5px;
- background:#8ee7ff;box-shadow:0 0 8px #39caff;
- transform-origin:center;animation:none
+.music-bars{height:28px;display:flex;align-items:center;gap:4px}
+.music-bars i{
+ display:block;width:4px;height:7px;border-radius:5px;
+ background:#79d2ff;box-shadow:0 0 7px #36baff
 }
-.music-control.playing .music-bars span{animation:musicBeat .65s ease-in-out infinite alternate}
-.music-control.playing .music-bars span:nth-child(1){animation-delay:-.48s}
-.music-control.playing .music-bars span:nth-child(2){animation-delay:-.30s}
-.music-control.playing .music-bars span:nth-child(3){animation-delay:-.12s}
-.music-control.playing .music-bars span:nth-child(4){animation-delay:-.38s}
-@keyframes musicBeat{
- 0%{height:5px;opacity:.65}
- 50%{height:19px;opacity:1}
- 100%{height:29px;opacity:.8}
+.music-mini.playing .music-bars i{animation:musicBeat .65s ease-in-out infinite alternate}
+.music-mini.playing .music-bars i:nth-child(2){animation-delay:.15s}
+.music-mini.playing .music-bars i:nth-child(3){animation-delay:.3s}
+.music-mini.playing .music-bars i:nth-child(4){animation-delay:.45s}
+@keyframes musicBeat{from{height:6px}to{height:26px}}
+.music-mini button{
+ width:39px;height:39px;border:1px solid #8bd7ff;border-radius:10px;
+ color:white;background:linear-gradient(135deg,#086de0,#13b5ff);
+ font-size:18px;font-weight:bold;cursor:pointer;box-shadow:0 0 12px #168cff
 }
-.music-toggle{
- min-width:112px;min-height:40px;padding:9px 14px;
- border:1px solid #9bdcff;border-radius:9px;
- color:white;background:linear-gradient(135deg,#0875df,#10aaf5);
- font-size:14px;font-weight:800;letter-spacing:.4px;
- cursor:pointer;box-shadow:0 0 12px rgba(40,170,255,.25);
- transition:transform .18s,filter .18s
-}
-.music-toggle:hover{filter:brightness(1.12);transform:translateY(-1px)}
-.music-toggle:active{transform:scale(.97)}
-.music-toggle:disabled{opacity:.65;cursor:wait}
-.music-control.playing{box-shadow:0 0 24px rgba(30,190,255,.5)}
-body.light .music-control{background:linear-gradient(120deg,#d7efff,#a7dcff)}
-body.light .music-toggle{color:#fff}
+.music-mini button:active{transform:scale(.96)}
 footer{
  padding:18px 10px 22px;text-align:center;color:#c1dcff;
  font-size:13px;line-height:1.9;background:rgba(3,8,23,.9);
@@ -1182,21 +1163,14 @@ footer strong{color:#55baff;letter-spacing:1px}
 
 </main>
 
-<div class="music-mini">
- <div class="music-control" id="musicControl">
-  <div class="music-bars" aria-hidden="true">
-   <span></span><span></span><span></span><span></span>
-  </div>
-  <button class="music-toggle" id="musicButton" type="button"
-          aria-label="Bật nhạc" aria-pressed="false">
-   <span id="musicIcon">▶</span>
-   <span id="musicLabel"> BẬT NHẠC</span>
-  </button>
- </div>
+<div class="music-mini" id="musicPlayer" aria-label="Trình phát nhạc">
+ <div class="music-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+ <button id="musicButton" type="button" aria-label="Bật hoặc tắt nhạc">
+  <span id="musicIcon">▶</span>
+ </button>
 </div>
 
-<audio id="backgroundMusic" src="/music.mp3" preload="none"
-       loop playsinline></audio>
+<audio id="backgroundMusic" preload="none"></audio>
 
 <footer>
  © 2026 Nguyễn Văn Phong Website<br>
@@ -1594,69 +1568,67 @@ document.addEventListener("click",e=>{
  }
 });
 
-// Nhạc nền V2.3.1: nút chữ nhật + 4 thanh nhịp + lặp lại bài nhạc.
+// Trình phát nhạc nền: bài cũ + Nhạc1 + Nhạc2, tự chuyển bài và lặp toàn bộ.
 const music=document.getElementById("backgroundMusic");
 const musicButton=document.getElementById("musicButton");
-const musicControl=document.getElementById("musicControl");
+const musicPlayer=document.getElementById("musicPlayer");
 const musicIcon=document.getElementById("musicIcon");
-const musicLabel=document.getElementById("musicLabel");
+const musicPlaylist=[
+ {name:"Nhạc nền",src:"/music.mp3"},
+ {name:"Nhạc1",src:"/Nhac1.mp3"},
+ {name:"Nhạc2",src:"/Nhac2.mp3"}
+];
+let currentMusicIndex=0;
+let musicStarted=false;
 
-music.loop=true;
-
-function updateMusicUI(isPlaying){
- musicControl.classList.toggle("playing",isPlaying);
- musicIcon.textContent=isPlaying?"Ⅱ":"▶";
- musicLabel.textContent=isPlaying?" TẮT NHẠC":" BẬT NHẠC";
- musicButton.setAttribute("aria-label",isPlaying?"Tắt nhạc":"Bật nhạc");
- musicButton.setAttribute("aria-pressed",isPlaying?"true":"false");
+function setMusicPlaying(playing){
+ musicIcon.textContent=playing?"Ⅱ":"▶";
+ musicPlayer.classList.toggle("playing",playing);
+ musicButton.setAttribute("aria-label",playing?"Tạm dừng nhạc":"Phát nhạc");
 }
 
-music.addEventListener("play",()=>updateMusicUI(true));
-music.addEventListener("pause",()=>updateMusicUI(false));
-music.addEventListener("ended",()=>{
- // Bảo đảm phát lại từ đầu nếu trình duyệt không tự xử lý loop.
- if(music.loop){
-  music.currentTime=0;
-  music.play().catch(()=>updateMusicUI(false));
+async function playPlaylistTrack(index){
+ currentMusicIndex=(index+musicPlaylist.length)%musicPlaylist.length;
+ music.src=musicPlaylist[currentMusicIndex].src;
+ music.load();
+ try{
+  await music.play();
+  musicStarted=true;
+  setMusicPlaying(true);
+ }catch(error){
+  setMusicPlaying(false);
+  toast("Không thể phát "+musicPlaylist[currentMusicIndex].name+
+        ". Hãy kiểm tra file MP3 đã được tải lên máy chủ.","bad");
  }
-});
-music.addEventListener("error",()=>{
- updateMusicUI(false);
- toast("Không tải được /music.mp3. Hãy kiểm tra file music.mp3 nằm cùng thư mục app.py.","bad");
-});
+}
 
 musicButton.addEventListener("click",async()=>{
- if(musicButton.disabled)return;
-
- if(!music.paused){
-  music.pause();
-  updateMusicUI(false);
-  return;
- }
-
- musicButton.disabled=true;
- musicLabel.textContent=" ĐANG TẢI...";
- try{
-  // Gọi play trực tiếp từ thao tác chạm/click để tương thích chính sách mobile.
-  await music.play();
-  updateMusicUI(true);
- }catch(error){
-  updateMusicUI(false);
-  let message="Không thể phát nhạc.";
-  if(error&&error.name==="NotAllowedError"){
-   message="Trình duyệt chặn phát nhạc. Hãy chạm nút BẬT NHẠC lần nữa.";
-  }else if(error&&error.name==="NotSupportedError"){
-   message="File music.mp3 không đúng định dạng hoặc không được hỗ trợ.";
-  }else if(!navigator.onLine){
-   message="Thiết bị đang ngoại tuyến, không tải được nhạc.";
+ if(music.paused){
+  if(!musicStarted){
+   await playPlaylistTrack(currentMusicIndex);
   }else{
-   message="Không phát được nhạc. Kiểm tra file music.mp3 và thử tải lại trang.";
+   try{
+    await music.play();
+    setMusicPlaying(true);
+   }catch(error){
+    setMusicPlaying(false);
+    toast("Không thể tiếp tục phát nhạc.","bad");
+   }
   }
-  toast(message,"bad");
- }finally{
-  musicButton.disabled=false;
+ }else{
+  music.pause();
+  setMusicPlaying(false);
  }
 });
+
+// Tự động phát bài kế tiếp; hết bài cuối quay lại bài đầu (lặp tất cả).
+music.addEventListener("ended",()=>{
+ playPlaylistTrack((currentMusicIndex+1)%musicPlaylist.length);
+});
+music.addEventListener("pause",()=>{
+ if(music.ended===false)setMusicPlaying(false);
+});
+music.addEventListener("play",()=>setMusicPlaying(true));
 
 showPage();
 </script>
@@ -2191,7 +2163,7 @@ checkAdmin();
 
 class Website(BaseHTTPRequestHandler):
 
-    server_version = "PhongWeb/2.3.1"
+    server_version = "PhongWeb/2.3"
     sys_version = ""
 
     def client_ip(self):
@@ -2471,7 +2443,7 @@ class Website(BaseHTTPRequestHandler):
             if provider != "link4m":
                 self.send_json(400, {
                     "success": False,
-                    "message": "PHONG WEB V2.3.1 chỉ hỗ trợ Link4M."
+                    "message": "PHONG WEB V2.3 chỉ hỗ trợ Link4M."
                 })
                 return
 
@@ -2546,7 +2518,7 @@ class Website(BaseHTTPRequestHandler):
                     "Đã tạo liên kết Link4M", ip
                 )
 
-                print("[V2.3.1] LINK CREATED:", destination)
+                print("[V2.3] LINK CREATED:", destination)
 
                 self.send_json(200, {
                     "success": True,
@@ -2609,7 +2581,7 @@ class Website(BaseHTTPRequestHandler):
                     "Callback Link4M được tiếp nhận", self.client_ip()
                 )
 
-            print("[V2.3.1] CALLBACK:", destination)
+            print("[V2.3] CALLBACK:", destination)
 
             self.redirect(
                 "/?result=thanks&destination=" +
@@ -2691,7 +2663,7 @@ class Website(BaseHTTPRequestHandler):
                 "Người dùng nhấn LẤY FILE", self.client_ip()
             )
 
-            print("[V2.3.1] DOWNLOAD:", destination)
+            print("[V2.3] DOWNLOAD:", destination)
             self.redirect(target)
             return
 
@@ -2840,6 +2812,8 @@ class Website(BaseHTTPRequestHandler):
             "/logo.png",
             "/background.jpg",
             "/music.mp3",
+            "/Nhac1.mp3",
+            "/Nhac2.mp3",
             "/cam-on-tu-phong.png",
             "/cam-on-tu-phong.mp3"
         }
@@ -2897,6 +2871,8 @@ class Website(BaseHTTPRequestHandler):
             "/logo.png",
             "/background.jpg",
             "/music.mp3",
+            "/Nhac1.mp3",
+            "/Nhac2.mp3",
             "/cam-on-tu-phong.png",
             "/cam-on-tu-phong.mp3"
         }
@@ -2921,73 +2897,20 @@ class Website(BaseHTTPRequestHandler):
 
         try:
             size = file_path.stat().st_size
-            range_header = self.headers.get("Range", "")
-            start = 0
-            end = size - 1
-            status = 200
 
-            # Hỗ trợ HTTP Range để trình duyệt điện thoại tải/seek MP3 ổn định.
-            if path.endswith(".mp3") and range_header.startswith("bytes="):
-                try:
-                    requested = range_header[6:].split(",", 1)[0].strip()
-                    left, right = requested.split("-", 1)
-
-                    if left:
-                        start = int(left)
-                        end = int(right) if right else size - 1
-                    elif right:
-                        suffix_length = int(right)
-                        if suffix_length <= 0:
-                            raise ValueError("Range suffix không hợp lệ.")
-                        start = max(0, size - suffix_length)
-                        end = size - 1
-                    else:
-                        raise ValueError("Range không hợp lệ.")
-
-                    if start < 0 or start >= size or end < start:
-                        self.send_response(416)
-                        self.send_header("Content-Range", "bytes */" + str(size))
-                        self.send_header("Accept-Ranges", "bytes")
-                        self.send_header("Content-Length", "0")
-                        self.send_security_headers()
-                        self.end_headers()
-                        return
-
-                    end = min(end, size - 1)
-                    status = 206
-
-                except (ValueError, TypeError):
-                    self.send_response(416)
-                    self.send_header("Content-Range", "bytes */" + str(size))
-                    self.send_header("Accept-Ranges", "bytes")
-                    self.send_header("Content-Length", "0")
-                    self.send_security_headers()
-                    self.end_headers()
-                    return
-
-            length = max(0, end - start + 1)
-            self.send_response(status)
+            self.send_response(200)
             self.send_header("Content-Type", content_type)
-            self.send_header("Content-Length", str(length))
-            self.send_header("Accept-Ranges", "bytes")
+            self.send_header("Content-Length", str(size))
             self.send_header("Cache-Control", "public, max-age=3600")
-            if status == 206:
-                self.send_header(
-                    "Content-Range",
-                    f"bytes {start}-{end}/{size}"
-                )
             self.send_security_headers()
             self.end_headers()
 
             with open(file_path, "rb") as file:
-                file.seek(start)
-                remaining = length
-                while remaining > 0:
-                    chunk = file.read(min(65536, remaining))
+                while True:
+                    chunk = file.read(65536)
                     if not chunk:
                         break
                     self.wfile.write(chunk)
-                    remaining -= len(chunk)
 
         except (
             BrokenPipeError,
@@ -3187,7 +3110,7 @@ class Website(BaseHTTPRequestHandler):
                 "Cập nhật cấu hình mục tải file"
             )
 
-            print("[V2.3.1] ADMIN UPDATED SETTINGS")
+            print("[V2.3] ADMIN UPDATED SETTINGS")
 
             self.send_json(200, {
                 "success": True,
@@ -3339,7 +3262,7 @@ class Website(BaseHTTPRequestHandler):
         })
 
     def log_message(self, fmt, *args):
-        print("[PHONG WEB V2.3.1]", fmt % args)
+        print("[PHONG WEB V2.3]", fmt % args)
 
 
 # =========================================================
@@ -3359,7 +3282,7 @@ if __name__ == "__main__":
 
     print("======================================")
     print("       NGUYEN VAN PHONG WEBSITE")
-    print("              V2.3.1")
+    print("              V2.3")
     print("======================================")
 
     print("Port:", PORT)
