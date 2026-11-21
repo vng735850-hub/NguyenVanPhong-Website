@@ -4,7 +4,6 @@ import json
 import time
 import secrets
 import hashlib
-import sqlite3
 import threading
 import mimetypes
 import urllib.request
@@ -16,16 +15,16 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlencode, urlsplit, quote, parse_qs
 
 # =========================================================
-# PHONG WEB V2.2.0
+# PHONG WEB V2.2.1
 # LINK4M ONLY | LOCATION + DETA + PROXY + MIZZE
-# ADMIN | STATISTICS | SECURITY | NEON UI
+# ADMIN | JSON STORAGE | ONLINE STATISTICS | SECURITY
 # =========================================================
 
 BASE_DIR = Path(__file__).resolve().parent
 PORT = int(os.environ.get("PORT", 5000))
-DATA_DIR = Path(os.environ.get("DATA_DIR", str(BASE_DIR)))
-DATA_DIR.mkdir(parents=True, exist_ok=True)
-DB_PATH = DATA_DIR / "phong_web.db"
+
+# JSON STORAGE - KHÔNG CẦN PERSISTENT DISK
+DATA_FILE = BASE_DIR / "data.json"
 
 SITE_URL = os.environ.get(
     "SITE_URL", "https://nvp-com.onrender.com"
@@ -34,10 +33,9 @@ SITE_URL = os.environ.get(
 LINK4M_API_TOKEN = os.environ.get(
     "LINK4M_API_TOKEN", ""
 ).strip()
+
 LINK4M_ENDPOINT = "https://link4m.co/api-shorten/v2"
 
-# Mật khẩu mặc định theo yêu cầu.
-# Có thể thay bằng biến môi trường ADMIN_PASSWORD.
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "152012")
 
 SESSION_TTL = 30 * 60
@@ -48,14 +46,17 @@ MEDIAFIRE_LINK = (
     "https://www.mediafire.com/file/"
     "yen60lu05hfnng4/DINH_VI_BT.zip/file"
 )
+
 DETA_MEDIAFIRE_LINK = (
     "https://www.mediafire.com/file/"
     "wohet4glfwyn5j0/Deta_Crack.7z/file"
 )
+
 PROXY_MEDIAFIRE_LINK = (
     "https://www.mediafire.com/file/"
     "zdoapnkcx9v70gq/PROXY+MOD+ALEN+Crack.zip/file"
 )
+
 MIZZE_MEDIAFIRE_LINK = (
     "https://www.mediafire.com/file/"
     "2plraqmzcl7gk4m/mizze+crack+adr+chs+ff+india.zip/file"
@@ -94,80 +95,129 @@ ADMIN_SESSIONS = {}
 RATE_LIMITS = {}
 
 LOCK = threading.RLock()
+JSON_LOCK = threading.RLock()
 
 
 # =========================================================
-# DATABASE
+# JSON DATABASE
 # =========================================================
 
-def db():
-    connection = sqlite3.connect(DB_PATH, timeout=15)
-    connection.row_factory = sqlite3.Row
-    return connection
+DEFAULT_DATA = {
+    "settings": {},
+    "visitors": {}
+}
+
+for key, value in DEFAULT_DESTINATIONS.items():
+    DEFAULT_DATA["settings"]["url_" + key] = value
+    DEFAULT_DATA["settings"]["enabled_" + key] = "1"
 
 
-def init_db():
-    with db() as con:
-        con.execute("""
-            CREATE TABLE IF NOT EXISTS settings (
-                key TEXT PRIMARY KEY,
-                value TEXT NOT NULL
+def save_data_unlocked(data):
+    """
+    Ghi JSON an toàn bằng file tạm rồi thay thế file chính.
+    Phải được gọi khi đang giữ JSON_LOCK.
+    """
+    temp_file = DATA_FILE.with_suffix(".tmp")
+
+    try:
+        with open(temp_file, "w", encoding="utf-8") as file:
+            json.dump(
+                data,
+                file,
+                ensure_ascii=False,
+                indent=4
             )
-        """)
+            file.flush()
+            os.fsync(file.fileno())
 
-        con.execute("""
-            CREATE TABLE IF NOT EXISTS visitors (
-                visitor_id TEXT PRIMARY KEY,
-                last_seen REAL NOT NULL
-            )
-        """)
+        os.replace(temp_file, DATA_FILE)
 
-        con.execute("""
-            CREATE TABLE IF NOT EXISTS stats (
-                key TEXT PRIMARY KEY,
-                value INTEGER NOT NULL
-            )
-        """)
+    except OSError:
+        try:
+            if temp_file.exists():
+                temp_file.unlink()
+        except OSError:
+            pass
+        raise
 
-        con.execute("""
-            CREATE TABLE IF NOT EXISTS visits (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                visitor_id TEXT NOT NULL,
-                created REAL NOT NULL
-            )
-        """)
 
-        for key, value in DEFAULT_DESTINATIONS.items():
-            con.execute(
-                "INSERT OR IGNORE INTO settings(key,value) VALUES(?,?)",
-                ("url_" + key, value)
-            )
+def load_data_unlocked():
+    """
+    Đọc dữ liệu JSON.
+    Phải được gọi khi đang giữ JSON_LOCK.
+    """
+    try:
+        if DATA_FILE.is_file():
+            with open(DATA_FILE, "r", encoding="utf-8") as file:
+                data = json.load(file)
 
-            con.execute(
-                "INSERT OR IGNORE INTO settings(key,value) VALUES(?,?)",
-                ("enabled_" + key, "1")
-            )
+            if not isinstance(data, dict):
+                raise ValueError("JSON data không hợp lệ.")
 
-        con.execute(
-            "INSERT OR IGNORE INTO stats(key,value) VALUES('total',0)"
-        )
+            if not isinstance(data.get("settings"), dict):
+                data["settings"] = {}
+
+            if not isinstance(data.get("visitors"), dict):
+                data["visitors"] = {}
+
+            # Bổ sung thiết lập mặc định nếu thiếu.
+            for key, value in DEFAULT_DATA["settings"].items():
+                data["settings"].setdefault(key, value)
+
+            return data
+
+    except (OSError, ValueError, json.JSONDecodeError) as error:
+        print("[JSON WARNING]", str(error))
+
+    # Tạo dữ liệu mặc định.
+    data = {
+        "settings": dict(DEFAULT_DATA["settings"]),
+        "visitors": {}
+    }
+
+    save_data_unlocked(data)
+    return data
+
+
+def load_data():
+    with JSON_LOCK:
+        return load_data_unlocked()
+
+
+def save_data(data):
+    with JSON_LOCK:
+        save_data_unlocked(data)
+
+
+def init_data():
+    """
+    Khởi tạo data.json và giữ lại dữ liệu cũ nếu file hợp lệ.
+    """
+    with JSON_LOCK:
+        data = load_data_unlocked()
+
+        for key, value in DEFAULT_DATA["settings"].items():
+            data["settings"].setdefault(key, value)
+
+        if not isinstance(data.get("visitors"), dict):
+            data["visitors"] = {}
+
+        save_data_unlocked(data)
+
+    print("[JSON] DATA FILE:", DATA_FILE)
 
 
 def setting(key, default=""):
-    with db() as con:
-        row = con.execute(
-            "SELECT value FROM settings WHERE key=?",
-            (key,)
-        ).fetchone()
-    return row["value"] if row else default
+    with JSON_LOCK:
+        data = load_data_unlocked()
+        return data["settings"].get(key, default)
 
 
 def set_setting(key, value):
-    with db() as con:
-        con.execute("""
-            INSERT INTO settings(key,value) VALUES(?,?)
-            ON CONFLICT(key) DO UPDATE SET value=excluded.value
-        """, (key, str(value)))
+    with JSON_LOCK:
+        data = load_data_unlocked()
+        data["settings"][key] = str(value)
+        save_data_unlocked(data)
 
 
 def get_destination_links():
@@ -182,60 +232,67 @@ def destination_enabled(key):
 
 
 # =========================================================
-# STATISTICS
+# ONLINE STATISTICS
 # =========================================================
 
 def register_visit(visitor_id):
+    """
+    Cập nhật thời gian hoạt động của khách truy cập.
+    Không lưu tổng lượt truy cập.
+    """
+    if not valid_token(visitor_id):
+        return
+
     now = time.time()
 
-    with db() as con:
-        row = con.execute(
-            "SELECT last_seen FROM visitors WHERE visitor_id=?",
-            (visitor_id,)
-        ).fetchone()
+    with JSON_LOCK:
+        data = load_data_unlocked()
+        visitors = data.get("visitors", {})
 
-        is_new_visit = (
-            row is None or now - row["last_seen"] > VISITOR_TIMEOUT
-        )
+        # Xóa người đã không hoạt động quá thời gian cho phép.
+        expired = []
 
-        con.execute("""
-            INSERT INTO visitors(visitor_id,last_seen)
-            VALUES(?,?)
-            ON CONFLICT(visitor_id)
-            DO UPDATE SET last_seen=excluded.last_seen
-        """, (visitor_id, now))
+        for visitor, last_seen in visitors.items():
+            try:
+                if now - float(last_seen) > VISITOR_TIMEOUT:
+                    expired.append(visitor)
+            except (ValueError, TypeError):
+                expired.append(visitor)
 
-        if is_new_visit:
-            con.execute(
-                "UPDATE stats SET value=value+1 WHERE key='total'"
-            )
-            con.execute(
-                "INSERT INTO visits(visitor_id,created) VALUES(?,?)",
-                (visitor_id, now)
-            )
+        for visitor in expired:
+            visitors.pop(visitor, None)
+
+        visitors[visitor_id] = now
+
+        data["visitors"] = visitors
+        save_data_unlocked(data)
 
 
 def get_statistics():
+    """
+    Chỉ trả về số người đang truy cập.
+    """
     now = time.time()
 
-    with db() as con:
-        con.execute(
-            "DELETE FROM visitors WHERE last_seen<?",
-            (now - VISITOR_TIMEOUT,)
-        )
+    with JSON_LOCK:
+        data = load_data_unlocked()
+        visitors = data.get("visitors", {})
 
-        online = con.execute(
-            "SELECT COUNT(*) AS n FROM visitors"
-        ).fetchone()["n"]
+        online_visitors = {}
 
-        total = con.execute(
-            "SELECT value FROM stats WHERE key='total'"
-        ).fetchone()["value"]
+        for visitor, last_seen in visitors.items():
+            try:
+                if now - float(last_seen) <= VISITOR_TIMEOUT:
+                    online_visitors[visitor] = float(last_seen)
+            except (ValueError, TypeError):
+                continue
 
-    return {
-        "online": online,
-        "total": total
-    }
+        data["visitors"] = online_visitors
+        save_data_unlocked(data)
+
+        return {
+            "online": len(online_visitors)
+        }
 
 
 # =========================================================
@@ -273,6 +330,7 @@ def validate_http_url(value):
             and not parsed.password
             and parsed.port in (None, 80, 443)
         )
+
     except ValueError:
         return False
 
@@ -308,6 +366,7 @@ def cleanup_sessions():
             RATE_LIMITS[ip] = [
                 t for t in RATE_LIMITS[ip] if now - t < 60
             ]
+
             if not RATE_LIMITS[ip]:
                 RATE_LIMITS.pop(ip, None)
 
@@ -363,7 +422,7 @@ def api_request(url):
     request = urllib.request.Request(
         url,
         headers={
-            "User-Agent": "Mozilla/5.0 PHONG-WEB/2.2.0",
+            "User-Agent": "Mozilla/5.0 PHONG-WEB/2.2.1",
             "Accept": "application/json",
             "Cache-Control": "no-cache"
         },
@@ -372,21 +431,32 @@ def api_request(url):
 
     try:
         with urllib.request.urlopen(request, timeout=25) as response:
-            return response.read().decode("utf-8", errors="replace")
+            return response.read().decode(
+                "utf-8",
+                errors="replace"
+            )
 
     except urllib.error.HTTPError as error:
-        body = error.read().decode("utf-8", errors="replace")
+        body = error.read().decode(
+            "utf-8",
+            errors="replace"
+        )
+
         raise ValueError(
             "Link4M HTTP " + str(error.code) + ": " + body[:180]
         )
 
     except urllib.error.URLError as error:
-        raise ValueError("Không thể kết nối Link4M: " + str(error.reason))
+        raise ValueError(
+            "Không thể kết nối Link4M: " + str(error.reason)
+        )
 
 
 def create_link4m_url(callback_url):
     if not LINK4M_API_TOKEN:
-        raise ValueError("Chưa cấu hình LINK4M_API_TOKEN trên Render.")
+        raise ValueError(
+            "Chưa cấu hình LINK4M_API_TOKEN trên Render."
+        )
 
     api_url = LINK4M_ENDPOINT + "?" + urlencode({
         "api": LINK4M_API_TOKEN,
@@ -395,15 +465,19 @@ def create_link4m_url(callback_url):
 
     try:
         result = json.loads(api_request(api_url))
+
     except json.JSONDecodeError:
-        raise ValueError("Link4M không trả về JSON hợp lệ.")
+        raise ValueError(
+            "Link4M không trả về JSON hợp lệ."
+        )
 
     if not isinstance(result, dict):
         raise ValueError("Dữ liệu Link4M không hợp lệ.")
 
     if result.get("status") != "success":
         raise ValueError(
-            "Link4M: " + str(result.get("message", "Tạo link thất bại"))[:180]
+            "Link4M: " +
+            str(result.get("message", "Tạo link thất bại"))[:180]
         )
 
     url = (
@@ -413,7 +487,9 @@ def create_link4m_url(callback_url):
     )
 
     if not validate_http_url(url):
-        raise ValueError("Link4M trả về URL không hợp lệ.")
+        raise ValueError(
+            "Link4M trả về URL không hợp lệ."
+        )
 
     return url
 
@@ -471,7 +547,7 @@ header{
  justify-content:center;background:rgba(0,120,255,.2);
  border:1px solid #55baff;border-radius:10px;
  box-shadow:0 0 12px #168cff;font-family:monospace;
- font-size:16px;font-weight:900
+ font-size:14px;font-weight:900;white-space:nowrap
 }
 .side-menu{
  display:none;position:absolute;top:67px;left:12px;width:200px;
@@ -587,7 +663,7 @@ footer strong{color:#55baff;letter-spacing:1px}
  header{grid-template-columns:40px minmax(0,1fr) 95px;gap:6px;padding:8px;min-height:65px}
  .hamburger-button{width:40px;height:43px;font-size:23px}
  .header-title{font-size:clamp(10px,3.2vw,15px);letter-spacing:0}
- .clock-box{width:95px;height:41px;font-size:14px}
+ .clock-box{width:95px;height:41px;font-size:12px}
  .side-menu{top:60px}.location-card{gap:12px}
  .location-info h2{font-size:16px}
  .link-box{margin:22px auto;padding:23px 15px}
@@ -601,7 +677,7 @@ footer strong{color:#55baff;letter-spacing:1px}
 <header>
  <button class="hamburger-button" id="hamburgerButton">☰</button>
  <div class="header-title">NGUYỄN VĂN PHONG WEBSITE</div>
- <div class="clock-box"><span id="liveClock">00:00:00</span></div>
+ <div class="clock-box"><span id="liveClock">🌙 00:00:00</span></div>
  <nav class="side-menu" id="sideMenu">
   <a href="/" id="homeMenuButton">🏠 TRANG CHỦ</a>
   <a href="/admin">⚙️ QUẢN TRỊ</a>
@@ -619,8 +695,8 @@ footer strong{color:#55baff;letter-spacing:1px}
  </div>
  <div class="stats-bar">
   <span>🟢 Đang truy cập: <b id="onlineCount">...</b></span>
-  <span>👁 Tổng lượt truy cập: <b id="totalCount">...</b></span>
  </div>
+
  <section class="location-container" id="card-location">
   <a class="location-link" href="/dinh-vi">
    <div class="location-card">
@@ -633,16 +709,19 @@ footer strong{color:#55baff;letter-spacing:1px}
    </div>
   </a>
  </section>
+
  <section class="menu-container" id="card-deta">
   <div class="menu-card"><h2>🔐 DETA IPA CRACK NOKЕY</h2>
    <button class="open-menu-button" onclick="navigate('/menu')">MỞ MENU</button>
   </div>
  </section>
+
  <section class="menu-container" id="card-proxy">
   <div class="menu-card"><h2>🌐 PROXY MOD ALEN CRACK</h2>
    <button class="open-menu-button" onclick="navigate('/proxy-mod-alen-crack')">MỞ MỤC</button>
   </div>
  </section>
+
  <section class="menu-container" id="card-mizze">
   <div class="menu-card"><h2>🎮 MENU MIZZE CRACK</h2>
    <button class="open-menu-button" onclick="navigate('/mizze-crack')">MỞ MỤC</button>
@@ -719,9 +798,13 @@ footer strong{color:#55baff;letter-spacing:1px}
 <div class="music-mini">
  <button id="musicButton"><span id="musicIcon">▶</span></button>
 </div>
+
 <audio id="backgroundMusic" src="/music.mp3" loop></audio>
 
-<footer>© 2026 Nguyễn Văn Phong Website<br><strong>PHONG WEB V2.2.0</strong></footer>
+<footer>
+ © 2026 Nguyễn Văn Phong Website<br>
+ <strong>PHONG WEB V2.2.1</strong>
+</footer>
 
 <script>
 const pages={
@@ -735,12 +818,17 @@ const pages={
 };
 
 const destinationRoutes={
- location:"/dinh-vi",deta:"/menu",
- proxy:"/proxy-mod-alen-crack",mizze:"/mizze-crack"
+ location:"/dinh-vi",
+ deta:"/menu",
+ proxy:"/proxy-mod-alen-crack",
+ mizze:"/mizze-crack"
 };
+
 const downloadRoutes={
- location:"/download-location",deta:"/download-deta",
- proxy:"/download-proxy",mizze:"/download-mizze"
+ location:"/download-location",
+ deta:"/download-deta",
+ proxy:"/download-proxy",
+ mizze:"/download-mizze"
 };
 
 function toast(message,type="good"){
@@ -751,204 +839,445 @@ function toast(message,type="good"){
  window.toastTimer=setTimeout(()=>el.className="",3500);
 }
 
+// =====================================================
+// CLOCK - VIETNAM TIME + DAY ICON
+// =====================================================
+
 function updateClock(){
- document.getElementById("liveClock").textContent=
- new Intl.DateTimeFormat("en-GB",{
+ const now=new Date();
+
+ const parts=new Intl.DateTimeFormat("en-GB",{
   timeZone:"Asia/Ho_Chi_Minh",
-  hour:"2-digit",minute:"2-digit",second:"2-digit",
+  hour:"2-digit",
+  minute:"2-digit",
+  second:"2-digit",
   hour12:false
- }).format(new Date());
+ }).formatToParts(now);
+
+ const values={};
+
+ parts.forEach(part=>{
+  values[part.type]=part.value;
+ });
+
+ const hour=Number(values.hour);
+
+ let icon="🌙";
+
+ if(hour>=6 && hour<13){
+  icon="🌅";
+ }else if(hour>=13 && hour<19){
+  icon="☀️";
+ }else{
+  icon="🌙";
+ }
+
+ const clockText=
+  icon+" "+values.hour+":"+values.minute+":"+values.second;
+
+ document.getElementById("liveClock").textContent=clockText;
 }
+
 updateClock();
 setInterval(updateClock,1000);
+
+
+// =====================================================
+// PAGE NAVIGATION
+// =====================================================
 
 function hideAllPages(){
  Object.values(pages).forEach(p=>p.classList.remove("active"));
 }
+
 function navigate(path){
  history.pushState({},"",path);
  showPage();
  window.scrollTo(0,0);
 }
+
 function showPage(){
  hideAllPages();
+
  const q=new URLSearchParams(location.search);
  const result=q.get("result");
- if(result==="thanks"){pages.thank.classList.add("active");return;}
- if(result==="success"||result==="failed"){
-  pages.result.classList.add("active");checkResult();return;
+
+ if(result==="thanks"){
+  pages.thank.classList.add("active");
+  return;
  }
+
+ if(result==="success"||result==="failed"){
+  pages.result.classList.add("active");
+  checkResult();
+  return;
+ }
+
  const routes={
-  "/":pages.home,"/index.html":pages.home,
-  "/dinh-vi":pages.location,"/menu":pages.deta,
+  "/":pages.home,
+  "/index.html":pages.home,
+  "/dinh-vi":pages.location,
+  "/menu":pages.deta,
   "/proxy-mod-alen-crack":pages.proxy,
   "/mizze-crack":pages.mizze
  };
+
  (routes[location.pathname]||pages.home).classList.add("active");
 }
+
 window.addEventListener("popstate",showPage);
+
+
+// =====================================================
+// ONLINE STATISTICS - ONLY ONLINE
+// =====================================================
 
 async function refreshStats(){
  try{
   const r=await fetch("/stats",{cache:"no-store"});
   const d=await r.json();
-  document.getElementById("onlineCount").textContent=d.online;
-  document.getElementById("totalCount").textContent=d.total;
+
+  document.getElementById("onlineCount").textContent=
+   Number(d.online||0);
+
  }catch(e){}
 }
+
 setInterval(refreshStats,15000);
 refreshStats();
+
+
+// =====================================================
+// PUBLIC SETTINGS
+// =====================================================
 
 async function refreshCards(){
  try{
   const r=await fetch("/public-settings",{cache:"no-store"});
   const d=await r.json();
+
   for(const key of ["location","deta","proxy","mizze"]){
    const card=document.getElementById("card-"+key);
-   if(card)card.style.display=d[key]?"":"none";
+
+   if(card){
+    card.style.display=d[key]?"":"none";
+   }
   }
  }catch(e){}
 }
+
 refreshCards();
+
+
+// =====================================================
+// CREATE SHORT LINK
+// =====================================================
 
 async function createShortLink(destination,button,status){
  button.disabled=true;
  button.textContent="ĐANG XỬ LÝ...";
+
  status.className="status";
  status.textContent="Đang kết nối API LINK4M...";
+
  try{
   const response=await fetch(
-   "/create-short-link?destination="+encodeURIComponent(destination),
+   "/create-short-link?destination="+
+   encodeURIComponent(destination),
    {cache:"no-store"}
   );
+
   const data=await response.json();
-  if(!response.ok||!data.success)throw new Error(data.message||"Không thể tạo link.");
-  if(!data.url)throw new Error("Link4M không trả về URL.");
+
+  if(!response.ok||!data.success){
+   throw new Error(data.message||"Không thể tạo link.");
+  }
+
+  if(!data.url){
+   throw new Error("Link4M không trả về URL.");
+  }
+
   status.className="status success";
-  status.textContent="Tạo link thành công! Đang chuyển đến Link4M...";
+  status.textContent=
+   "Tạo link thành công! Đang chuyển đến Link4M...";
+
   toast("Tạo link thành công! Đang chuyển hướng.","good");
+
   window.location.href=data.url;
+
  }catch(error){
   status.className="status error";
   status.textContent="LỖI: "+error.message;
+
   toast("Tạo link thất bại: "+error.message,"bad");
+
   button.disabled=false;
   button.textContent="🔓 THỬ LẠI";
  }
 }
+
 function setupCrossButton(key){
  const button=document.getElementById(key+"CrossButton");
  const status=document.getElementById(key+"Status");
- button.addEventListener("click",()=>createShortLink(key,button,status));
+
+ button.addEventListener("click",()=>{
+  createShortLink(key,button,status);
+ });
 }
+
 ["location","deta","proxy","mizze"].forEach(setupCrossButton);
 
+
+// =====================================================
+// THANK YOU AUDIO
+// =====================================================
+
 const thankAudio=document.getElementById("thankAudio");
+
 document.getElementById("thankAudioButton").addEventListener("click",async()=>{
  const status=document.getElementById("thankStatus");
+
  try{
   if(thankAudio.paused){
    await thankAudio.play();
+
    status.className="status success";
    status.textContent="🎵 Đang phát lời cảm ơn từ Phong...";
+
   }else{
    thankAudio.pause();
    status.textContent="Đã tạm dừng âm thanh.";
   }
+
  }catch(e){
   status.className="status error";
   status.textContent="Không thể phát âm thanh. Kiểm tra file MP3.";
  }
 });
+
 thankAudio.addEventListener("ended",()=>{
- document.getElementById("thankStatus").textContent="💙 Cảm ơn bạn đã lắng nghe!";
+ document.getElementById("thankStatus").textContent=
+  "💙 Cảm ơn bạn đã lắng nghe!";
 });
+
+
+// =====================================================
+// CONTINUE AFTER LINK4M
+// =====================================================
 
 document.getElementById("continueButton").addEventListener("click",async()=>{
  const q=new URLSearchParams(location.search);
- const token=q.get("token"),destination=q.get("destination");
+
+ const token=q.get("token");
+ const destination=q.get("destination");
+
  if(!token||!destination||!destinationRoutes[destination]){
-  showFailure("Không tìm thấy thông tin phiên vượt link.",destination);return;
+  showFailure("Không tìm thấy thông tin phiên vượt link.",destination);
+  return;
  }
+
  const button=document.getElementById("continueButton");
- button.disabled=true;button.textContent="ĐANG KIỂM TRA...";
+
+ button.disabled=true;
+ button.textContent="ĐANG KIỂM TRA...";
+
  try{
-  const r=await fetch("/check-session?token="+encodeURIComponent(token),{cache:"no-store"});
+  const r=await fetch(
+   "/check-session?token="+encodeURIComponent(token),
+   {cache:"no-store"}
+  );
+
   const d=await r.json();
-  if(!r.ok||!d.success||!d.returned)throw new Error(d.message||"Phiên chưa được xác nhận.");
-  if(d.destination!==destination)throw new Error("Thông tin mục vượt link không khớp.");
-  history.pushState({},"","/?result=success&destination="+encodeURIComponent(destination)+"&token="+encodeURIComponent(token));
-  showPage();window.scrollTo(0,0);
- }catch(e){showFailure(e.message,destination);}
- finally{button.disabled=false;button.textContent="TIẾP THEO →";}
+
+  if(!r.ok||!d.success||!d.returned){
+   throw new Error(d.message||"Phiên chưa được xác nhận.");
+  }
+
+  if(d.destination!==destination){
+   throw new Error("Thông tin mục vượt link không khớp.");
+  }
+
+  history.pushState(
+   {},
+   "",
+   "/?result=success&destination="+
+   encodeURIComponent(destination)+
+   "&token="+encodeURIComponent(token)
+  );
+
+  showPage();
+  window.scrollTo(0,0);
+
+ }catch(e){
+  showFailure(e.message,destination);
+
+ }finally{
+  button.disabled=false;
+  button.textContent="TIẾP THEO →";
+ }
 });
 
+
+// =====================================================
+// FAILURE PAGE
+// =====================================================
+
 function showFailure(message,destination){
- hideAllPages();pages.result.classList.add("active");
+ hideAllPages();
+ pages.result.classList.add("active");
+
  document.getElementById("resultIcon").textContent="❌";
- document.getElementById("resultTitle").textContent="Vượt Link Không Thành Công";
- document.getElementById("resultDescription").textContent="Phiên vượt link chưa được xác nhận hoặc đã hết hạn.";
+
+ document.getElementById("resultTitle").textContent=
+  "Vượt Link Không Thành Công";
+
+ document.getElementById("resultDescription").textContent=
+  "Phiên vượt link chưa được xác nhận hoặc đã hết hạn.";
+
  const status=document.getElementById("resultStatus");
- status.className="status error";status.textContent=message||"Vui lòng thử vượt link mới.";
+
+ status.className="status error";
+ status.textContent=message||"Vui lòng thử vượt link mới.";
+
  document.getElementById("resultAction").classList.add("hidden");
+
  const retry=document.getElementById("retryButton");
+
  retry.classList.remove("hidden");
- retry.onclick=()=>navigate(destinationRoutes[destination]||"/");
+
+ retry.onclick=()=>{
+  navigate(destinationRoutes[destination]||"/");
+ };
 }
+
+
+// =====================================================
+// CHECK RESULT
+// =====================================================
 
 async function checkResult(){
  const q=new URLSearchParams(location.search);
- const result=q.get("result"),destination=q.get("destination"),token=q.get("token");
+
+ const result=q.get("result");
+ const destination=q.get("destination");
+ const token=q.get("token");
+
  const action=document.getElementById("resultAction");
  const retry=document.getElementById("retryButton");
- action.classList.add("hidden");retry.classList.add("hidden");
+
+ action.classList.add("hidden");
+ retry.classList.add("hidden");
+
  document.getElementById("resultStatus").textContent="";
- if(result==="failed"){showFailure("Không nhận được callback hợp lệ từ Link4M.",destination);return;}
- if(result!=="success"||!token||!downloadRoutes[destination]){
-  showFailure("Không tìm thấy thông tin phiên vượt link.",destination);return;
+
+ if(result==="failed"){
+  showFailure("Không nhận được callback hợp lệ từ Link4M.",destination);
+  return;
  }
+
+ if(result!=="success"||!token||!downloadRoutes[destination]){
+  showFailure("Không tìm thấy thông tin phiên vượt link.",destination);
+  return;
+ }
+
  document.getElementById("resultIcon").textContent="⏳";
- document.getElementById("resultTitle").textContent="ĐANG KIỂM TRA";
- document.getElementById("resultDescription").textContent="Đang kiểm tra phiên quay lại từ Link4M...";
+
+ document.getElementById("resultTitle").textContent=
+  "ĐANG KIỂM TRA";
+
+ document.getElementById("resultDescription").textContent=
+  "Đang kiểm tra phiên quay lại từ Link4M...";
+
  try{
-  const r=await fetch("/check-session?token="+encodeURIComponent(token),{cache:"no-store"});
+  const r=await fetch(
+   "/check-session?token="+encodeURIComponent(token),
+   {cache:"no-store"}
+  );
+
   const d=await r.json();
-  if(!r.ok||!d.success||!d.returned)throw new Error(d.message||"Phiên không hợp lệ.");
-  if(d.destination!==destination)throw new Error("Thông tin mục vượt link không khớp.");
+
+  if(!r.ok||!d.success||!d.returned){
+   throw new Error(d.message||"Phiên không hợp lệ.");
+  }
+
+  if(d.destination!==destination){
+   throw new Error("Thông tin mục vượt link không khớp.");
+  }
+
   document.getElementById("resultIcon").textContent="✅";
-  document.getElementById("resultTitle").textContent="Vượt Link Thành Công";
-  document.getElementById("resultDescription").textContent="Bạn đã quay lại PHONG WEB. Nhấn LẤY FILE để mở MediaFire.";
+
+  document.getElementById("resultTitle").textContent=
+   "Vượt Link Thành Công";
+
+  document.getElementById("resultDescription").textContent=
+   "Bạn đã quay lại PHONG WEB. Nhấn LẤY FILE để mở MediaFire.";
+
   const status=document.getElementById("resultStatus");
-  status.className="status success";status.textContent="Đã xác nhận phiên Link4M.";
-  action.href=downloadRoutes[destination]+"?token="+encodeURIComponent(token);
+
+  status.className="status success";
+  status.textContent="Đã xác nhận phiên Link4M.";
+
+  action.href=
+   downloadRoutes[destination]+"?token="+encodeURIComponent(token);
+
   action.classList.remove("hidden");
- }catch(e){showFailure(e.message,destination);}
+
+ }catch(e){
+  showFailure(e.message,destination);
+ }
 }
+
+
+// =====================================================
+// HAMBURGER MENU
+// =====================================================
 
 const hamburger=document.getElementById("hamburgerButton");
 const menu=document.getElementById("sideMenu");
+
 hamburger.addEventListener("click",e=>{
- e.stopPropagation();menu.classList.toggle("show");
+ e.stopPropagation();
+ menu.classList.toggle("show");
 });
+
 document.getElementById("homeMenuButton").addEventListener("click",e=>{
- e.preventDefault();menu.classList.remove("show");navigate("/");
+ e.preventDefault();
+ menu.classList.remove("show");
+ navigate("/");
 });
+
 document.addEventListener("click",e=>{
- if(!menu.contains(e.target)&&!hamburger.contains(e.target))menu.classList.remove("show");
+ if(!menu.contains(e.target)&&!hamburger.contains(e.target)){
+  menu.classList.remove("show");
+ }
 });
+
+
+// =====================================================
+// BACKGROUND MUSIC
+// =====================================================
 
 const music=document.getElementById("backgroundMusic");
 const musicButton=document.getElementById("musicButton");
+
 musicButton.addEventListener("click",async()=>{
  try{
   if(music.paused){
-   await music.play();document.getElementById("musicIcon").textContent="Ⅱ";
+   await music.play();
+
+   document.getElementById("musicIcon").textContent="Ⅱ";
    musicButton.classList.add("playing");
+
   }else{
-   music.pause();document.getElementById("musicIcon").textContent="▶";
+   music.pause();
+
+   document.getElementById("musicIcon").textContent="▶";
    musicButton.classList.remove("playing");
   }
- }catch(e){toast("Không thể phát nhạc. Kiểm tra music.mp3.","bad");}
+
+ }catch(e){
+  toast("Không thể phát nhạc. Kiểm tra music.mp3.","bad");
+ }
 });
 
 showPage();
@@ -1003,7 +1332,8 @@ a{color:#7bcaff}
 </head>
 <body>
 <main>
-<h1>⚙️ PHONG WEB V2.2.0 - QUẢN TRỊ</h1>
+
+<h1>⚙️ PHONG WEB V2.2.1 - QUẢN TRỊ</h1>
 <p class="small">Trang quản trị riêng của Nguyễn Văn Phong.</p>
 
 <section class="panel" id="loginPanel">
@@ -1014,10 +1344,10 @@ a{color:#7bcaff}
 </section>
 
 <div id="dashboard" class="hidden">
+
 <section class="panel">
 <h2>📊 THỐNG KÊ WEBSITE</h2>
-<p>Đang truy cập: <b id="online">...</b></p>
-<p>Tổng lượt truy cập: <b id="total">...</b></p>
+<p>🟢 Đang truy cập: <b id="online">...</b></p>
 <button onclick="loadStats()">LÀM MỚI</button>
 </section>
 
@@ -1030,84 +1360,154 @@ a{color:#7bcaff}
 
 <section class="panel">
 <h2>🔒 BẢO MẬT</h2>
-<p class="small">Phiên vượt link hết hạn sau 30 phút. Trang quản trị tự đăng xuất sau thời gian không hoạt động. Không chia sẻ mật khẩu quản trị.</p>
+<p class="small">
+Phiên vượt link hết hạn sau 30 phút.
+Trang quản trị tự đăng xuất sau thời gian không hoạt động.
+Không chia sẻ mật khẩu quản trị.
+</p>
 <button class="danger" onclick="logout()">ĐĂNG XUẤT</button>
 </section>
+
 </div>
 
 <div id="message"></div>
 <p><a href="/">← Quay lại website</a></p>
+
 </main>
+
 <script>
 let config={};
+
 async function api(path,body){
- const options={method:body?"POST":"GET",headers:{}};
+ const options={
+  method:body?"POST":"GET",
+  headers:{}
+ };
+
  if(body){
   options.headers["Content-Type"]="application/json";
   options.body=JSON.stringify(body);
  }
+
  const r=await fetch(path,options);
  const d=await r.json();
- if(!r.ok||!d.success)throw new Error(d.message||"Có lỗi xảy ra.");
+
+ if(!r.ok||!d.success){
+  throw new Error(d.message||"Có lỗi xảy ra.");
+ }
+
  return d;
 }
+
 async function login(){
  const msg=document.getElementById("loginMessage");
+
  try{
-  await api("/admin/login",{password:document.getElementById("password").value});
+  await api("/admin/login",{
+   password:document.getElementById("password").value
+  });
+
   document.getElementById("loginPanel").classList.add("hidden");
   document.getElementById("dashboard").classList.remove("hidden");
+
   msg.textContent="";
+
   await loadAll();
- }catch(e){msg.textContent=e.message;}
+
+ }catch(e){
+  msg.textContent=e.message;
+ }
 }
+
 async function loadStats(){
  const d=await api("/admin/stats");
- document.getElementById("online").textContent=d.online;
- document.getElementById("total").textContent=d.total;
+
+ document.getElementById("online").textContent=
+  Number(d.online||0);
 }
+
 async function loadAll(){
  await loadStats();
+
  const d=await api("/admin/settings");
+
  config=d.items;
+
  const root=document.getElementById("items");
  root.innerHTML="";
+
  for(const [key,item] of Object.entries(config)){
   const box=document.createElement("div");
   box.className="panel";
+
   const title=document.createElement("h3");
   title.textContent=item.name;
+
   const check=document.createElement("input");
-  check.type="checkbox";check.checked=item.enabled;
+  check.type="checkbox";
+  check.checked=item.enabled;
   check.id="enabled-"+key;
+
   const label=document.createElement("label");
   label.textContent="Hiển thị mục này";
   label.prepend(check);
+
   const url=document.createElement("input");
-  url.type="url";url.id="url-"+key;url.value=item.url;
+  url.type="url";
+  url.id="url-"+key;
+  url.value=item.url;
   url.placeholder="https://www.mediafire.com/...";
+
   box.append(title,label,url);
   root.append(box);
  }
 }
+
 async function saveSettings(){
  try{
   const items={};
+
   for(const key of Object.keys(config)){
    items[key]={
     enabled:document.getElementById("enabled-"+key).checked,
     url:document.getElementById("url-"+key).value.trim()
    };
   }
+
   await api("/admin/settings",{items});
-  document.getElementById("message").textContent="Đã lưu thiết lập thành công.";
+
+  document.getElementById("message").textContent=
+   "Đã lưu thiết lập thành công.";
+
   await loadAll();
- }catch(e){document.getElementById("message").textContent=e.message;}
+
+ }catch(e){
+  document.getElementById("message").textContent=e.message;
+ }
 }
+
 async function logout(){
- try{await api("/admin/logout",{});}catch(e){}
+ try{
+  await api("/admin/logout",{});
+ }catch(e){}
+
  location.reload();
 }
+
+// Kiểm tra phiên đăng nhập khi mở trang Admin.
+async function checkAdmin(){
+ try{
+  const d=await api("/admin/me");
+
+  if(d.success){
+   document.getElementById("loginPanel").classList.add("hidden");
+   document.getElementById("dashboard").classList.remove("hidden");
+   await loadAll();
+  }
+ }catch(e){}
+}
+
+checkAdmin();
 </script>
 </body>
 </html>
@@ -1119,7 +1519,8 @@ async function logout(){
 # =========================================================
 
 class Website(BaseHTTPRequestHandler):
-    server_version = "PhongWeb/2.2.0"
+
+    server_version = "PhongWeb/2.2.1"
     sys_version = ""
 
     def client_ip(self):
@@ -1129,7 +1530,12 @@ class Website(BaseHTTPRequestHandler):
     def send_security_headers(self):
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("X-Frame-Options", "DENY")
-        self.send_header("Referrer-Policy", "strict-origin-when-cross-origin")
+
+        self.send_header(
+            "Referrer-Policy",
+            "strict-origin-when-cross-origin"
+        )
+
         self.send_header(
             "Content-Security-Policy",
             "default-src 'self' https: data:; "
@@ -1140,10 +1546,23 @@ class Website(BaseHTTPRequestHandler):
         )
 
     def send_json(self, status, data, extra_headers=None):
-        content = json.dumps(data, ensure_ascii=False).encode("utf-8")
+        content = json.dumps(
+            data,
+            ensure_ascii=False
+        ).encode("utf-8")
+
         self.send_response(status)
-        self.send_header("Content-Type", "application/json; charset=utf-8")
-        self.send_header("Content-Length", str(len(content)))
+
+        self.send_header(
+            "Content-Type",
+            "application/json; charset=utf-8"
+        )
+
+        self.send_header(
+            "Content-Length",
+            str(len(content))
+        )
+
         self.send_header("Cache-Control", "no-store")
         self.send_security_headers()
 
@@ -1155,20 +1574,33 @@ class Website(BaseHTTPRequestHandler):
 
         try:
             self.wfile.write(content)
+
         except (BrokenPipeError, ConnectionResetError):
             pass
 
     def send_html(self, content, status=200):
         data = content.encode("utf-8")
+
         self.send_response(status)
-        self.send_header("Content-Type", "text/html; charset=utf-8")
-        self.send_header("Content-Length", str(len(data)))
+
+        self.send_header(
+            "Content-Type",
+            "text/html; charset=utf-8"
+        )
+
+        self.send_header(
+            "Content-Length",
+            str(len(data))
+        )
+
         self.send_header("Cache-Control", "no-store")
         self.send_security_headers()
+
         self.end_headers()
 
         try:
             self.wfile.write(data)
+
         except (BrokenPipeError, ConnectionResetError):
             pass
 
@@ -1181,7 +1613,10 @@ class Website(BaseHTTPRequestHandler):
 
     def read_json(self):
         try:
-            length = int(self.headers.get("Content-Length", "0"))
+            length = int(
+                self.headers.get("Content-Length", "0")
+            )
+
         except ValueError:
             return None
 
@@ -1190,8 +1625,13 @@ class Website(BaseHTTPRequestHandler):
 
         try:
             raw = self.rfile.read(length)
-            value = json.loads(raw.decode("utf-8"))
+
+            value = json.loads(
+                raw.decode("utf-8")
+            )
+
             return value if isinstance(value, dict) else None
+
         except (ValueError, UnicodeDecodeError):
             return None
 
@@ -1199,9 +1639,14 @@ class Website(BaseHTTPRequestHandler):
         cookie = SimpleCookie()
 
         try:
-            cookie.load(self.headers.get("Cookie", ""))
+            cookie.load(
+                self.headers.get("Cookie", "")
+            )
+
             morsel = cookie.get(name)
+
             return morsel.value if morsel else ""
+
         except Exception:
             return ""
 
@@ -1233,8 +1678,14 @@ class Website(BaseHTTPRequestHandler):
                 "success": False,
                 "message": "Bạn cần đăng nhập quản trị."
             })
+
             return False
+
         return True
+
+    # =====================================================
+    # GET ROUTES
+    # =====================================================
 
     def do_GET(self):
         cleanup_sessions()
@@ -1254,12 +1705,21 @@ class Website(BaseHTTPRequestHandler):
 
             if not valid_token(visitor):
                 visitor = secrets.token_urlsafe(24)
+
+                secure = (
+                    "; Secure"
+                    if SITE_URL.startswith("https://")
+                    else ""
+                )
+
                 headers["Set-Cookie"] = (
                     "ph_visitor=" + visitor +
-                    "; Path=/; Max-Age=31536000; SameSite=Lax; HttpOnly"
+                    "; Path=/; Max-Age=31536000"
+                    "; SameSite=Lax; HttpOnly" + secure
                 )
 
             register_visit(visitor)
+
             self.send_html_with_cookie(HTML, headers)
             return
 
@@ -1267,7 +1727,7 @@ class Website(BaseHTTPRequestHandler):
             self.send_html(ADMIN_HTML)
             return
 
-        # -------------------- PUBLIC STATS --------------------
+        # -------------------- PUBLIC ONLINE STATS --------------------
 
         if path == "/stats":
             self.send_json(200, {
@@ -1275,6 +1735,8 @@ class Website(BaseHTTPRequestHandler):
                 **get_statistics()
             })
             return
+
+        # -------------------- PUBLIC SETTINGS --------------------
 
         if path == "/public-settings":
             self.send_json(200, {
@@ -1295,13 +1757,18 @@ class Website(BaseHTTPRequestHandler):
                 })
                 return
 
-            provider = query.get("provider", ["link4m"])[0].lower()
-            destination = query.get("destination", [""])[0].lower()
+            provider = query.get(
+                "provider", ["link4m"]
+            )[0].lower()
+
+            destination = query.get(
+                "destination", [""]
+            )[0].lower()
 
             if provider != "link4m":
                 self.send_json(400, {
                     "success": False,
-                    "message": "PHONG WEB V2.2.0 chỉ hỗ trợ Link4M."
+                    "message": "PHONG WEB V2.2.1 chỉ hỗ trợ Link4M."
                 })
                 return
 
@@ -1334,6 +1801,7 @@ class Website(BaseHTTPRequestHandler):
                 return
 
             token = secrets.token_urlsafe(32)
+
             callback_url = (
                 SITE_URL + "/provider-return?token=" +
                 quote(token, safe="")
@@ -1350,7 +1818,10 @@ class Website(BaseHTTPRequestHandler):
                         "destination": destination
                     }
 
-                print("[V2.2.0] LINK CREATED:", destination)
+                print(
+                    "[V2.2.1] LINK CREATED:",
+                    destination
+                )
 
                 self.send_json(200, {
                     "success": True,
@@ -1360,7 +1831,11 @@ class Website(BaseHTTPRequestHandler):
                 })
 
             except Exception as error:
-                print("[LINK4M ERROR]", str(error)[:300])
+                print(
+                    "[LINK4M ERROR]",
+                    str(error)[:300]
+                )
+
                 self.send_json(502, {
                     "success": False,
                     "message": str(error)[:220]
@@ -1382,28 +1857,37 @@ class Website(BaseHTTPRequestHandler):
             with LOCK:
                 session = SESSIONS.get(token)
 
-                if session and time.time() - session["created"] <= SESSION_TTL:
+                if (
+                    session
+                    and time.time() - session["created"] <= SESSION_TTL
+                ):
                     session["returned"] = True
                     session["returned_at"] = time.time()
+
                     destination = session["destination"]
 
             if not destination:
                 self.redirect("/?result=failed")
                 return
 
-            print("[V2.2.0] CALLBACK:", destination)
+            print(
+                "[V2.2.1] CALLBACK:",
+                destination
+            )
 
             self.redirect(
                 "/?result=thanks&destination=" +
                 quote(destination, safe="") +
                 "&token=" + quote(token, safe="")
             )
+
             return
 
         # -------------------- CHECK SESSION --------------------
 
         if path == "/check-session":
             token = query.get("token", [""])[0]
+
             session = get_session(token)
 
             if session and session.get("returned"):
@@ -1414,22 +1898,26 @@ class Website(BaseHTTPRequestHandler):
                     "provider": session["provider"],
                     "message": "Đã nhận callback từ Link4M."
                 })
+
             else:
                 self.send_json(403, {
                     "success": False,
                     "returned": False,
                     "message": "Phiên vượt link không hợp lệ hoặc đã hết hạn."
                 })
+
             return
 
         # -------------------- DOWNLOAD --------------------
 
         download_routes = {
-            route: key for key, route in DOWNLOAD_ROUTES.items()
+            route: key
+            for key, route in DOWNLOAD_ROUTES.items()
         }
 
         if path in download_routes:
             destination = download_routes[path]
+
             token = query.get("token", [""])[0]
 
             if not destination_enabled(destination):
@@ -1461,7 +1949,11 @@ class Website(BaseHTTPRequestHandler):
                 })
                 return
 
-            print("[V2.2.0] DOWNLOAD:", destination)
+            print(
+                "[V2.2.1] DOWNLOAD:",
+                destination
+            )
+
             self.redirect(target)
             return
 
@@ -1473,7 +1965,7 @@ class Website(BaseHTTPRequestHandler):
             })
             return
 
-        # -------------------- ADMIN STATS --------------------
+        # -------------------- ADMIN ONLINE STATS --------------------
 
         if path == "/admin/stats":
             if not self.require_admin():
@@ -1483,6 +1975,7 @@ class Website(BaseHTTPRequestHandler):
                 "success": True,
                 **get_statistics()
             })
+
             return
 
         # -------------------- ADMIN SETTINGS --------------------
@@ -1507,13 +2000,17 @@ class Website(BaseHTTPRequestHandler):
                 "success": True,
                 "items": items
             })
+
             return
 
         # -------------------- STATIC FILES --------------------
 
         allowed = {
-            "/logo.png", "/background.jpg", "/music.mp3",
-            "/cam-on-tu-phong.png", "/cam-on-tu-phong.mp3"
+            "/logo.png",
+            "/background.jpg",
+            "/music.mp3",
+            "/cam-on-tu-phong.png",
+            "/cam-on-tu-phong.mp3"
         }
 
         if path in allowed:
@@ -1536,9 +2033,12 @@ class Website(BaseHTTPRequestHandler):
 
         if path == "/link4m-return":
             token = query.get("token", [""])[0]
+
             self.redirect(
-                "/provider-return?token=" + quote(token, safe="")
+                "/provider-return?token=" +
+                quote(token, safe="")
             )
+
             return
 
         if path == "/check-link4m":
@@ -1549,11 +2049,13 @@ class Website(BaseHTTPRequestHandler):
                     "success": True,
                     "message": "Đã xác nhận phiên."
                 })
+
             else:
                 self.send_json(403, {
                     "success": False,
                     "message": "Phiên không hợp lệ."
                 })
+
             return
 
         self.send_json(404, {
@@ -1561,11 +2063,25 @@ class Website(BaseHTTPRequestHandler):
             "message": "Không tìm thấy đường dẫn."
         })
 
+    # =====================================================
+    # HTML WITH COOKIE
+    # =====================================================
+
     def send_html_with_cookie(self, html, headers):
         data = html.encode("utf-8")
+
         self.send_response(200)
-        self.send_header("Content-Type", "text/html; charset=utf-8")
-        self.send_header("Content-Length", str(len(data)))
+
+        self.send_header(
+            "Content-Type",
+            "text/html; charset=utf-8"
+        )
+
+        self.send_header(
+            "Content-Length",
+            str(len(data))
+        )
+
         self.send_header("Cache-Control", "no-store")
         self.send_security_headers()
 
@@ -1576,17 +2092,27 @@ class Website(BaseHTTPRequestHandler):
 
         try:
             self.wfile.write(data)
+
         except (BrokenPipeError, ConnectionResetError):
             pass
 
+    # =====================================================
+    # STATIC FILES
+    # =====================================================
+
     def send_static_file(self, path):
         allowed = {
-            "/logo.png", "/background.jpg", "/music.mp3",
-            "/cam-on-tu-phong.png", "/cam-on-tu-phong.mp3"
+            "/logo.png",
+            "/background.jpg",
+            "/music.mp3",
+            "/cam-on-tu-phong.png",
+            "/cam-on-tu-phong.mp3"
         }
 
         if path not in allowed:
-            self.send_json(404, {"success": False})
+            self.send_json(404, {
+                "success": False
+            })
             return
 
         file_path = BASE_DIR / path.lstrip("/")
@@ -1605,21 +2131,42 @@ class Website(BaseHTTPRequestHandler):
 
         try:
             size = file_path.stat().st_size
+
             self.send_response(200)
-            self.send_header("Content-Type", content_type)
-            self.send_header("Content-Length", str(size))
-            self.send_header("Cache-Control", "public, max-age=3600")
+
+            self.send_header(
+                "Content-Type",
+                content_type
+            )
+
+            self.send_header(
+                "Content-Length",
+                str(size)
+            )
+
+            self.send_header(
+                "Cache-Control",
+                "public, max-age=3600"
+            )
+
             self.send_security_headers()
             self.end_headers()
 
             with open(file_path, "rb") as file:
                 while True:
                     chunk = file.read(65536)
+
                     if not chunk:
                         break
+
                     self.wfile.write(chunk)
 
-        except (BrokenPipeError, ConnectionResetError, OSError) as error:
+        except (
+            BrokenPipeError,
+            ConnectionResetError,
+            OSError
+        ) as error:
+
             print("[STATIC ERROR]", str(error))
 
     # =====================================================
@@ -1628,6 +2175,7 @@ class Website(BaseHTTPRequestHandler):
 
     def do_POST(self):
         path = urlsplit(self.path).path
+
         data = self.read_json()
 
         if data is None:
@@ -1652,7 +2200,8 @@ class Website(BaseHTTPRequestHandler):
             password = data.get("password", "")
 
             if not isinstance(password, str) or not secrets.compare_digest(
-                hash_text(password), hash_text(ADMIN_PASSWORD)
+                hash_text(password),
+                hash_text(ADMIN_PASSWORD)
             ):
                 self.send_json(401, {
                     "success": False,
@@ -1667,7 +2216,11 @@ class Website(BaseHTTPRequestHandler):
                     "created": time.time()
                 }
 
-            secure = "; Secure" if SITE_URL.startswith("https://") else ""
+            secure = (
+                "; Secure"
+                if SITE_URL.startswith("https://")
+                else ""
+            )
 
             self.send_json(200, {
                 "success": True,
@@ -1679,6 +2232,7 @@ class Website(BaseHTTPRequestHandler):
                     "; Max-Age=" + str(ADMIN_TTL) + secure
                 )
             })
+
             return
 
         # -------------------- ADMIN LOGOUT --------------------
@@ -1694,9 +2248,11 @@ class Website(BaseHTTPRequestHandler):
                 "message": "Đã đăng xuất."
             }, {
                 "Set-Cookie": (
-                    "ph_admin=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0"
+                    "ph_admin=; Path=/; HttpOnly; "
+                    "SameSite=Strict; Max-Age=0"
                 )
             })
+
             return
 
         # -------------------- ADMIN SAVE SETTINGS --------------------
@@ -1744,20 +2300,30 @@ class Website(BaseHTTPRequestHandler):
                     })
                     return
 
-            for key in DEFAULT_DESTINATIONS:
-                item = items[key]
-                set_setting("url_" + key, item["url"].strip())
-                set_setting(
-                    "enabled_" + key,
-                    "1" if item["enabled"] else "0"
-                )
+            # Lưu tất cả thiết lập vào data.json.
+            with JSON_LOCK:
+                stored = load_data_unlocked()
 
-            print("[V2.2.0] ADMIN UPDATED SETTINGS")
+                for key in DEFAULT_DESTINATIONS:
+                    item = items[key]
+
+                    stored["settings"]["url_" + key] = (
+                        item["url"].strip()
+                    )
+
+                    stored["settings"]["enabled_" + key] = (
+                        "1" if item["enabled"] else "0"
+                    )
+
+                save_data_unlocked(stored)
+
+            print("[V2.2.1] ADMIN UPDATED JSON SETTINGS")
 
             self.send_json(200, {
                 "success": True,
                 "message": "Đã lưu thiết lập thành công."
             })
+
             return
 
         self.send_json(404, {
@@ -1766,15 +2332,19 @@ class Website(BaseHTTPRequestHandler):
         })
 
     def log_message(self, fmt, *args):
-        print("[PHONG WEB V2.2.0]", fmt % args)
+        print(
+            "[PHONG WEB V2.2.1]",
+            fmt % args
+        )
 
 
 # =========================================================
-# START
+# START SERVER
 # =========================================================
 
 if __name__ == "__main__":
-    init_db()
+
+    init_data()
 
     server = ThreadingHTTPServer(
         ("0.0.0.0", PORT),
@@ -1785,29 +2355,48 @@ if __name__ == "__main__":
 
     print("======================================")
     print("       NGUYEN VAN PHONG WEBSITE")
-    print("              V2.2.0")
+    print("              V2.2.1")
     print("======================================")
+
     print("Port:", PORT)
-    print("Database:", DB_PATH)
-    print("Link4M:", "ENABLED" if LINK4M_API_TOKEN else "MISSING API TOKEN")
+    print("JSON:", DATA_FILE)
+
+    print(
+        "Link4M:",
+        "ENABLED" if LINK4M_API_TOKEN else "MISSING API TOKEN"
+    )
+
     print("Admin page: /admin")
     print("Admin password: Set by ADMIN_PASSWORD or default")
-    print("Statistics: SQLITE ENABLED")
+
+    print("Storage: JSON")
+    print("SQLite: DISABLED")
+    print("Persistent Disk: NOT REQUIRED")
+
+    print("Statistics: ONLINE ONLY")
     print("Online timeout:", VISITOR_TIMEOUT, "seconds")
     print("Session TTL:", SESSION_TTL, "seconds")
+
+    print("Clock: VIETNAM TIME + DAY ICON")
+
     print("Location: /dinh-vi")
     print("Deta: /menu")
     print("Proxy: /proxy-mod-alen-crack")
     print("Mizze: /mizze-crack")
+
     print("Callback: /provider-return")
     print("Session check: /check-session")
     print("Admin settings: /admin/settings")
+
     print("Providers: LINK4M ONLY")
+
     print("======================================")
 
     try:
         server.serve_forever()
+
     except KeyboardInterrupt:
         print("[PHONG WEB] Server stopped.")
+
     finally:
         server.server_close()
