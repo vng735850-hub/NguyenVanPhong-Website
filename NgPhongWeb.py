@@ -978,6 +978,29 @@ body.light .link-description{color:#274768}
 .music-mini.dragging{cursor:grabbing;opacity:.9}.music-track-name{max-width:105px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#e3f5ff;font-size:12px;font-weight:bold}
 .music-mini.minimized{display:none!important}.music-restore{position:fixed;z-index:9001;right:16px;bottom:16px;width:52px;height:52px;border-radius:50%;border:1px solid #8bd7ff;color:white;background:linear-gradient(135deg,#086de0,#13b5ff);font-size:25px;box-shadow:0 0 18px #168cff}
 .music-mini .music-minimize{width:28px;height:28px;font-size:15px;border-radius:7px}
+
+.all-tags-directory{max-width:980px;margin:28px auto 38px;text-align:left}
+.directory-heading{text-align:center;margin:0 0 22px}
+.directory-heading h2{color:#9cddff;text-shadow:0 0 14px rgba(35,155,255,.45);margin:0 0 7px}
+.directory-heading p{color:#a9c8e8;margin:0;font-size:13px}
+.tag-group{margin:18px 0;padding:17px;border:1px solid rgba(65,166,255,.42);border-radius:17px;background:linear-gradient(135deg,rgba(8,35,75,.92),rgba(5,17,43,.92));box-shadow:0 8px 25px rgba(0,0,0,.18)}
+.tag-group-title{display:flex;align-items:center;gap:11px;margin-bottom:14px}
+.tag-group-title>span{font-size:28px}
+.tag-group-title h3{margin:0;color:#e1f4ff;font-size:17px}
+.tag-group-title small{display:block;color:#9ab8d8;margin-top:4px}
+.tag-group-title>a{margin-left:auto;color:#69c7ff;text-decoration:none;font-weight:700;font-size:13px;white-space:nowrap}
+.tag-items-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.tag-item-card{min-width:0;display:flex;flex-direction:column;gap:6px;padding:14px;border-radius:12px;border:1px solid rgba(80,168,255,.3);background:rgba(10,45,87,.7);color:#eaf7ff;text-decoration:none;transition:transform .2s,border-color .2s,background .2s}
+.tag-item-card:hover{transform:translateY(-2px);border-color:#50baff;background:rgba(15,67,120,.85)}
+.tag-item-card>span{font-size:23px}
+.tag-item-card b{font-size:13px;line-height:1.4}
+.tag-item-card small{font-size:11px;color:#a9c9e9}
+@media(max-width:600px){
+ .all-tags-directory{margin:22px 3px 30px}
+ .tag-group{padding:13px}
+ .tag-items-grid{grid-template-columns:1fr}
+ .tag-group-title h3{font-size:15px}
+}
 footer{
  padding:18px 10px 22px;text-align:center;color:#c1dcff;
  font-size:13px;line-height:1.9;background:rgba(3,8,23,.9);
@@ -1092,6 +1115,44 @@ footer strong{color:#55baff;letter-spacing:1px}
    <span>❌ Vượt link thất bại: <b id="failedCount">...</b></span>
    <span>📥 Lượt lấy file: <b id="downloadCount">...</b></span>
   </div>
+
+  <!-- V2.4.0: Trang Chủ tổng hợp nội dung từ tất cả Tag -->
+  <section class="all-tags-directory" id="allTagsDirectory">
+   <div class="directory-heading">
+    <h2>🌐 KHÁM PHÁ TẤT CẢ DANH MỤC</h2>
+    <p>Tổng hợp các mục đang có trong tất cả Tag ngay tại Trang Chủ.</p>
+   </div>
+
+   <section class="tag-group" data-tag="freefire">
+    <div class="tag-group-title"><span>🔥</span><div><h3>HACK FREE FIRE</h3><small>Các mục thuộc Tag Free Fire</small></div>
+     <a href="/?category=freefire">Xem Tag →</a>
+    </div>
+    <div class="tag-items-grid">
+     <a class="tag-item-card" href="/dinh-vi"><span>📍</span><b>Định Vị Xanh Tím OB55</b><small>Mở mục định vị</small></a>
+     <a class="tag-item-card" href="/menu"><span>🔐</span><b>DETA IPA CRACK NOKЕY</b><small>Mở menu Deta</small></a>
+     <a class="tag-item-card" href="/proxy-mod-alen-crack"><span>🌐</span><b>PROXY MOD ALEN CRACK</b><small>Mở mục Proxy</small></a>
+     <a class="tag-item-card" href="/mizze-crack"><span>🎮</span><b>MENU MIZZE CRACK</b><small>Mở mục Mizze</small></a>
+    </div>
+   </section>
+
+   <section class="tag-group" data-tag="lienquan">
+    <div class="tag-group-title"><span>⚔️</span><div><h3>HACK LIÊN QUÂN</h3><small>Nội dung thuộc Tag Liên Quân</small></div>
+     <a href="/?category=lienquan">Xem Tag →</a>
+    </div>
+    <div class="tag-items-grid">
+     <a class="tag-item-card" href="/?category=lienquan"><span>⚔️</span><b>Hack Liên Quân</b><small>Xem thông tin và cập nhật</small></a>
+    </div>
+   </section>
+
+   <section class="tag-group" data-tag="roblox">
+    <div class="tag-group-title"><span>🧱</span><div><h3>HACK ROBLOX</h3><small>Nội dung thuộc Tag Roblox</small></div>
+     <a href="/?category=roblox">Xem Tag →</a>
+    </div>
+    <div class="tag-items-grid">
+     <a class="tag-item-card" href="/?category=roblox"><span>🧱</span><b>Hack Roblox</b><small>Xem thông tin và cập nhật</small></a>
+    </div>
+   </section>
+  </section>
 
   <section class="location-container" id="card-location">
    <a class="location-link" href="/dinh-vi">
@@ -1434,7 +1495,11 @@ refreshStats();
 async function loadPublicConfig(){
  try{const r=await fetch("/public-settings",{cache:"no-store"});const d=await r.json();if(!r.ok)return;
   const name=d.site_name||"NGUYỄN VĂN PHONG WEBSITE";const title=document.getElementById("siteTitle");if(title)title.textContent=name;document.title=name+" | PHONG WEB";
-  document.querySelectorAll("[data-tag]").forEach(el=>el.classList.toggle("hidden",!!(d.tags&&d.tags[el.dataset.tag]===false)));
+  document.querySelectorAll("[data-tag]").forEach(el=>{
+   const enabled=!(d.tags&&d.tags[el.dataset.tag]===false);
+   el.classList.toggle("hidden",!enabled);
+   if(el.classList.contains("tag-group"))el.style.display=enabled?"":"none";
+  });
   const ann=document.getElementById("announcement");if(ann){if(d.announcement&&d.announcement.enabled&&d.announcement.message){ann.textContent="📢 "+d.announcement.message;ann.classList.remove("hidden")}else ann.classList.add("hidden")}
   if(Array.isArray(d.music_playlist)&&d.music_playlist.length){musicPlaylist=d.music_playlist;currentMusicIndex=0;updateTrackName()}
   const m=document.getElementById("maintenanceBox"),n=document.getElementById("normalHome");if(d.maintenance&&d.maintenance.enabled&&m&&n){m.textContent=d.maintenance.message||"Website đang bảo trì.";m.classList.remove("hidden");n.classList.add("hidden")}
