@@ -134,9 +134,9 @@ async function api(path, options={}) {
   return data;
 }
 async function syncConfigToServer(){
-  if(!adminToken)return;
-  try{await api('/api/admin/config',{method:'PUT',body:JSON.stringify({config:cfg})})}
-  catch(e){toast('Không đồng bộ được dữ liệu: '+e.message)}
+  if(!adminToken)throw new Error('Bạn chưa đăng nhập quản trị máy chủ.');
+  await api('/api/admin/config',{method:'PUT',body:JSON.stringify({config:cfg})});
+  return true;
 }
 async function loadSharedConfig(){
   try{const data=await api('/api/config');if(data.config){cfg=Object.assign(cfg,data.config);saveLocalOnly()}}
@@ -212,7 +212,7 @@ function loadConfig(){
   return cfg;
 }
 let cfg=loadConfig();
-function save(){try{localStorage.setItem(STORE,JSON.stringify(cfg))}catch(e){toast("Không lưu được dữ liệu trình duyệt.","bad")} if(adminToken)syncConfigToServer()}
+function save(){try{localStorage.setItem(STORE,JSON.stringify(cfg))}catch(e){toast("Không lưu được dữ liệu trình duyệt.","bad")} if(adminToken)syncConfigToServer().catch(e=>toast("Đã lưu trên trình duyệt nhưng chưa đồng bộ Render: "+e.message))}
 function toast(msg){
   const t=$("#toast");t.textContent=msg;t.className="show";
   clearTimeout(toast.t);toast.t=setTimeout(()=>t.className="",3500);
@@ -487,7 +487,7 @@ function adminFiles(){
     p.append(el("label",{text:"Trạng thái"},f.status),el("small",{text:"Lượt lấy file: "+(d.downloads||0)}));
     inputs[d.key]=f;w.append(p);
   });
-  w.append(el("button",{class:"btn green",text:"LƯU THAY ĐỔI",onclick(){
+  w.append(el("button",{class:"btn green",text:"LƯU THAY ĐỔI",onclick:async()=>{
     for(const d of cfg.destinations){
       const f=inputs[d.key];
       if(!httpsUrl(f.url.value)){toast("Link LẤY FILE của "+d.name+" phải là HTTPS hợp lệ.");return}
@@ -500,7 +500,9 @@ function adminFiles(){
       d.fileName=f.fileName.value.trim().slice(0,120);d.size=f.size.value.trim().slice(0,40);
       d.status=f.status.value;
     }
-    save();buildMenu();toast("Đã lưu thiết lập.");
+    saveLocalOnly();buildMenu();
+    try{await syncConfigToServer();toast("Đã lưu và đồng bộ 6 mục tải lên Render.");}
+    catch(e){toast("Đã lưu trên trình duyệt nhưng đồng bộ Render thất bại: "+e.message);}
   }}));
   return w;
 }
