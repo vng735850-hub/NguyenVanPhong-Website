@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NGUYỄN VĂN PHONG WEBSITE</title>
+<style>
+:root{--bg:#080d20;--card:rgba(255,255,255,.07);--line:rgba(255,255,255,.16);--tx:#fff;--mut:#b9c4e4;--ac:#3b82f6;--ok:#22c55e;--bad:#ef4444}
+:root[data-theme=light]{--bg:#e8f4ff;--card:rgba(255,255,255,.8);--line:rgba(16,32,60,.18);--tx:#10203c;--mut:#4a5b7d}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font-family:Arial,sans-serif;background:var(--bg);color:var(--tx);transition:.3s}
+header{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--card);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.title{flex:1;font-weight:700;font-size:15px}
+button,.btn{cursor:pointer;border:0;border-radius:10px;padding:10px 16px;font-weight:700;color:#fff;background:var(--ac);text-decoration:none;display:inline-block;font-size:14px}
+button.ghost{background:var(--card);color:var(--tx);border:1px solid var(--line)}
+button.bad{background:var(--bad)}
+nav{display:none;position:absolute;top:100%;left:10px;min-width:230px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:8px}
+nav.open{display:block}
+nav a{display:block;padding:10px;color:var(--tx);text-decoration:none;border-radius:8px}
+nav a:hover{background:var(--card)}
+main{max-width:760px;margin:0 auto;padding:22px 14px 80px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;margin:14px 0;text-align:center}
+h1,h2{margin:.3em 0}
+.mut{color:var(--mut)}
+.stats{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:10px 0}
+.stats span{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:13px}
+.grid{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.item{display:block;color:var(--tx);text-decoration:none;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+.item b{display:block;margin:6px 0 2px}
+.item:hover{border-color:var(--ac)}
+input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--tx);font:inherit}
+.notice{border-radius:12px;padding:12px;margin:12px 0;background:rgba(59,130,246,.18);border:1px solid var(--ac)}
+.notice.warn{background:rgba(239,68,68,.18);border-color:var(--bad)}
+.hidden{display:none!important}
+.row{display:grid;grid-template-columns:1.1fr 2fr auto auto;gap:8px;align-items:center;text-align:left;margin:8px 0}
+.row small{color:var(--mut)}
+.status{min-height:22px;margin:10px 0;color:var(--mut)}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);padding:12px 18px;border-radius:12px;color:#fff;background:var(--ok);opacity:0;pointer-events:none;transition:.3s;z-index:50}
+#toast.show{opacity:1}#toast.bad{background:var(--bad)}
+footer{text-align:center;color:var(--mut);padding:20px;font-size:13px}
+@media(max-width:600px){.row{grid-template-columns:1fr 1fr}.row .wide{grid-column:1/-1}}
+</style>
+</head>
+<body>
+<header>
+ <button class="ghost" id="menuBtn">☰</button>
+ <div class="title" id="siteTitle">NGUYỄN VĂN PHONG WEBSITE</div>
+ <span id="clock" class="mut"></span>
+ <button class="ghost" id="themeBtn">☀️</button>
+ <nav id="nav">
+  <a href="#/">🏠 TRANG CHỦ</a>
+  <a href="#/cat/freefire">🔥 HACK FREE FIRE</a>
+  <a href="#/cat/lienquan">⚔️ HACK LIÊN QUÂN</a>
+  <a href="#/cat/roblox">🧱 HACK ROBLOX</a>
+  <a href="#/admin">⚙️ QUẢN TRỊ</a>
+ </nav>
+</header>
+<main id="app"></main>
+<div id="toast"></div>
+<footer>© 2026 Nguyễn Văn Phong Website<br><b>PHONG WEB V2.7.2 · HTML</b></footer>
+
+<script>
+"use strict";
+// ---------- Cấu hình mặc định (lấy từ bản Python) ----------
+const ITEMS = {
+  location:{slug:"dinh-vi",icon:"📍",name:"Định Vị Xanh Tím OB55",cat:"freefire",file:"DINH_VI_BT.zip",url:"https://www.mediafire.com/file/yen60lu05hfnng4/DINH_VI_BT.zip/file"},
+  deta:{slug:"menu",icon:"🔐",name:"DETA IPA CRACK NOKEY",cat:"freefire",file:"Deta_Crack.7z",url:"https://www.mediafire.com/file/wohet4glfwyn5j0/Deta_Crack.7z/file"},
+  proxy:{slug:"proxy-mod-alen-crack",icon:"🌐",name:"PROXY MOD ALEN CRACK",cat:"freefire",file:"PROXY MOD ALEN Crack.zip",url:"https://www.mediafire.com/file/zdoapnkcx9v70gq/PROXY+MOD+ALEN+Crack.zip/file"},
+  mizze:{slug:"mizze-crack",icon:"🎮",name:"MENU MIZZE CRACK",cat:"freefire",file:"Menu Mizze Crack",url:"https://www.mediafire.com/file/2plraqmzcl7gk4m/mizze+crack+adr+chs+ff+india.zip/file"},
+  nvpkey:{slug:"menu-nvp-crack-key",icon:"🔑",name:"MENU NVP CRACK KEY",cat:"lienquan",file:"Menu Nvp Crack Key",url:"https://zufile.com/f/2vRmNkma5C"},
+  ysm:{slug:"menu-ysm-team-lien-quan",icon:"⚔️",name:"MENU YSM TEAM LIÊN QUÂN",cat:"lienquan",file:"YSM_TEAM_LIEN_QUAN.apk",url:"https://www.mediafire.com/file/x9xo2468orsfr3l/YSM_TEAM_LIEN_QUAN.apk/file"}
+};
+const CATS = {
+  freefire:{icon:"🔥",name:"HACK FREE FIRE"},
+  lienquan:{icon:"⚔️",name:"HACK LIÊN QUÂN"},
+  roblox:{icon:"🧱",name:"HACK ROBLOX"}
+};
+const LINK4M = "https://link4m.co/api-shorten/v2";
+const SESSION_TTL = 30*60*1000, ADMIN_TTL = 30*60*1000, DEFAULT_PW = "152012";
+const KEY = "phong_web_data";
+
+// ---------- Lưu trữ (localStorage) ----------
+function defaults(){
+  const files = {};
+  for(const k in ITEMS) files[k] = {url:ITEMS[k].url,enabled:true,status:"available",downloads:0};
+  return {siteName:"NGUYỄN VĂN PHONG WEBSITE",link4mToken:"",pwHash:"",files,
+    announcement:{enabled:false,message:""},
+    maintenance:{enabled:false,message:"Website đang bảo trì. Vui lòng quay lại sau."},
+    stats:{total:0,success:0,failed:0,downloads:0},sessions:{}};
+}
+function load(){
+  let d; try{d = JSON.parse(localStorage.getItem(KEY))}catch(e){}
+  const base = defaults();
+  if(!d || typeof d !== "object") return base;
+  for(const k in base){ if(!(k in d)) d[k] = base[k]; }
+  for(const k in ITEMS) d.files[k] = Object.assign({}, base.files[k], d.files[k]);
+  return d;
+}
+function save(){ try{localStorage.setItem(KEY, JSON.stringify(D))}catch(e){} }
+let D = load();
+
+// ---------- Tiện ích ----------
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function toast(msg, bad){
+  const t = $("#toast"); t.textContent = msg; t.className = "show" + (bad ? " bad" : "");
+  clearTimeout(toast.t); toast.t = setTimeout(() => t.className = "", 3500);
+}
+async function sha256(s){
+  const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
+  return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2,"0")).join("");
+}
+function randToken(){
+  const a = new Uint8Array(24); crypto.getRandomValues(a);
+  return [...a].map(x => x.toString(16).padStart(2,"0")).join("");
+}
+function httpsUrl(v){
+  try{ const u = new URL(v); return u.protocol === "https:" && !u.username && !u.password; }
+  catch(e){ return false; }
+}
+function isAdmin(){
+  const t = Number(sessionStorage.getItem("phong_admin") || 0);
+  return t && Date.now() - t < ADMIN_TTL;
+}
+const rateLog = [];
+function rateLimited(max = 8){
+  const now = Date.now();
+  while(rateLog.length && now - rateLog[0] > 60000) rateLog.shift();
+  if(rateLog.length >= max) return true;
+  rateLog.push(now); return false;
+}
+
+// ---------- Giao diện chung ----------
+function applyTheme(t){
+  document.documentElement.dataset.theme = t;
+  $("#themeBtn").textContent = t === "light" ? "🌙" : "☀️";
+  try{localStorage.setItem("phong_theme", t)}catch(e){}
+}
+$("#themeBtn").onclick = () => applyTheme(document.documentElement.dataset.theme === "light" ? "dark" : "light");
+$("#menuBtn").onclick = e => { e.stopPropagation(); $("#nav").classList.toggle("open"); };
+document.addEventListener("click", () => $("#nav").classList.remove("open"));
+setInterval(() => {
+  const d = new Date(), h = d.getHours();
+  $("#clock").textContent = (h >= 6 && h < 18 ? "☀️ " : "🌙 ") + d.toLocaleTimeString("vi-VN");
+}, 1000);
+
+// ---------- Luồng vượt link ----------
+async function startBypass(key){
+  const f = D.files[key], st = $("#status");
+  if(rateLimited()) return toast("Bạn thao tác quá nhanh. Hãy thử lại sau.", true);
+  if(D.maintenance.enabled) return toast(D.maintenance.message, true);
+  if(!f.enabled) return toast("Mục này hiện đang tạm khóa.", true);
+  if(f.status !== "available") return toast("File hiện đang tạm ngưng.", true);
+  if(!D.link4mToken) return toast("Chưa cấu hình Link4M API Token trong trang Quản trị.", true);
+
+  const token = randToken();
+  const callback = location.href.split("#")[0] + "#/return/" + token;
+  st.textContent = "⏳ Đang tạo link Link4M...";
+  try{
+    const res = await fetch(LINK4M + "?" + new URLSearchParams({api:D.link4mToken, url:callback}));
+    const j = await res.json();
+    const short = j.shortenedUrl || j.shortened_url || j.short_url;
+    if(j.status !== "success" || !httpsUrl(short)) throw new Error(j.message || "Link4M trả về dữ liệu không hợp lệ.");
+    D = load();
+    D.sessions[token] = {key, created:Date.now(), counted:false, used:false};
+    save();
+    location.href = short;
+  }catch(e){
+    D = load(); D.stats.failed++; save();
+    st.textContent = "";
+    toast("Không tạo được link: " + e.message + " (trình duyệt có thể chặn CORS với API Link4M).", true);
+  }
+}
+function getSession(token){
+  D = load();
+  const s = D.sessions[token];
+  if(!s || Date.now() - s.created > SESSION_TTL) return null;
+  return s;
+}
+function cleanSessions(){
+  let ch = false;
+  for(const t in D.sessions) if(Date.now() - D.sessions[t].created > SESSION_TTL){ delete D.sessions[t]; ch = true; }
+  if(ch) save();
+}
+
+// ---------- Các trang ----------
+function itemCard(k){
+  const i = ITEMS[k];
+  return `<a class="item" href="#/${i.slug}"><span style="font-size:26px">${i.icon}</span><b>${esc(i.name)}</b><small class="mut">Mở mục</small></a>`;
+}
+function pageHome(){
+  const q = (sessionStorage.getItem("phong_q") || "").toLowerCase();
+  const keys = Object.keys(ITEMS).filter(k => !q || (ITEMS[k].name + CATS[ITEMS[k].cat].name).toLowerCase().includes(q));
+  let h = "";
+  if(D.maintenance.enabled) h += `<div class="notice warn">🚧 ${esc(D.maintenance.message)}</div>`;
+  h += `<div class="box"><h1>WELCOME TO PHONG WEB</h1>
+   <div class="mut">Chào mừng bạn đến với website của Nguyễn Văn Phong.<br>📍 ĐỊNH VỊ XANH TÍM OB55</div></div>`;
+  if(D.announcement.enabled && D.announcement.message) h += `<div class="notice">📢 ${esc(D.announcement.message)}</div>`;
+  h += `<input id="q" type="search" placeholder="🔎 Tìm nhanh chức năng, danh mục..." value="${esc(q)}" autocomplete="off">
+   <div class="stats">
+    <span>👁 Lượt truy cập: <b>${D.stats.total}</b></span>
+    <span>✅ Vượt link thành công: <b>${D.stats.success}</b></span>
+    <span>❌ Thất bại: <b>${D.stats.failed}</b></span>
+    <span>📥 Lượt lấy file: <b>${D.stats.downloads}</b></span>
+   </div>`;
+  for(const c in CATS){
+    const ks = keys.filter(k => ITEMS[k].cat === c);
+    if(!ks.length && q) continue;
+    h += `<div class="box"><h2>${CATS[c].icon} ${CATS[c].name}</h2>
+     <div class="grid">${ks.map(itemCard).join("") || '<div class="mut">Đang cập nhật...</div>'}</div>
+     <p><a href="#/cat/${c}">Xem Tag →</a></p></div>`;
+  }
+  $("#app").innerHTML = h;
+  $("#q").oninput = e => {
+    sessionStorage.setItem("phong_q", e.target.value);
+    const pos = e.target.selectionStart; pageHome();
+    const n = $("#q"); n.focus(); n.setSelectionRange(pos, pos);
+  };
+}
+function pageCat(c){
+  if(!CATS[c]) return go("/");
+  const ks = Object.keys(ITEMS).filter(k => ITEMS[k].cat === c);
+  $("#app").innerHTML = `<div class="box"><div style="font-size:42px">${CATS[c].icon}</div>
+   <h2>CHÀO BẠN ĐẾN VỚI ${CATS[c].name}</h2>
+   ${ks.length ? `<div class="grid">${ks.map(itemCard).join("")}</div>`
+     : `<div class="notice warn">🚧 WEBSITE ĐANG CẬP NHẬT<br>Vui lòng chờ. Chúng tôi sẽ cập nhật nội dung sớm nhất.</div>`}
+   <p><a class="btn ghost" href="#/">← TRANG CHỦ</a></p></div>`;
+}
+function pageItem(k){
+  const i = ITEMS[k], f = D.files[k];
+  $("#app").innerHTML = `<div class="box"><div style="font-size:42px">${i.icon}</div>
+   <h2>BẠN CẦN VƯỢT LINK ĐỂ LẤY FILE</h2>
+   <h3>${esc(i.name)}</h3>
+   <div class="mut">📦 ${esc(i.file)}${f.status !== "available" ? " · ⛔ Tạm ngưng" : ""}${!f.enabled ? " · 🔒 Đang khóa" : ""}</div>
+   <p><button id="go">🔓 VƯỢT LINK</button></p>
+   <div class="status" id="status"></div>
+   <a class="btn ghost" href="#/">← QUAY LẠI TRANG CHỦ</a></div>`;
+  $("#go").onclick = () => startBypass(k);
+}
+function pageReturn(token){
+  const s = getSession(token);
+  if(!s){ D.stats.failed++; save(); return pageResult(null, "failed"); }
+  if(!s.counted){ s.counted = true; D.stats.success++; save(); }
+  $("#app").innerHTML = `<div class="box"><div style="font-size:42px">💙</div>
+   <h2>Cảm Ơn Vì Đã Ủng Hộ Cho Phong</h2>
+   <div class="mut">Phong chân thành cảm ơn bạn đã dành thời gian ủng hộ website.</div>
+   <p><button id="next">TIẾP THEO →</button></p></div>`;
+  $("#next").onclick = () => go("/result/" + token);
+}
+function pageResult(token, forced){
+  const s = token ? getSession(token) : null;
+  if(forced === "failed" || !s){
+    $("#app").innerHTML = `<div class="box"><div style="font-size:42px">❌</div>
+     <h2>Vượt Link Thất Bại</h2><div class="mut">Phiên đã hết hạn hoặc không hợp lệ. Vui lòng vượt link mới.</div>
+     <p><a class="btn ghost" href="#/">← QUAY LẠI TRANG CHỦ</a></p></div>`;
+    return;
+  }
+  const i = ITEMS[s.key];
+  $("#app").innerHTML = `<div class="box"><div style="font-size:42px">✅</div>
+   <h2>Vượt Link Thành Công</h2><div class="mut">${esc(i.name)} · ${esc(i.file)}</div>
+   <p><button id="get">📥 LẤY FILE</button></p>
+   <a class="btn ghost" href="#/">← QUAY LẠI TRANG CHỦ</a></div>`;
+  $("#get").onclick = () => {
+    D = load();
+    const f = D.files[s.key];
+    if(!httpsUrl(f.url)) return toast("Link file không hợp lệ.", true);
+    if(D.sessions[token] && !D.sessions[token].used){
+      D.sessions[token].used = true; D.stats.downloads++; f.downloads++; save();
+    }
+    window.open(f.url, "_blank", "noopener");
+  };
+}
+
+// ---------- Trang quản trị (chạy phía trình duyệt) ----------
+function pageAdmin(){
+  if(!isAdmin()){
+    $("#app").innerHTML = `<div class="box"><h2>⚙️ QUẢN TRỊ</h2>
+     <p><input id="pw" type="password" placeholder="Mật khẩu quản trị" autocomplete="current-password"></p>
+     <button id="login">ĐĂNG NHẬP</button></div>`;
+    const doLogin = async () => {
+      const h = await sha256($("#pw").value);
+      const real = D.pwHash || await sha256(DEFAULT_PW);
+      if(h === real){ sessionStorage.setItem("phong_admin", Date.now()); pageAdmin(); }
+      else toast("Mật khẩu không đúng.", true);
+    };
+    $("#login").onclick = doLogin;
+    $("#pw").onkeydown = e => { if(e.key === "Enter") doLogin(); };
+    return;
+  }
+  sessionStorage.setItem("phong_admin", Date.now());
+  let rows = "";
+  for(const k in ITEMS){
+    const f = D.files[k];
+    rows += `<div class="row">
+      <div><b>${ITEMS[k].icon} ${esc(ITEMS[k].name)}</b><br><small>${f.downloads} lượt lấy</small></div>
+      <input class="wide" data-url="${k}" value="${esc(f.url)}" placeholder="https://...">
+      <select data-status="${k}"><option value="available"${f.status==="available"?" selected":""}>Sẵn sàng</option><option value="paused"${f.status!=="available"?" selected":""}>Tạm ngưng</option></select>
+      <label><input type="checkbox" data-en="${k}" style="width:auto"${f.enabled?" checked":""}> Bật</label></div>`;
+  }
+  $("#app").innerHTML = `<div class="box" style="text-align:left">
+   <h2>⚙️ QUẢN TRỊ</h2>
+   <div class="stats"><span>👁 ${D.stats.total}</span><span>✅ ${D.stats.success}</span><span>❌ ${D.stats.failed}</span><span>📥 ${D.stats.downloads}</span></div>
+   <div class="notice warn">Trang này chạy hoàn toàn trong trình duyệt: dữ liệu và thống kê chỉ lưu trên máy này, không có máy chủ bảo vệ.</div>
+   <h3>Quản lý file</h3>${rows}
+   <h3>Cấu hình</h3>
+   <p><input id="siteName" value="${esc(D.siteName)}" placeholder="Tên website"></p>
+   <p><input id="token" type="password" value="${esc(D.link4mToken)}" placeholder="Link4M API Token"></p>
+   <h3>Thông báo</h3>
+   <p><label><input type="checkbox" id="annOn" style="width:auto"${D.announcement.enabled?" checked":""}> Bật thông báo</label></p>
+   <p><textarea id="annMsg" rows="2">${esc(D.announcement.message)}</textarea></p>
+   <p><label><input type="checkbox" id="mtOn" style="width:auto"${D.maintenance.enabled?" checked":""}> Bật bảo trì</label></p>
+   <p><textarea id="mtMsg" rows="2">${esc(D.maintenance.message)}</textarea></p>
+   <p><button id="saveAll">💾 LƯU TẤT CẢ</button></p>
+   <h3>Mật khẩu & dữ liệu</h3>
+   <p><input id="newPw" type="password" placeholder="Mật khẩu mới (8–200 ký tự)"></p>
+   <p><button class="ghost" id="chPw">Đổi mật khẩu</button>
+   <button class="ghost" id="exp">⬇️ Sao lưu JSON</button>
+   <button class="ghost" id="imp">⬆️ Khôi phục</button>
+   <button class="bad" id="reset">🗑 Xóa thống kê</button>
+   <button class="ghost" id="out">Đăng xuất</button></p>
+   <input type="file" id="impFile" accept="application/json" class="hidden"></div>`;
+
+  $("#saveAll").onclick = () => {
+    for(const k in ITEMS){
+      const url = document.querySelector(`[data-url="${k}"]`).value.trim();
+      if(!httpsUrl(url)) return toast("Link của " + ITEMS[k].name + " phải là HTTPS hợp lệ.", true);
+      D.files[k].url = url;
+      D.files[k].status = document.querySelector(`[data-status="${k}"]`).value;
+      D.files[k].enabled = document.querySelector(`[data-en="${k}"]`).checked;
+    }
+    D.siteName = $("#siteName").value.trim().slice(0,80) || "NGUYỄN VĂN PHONG WEBSITE";
+    D.link4mToken = $("#token").value.trim();
+    D.announcement = {enabled:$("#annOn").checked, message:$("#annMsg").value.trim().slice(0,1000)};
+    D.maintenance = {enabled:$("#mtOn").checked, message:$("#mtMsg").value.trim().slice(0,1000) || "Website đang bảo trì. Vui lòng quay lại sau."};
+    save(); applySite(); toast("Đã lưu cấu hình.");
+  };
+  $("#chPw").onclick = async () => {
+    const p = $("#newPw").value;
+    if(p.length < 8 || p.length > 200) return toast("Mật khẩu mới phải từ 8 đến 200 ký tự.", true);
+    D.pwHash = await sha256(p); save(); $("#newPw").value = ""; toast("Đã đổi mật khẩu.");
+  };
+  $("#exp").onclick = () => {
+    const copy = Object.assign({}, D, {sessions:{}});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(copy, null, 2)], {type:"application/json"}));
+    a.download = "phong-web-backup.json"; a.click(); URL.revokeObjectURL(a.href);
+  };
+  $("#imp").onclick = () => $("#impFile").click();
+  $("#impFile").onchange = async e => {
+    try{
+      const d = JSON.parse(await e.target.files[0].text());
+      if(!d || typeof d.files !== "object") throw 0;
+      localStorage.setItem(KEY, JSON.stringify(d)); D = load(); applySite(); pageAdmin(); toast("Đã khôi phục dữ liệu.");
+    }catch(err){ toast("File sao lưu không hợp lệ.", true); }
+  };
+  $("#reset").onclick = () => {
+    if(!confirm("Xóa toàn bộ dữ liệu thống kê?")) return;
+    D.stats = {total:0,success:0,failed:0,downloads:0};
+    for(const k in D.files) D.files[k].downloads = 0;
+    save(); pageAdmin(); toast("Đã xóa thống kê.");
+  };
+  $("#out").onclick = () => { sessionStorage.removeItem("phong_admin"); pageAdmin(); };
+}
+
+// ---------- Định tuyến theo hash ----------
+function go(p){ location.hash = "#" + p; }
+function applySite(){
+  $("#siteTitle").textContent = D.siteName;
+  document.title = D.siteName;
+}
+function route(){
+  D = load(); cleanSessions(); applySite();
+  $("#nav").classList.remove("open");
+  const p = (location.hash.replace(/^#/, "") || "/").split("/").filter(Boolean);
+  if(!p.length) return pageHome();
+  if(p[0] === "cat") return pageCat(p[1]);
+  if(p[0] === "admin") return pageAdmin();
+  if(p[0] === "return" && p[1]) return pageReturn(p[1]);
+  if(p[0] === "result" && p[1]) return pageResult(p[1]);
+  const k = Object.keys(ITEMS).find(x => ITEMS[x].slug === p[0]);
+  if(k) return pageItem(k);
+  pageHome();
+}
+window.addEventListener("hashchange", route);
+
+// Đếm lượt truy cập (mỗi trình duyệt một lần)
+try{
+  if(!localStorage.getItem("phong_visited")){
+    localStorage.setItem("phong_visited", "1"); D.stats.total++; save();
+  }
+}catch(e){}
+applyTheme((() => { try{return localStorage.getItem("phong_theme")}catch(e){} })() || "dark");
+route();
+</script>
+</body>
+</html>
