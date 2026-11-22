@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: nvp105
+    runtime: node
+    plan: starter
+    buildCommand: npm install
+    startCommand: npm start
+    disk:
+      name: phong-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: SITE_URL
+        value: https://nvp105.onrender.com
+      - key: DATA_DIR
+        value: /var/data
+      - key: LINK4M_API_TOKEN
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
