@@ -73,6 +73,29 @@ footer{padding:18px;text-align:center;font-size:13px;border-top:1px solid #9fcff
 .adm label{display:block;margin:8px 0;font-size:13px}
 .adm label input[type=checkbox]{width:auto}
 @media(max-width:600px){.grid{grid-template-columns:1fr}header{grid-template-columns:40px 1fr 88px 40px}.clock{font-size:11px}}
+
+/* ===== PHONG WEB UI UPGRADE ===== */
+*,*::before,*::after{box-sizing:border-box;border-radius:0}
+:root{--blue:#168cff;--glow:0 0 0 1px rgba(22,140,255,.28),0 8px 28px rgba(22,140,255,.13)}
+body{background:radial-gradient(ellipse at top,#edf7ff 0,#fff 58%);transition:background .3s,color .3s}
+body.dark{background:radial-gradient(ellipse at top,#10294b 0,#080d20 62%)}
+header{position:sticky;top:0;backdrop-filter:blur(14px);box-shadow:0 4px 24px rgba(0,75,150,.08)}
+.box,.card,.group,.item,.adm .panel,.notice,.maint,.stats span,.back,.search input,.results,.thank{border-radius:24px!important;box-shadow:var(--glow);transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease}
+.item:hover,.card:hover,.box:hover{transform:translateY(-3px);box-shadow:0 0 0 1px rgba(22,140,255,.4),0 12px 34px rgba(22,140,255,.2)}
+.btn,header button,#player button{border-radius:14px!important;transition:transform .2s,filter .2s,box-shadow .2s}
+.btn:hover,header button:hover,#player button:hover{transform:translateY(-2px);filter:brightness(1.08);box-shadow:0 5px 18px rgba(22,140,255,.24)}
+#sideMenu{display:block;position:fixed;top:0;left:0;height:100dvh;width:min(290px,82vw);padding:84px 14px 20px;transform:translateX(-110%);transition:transform .28s ease;z-index:100;background:#fff;border:0;border-right:1px solid #299cff;border-radius:0 24px 24px 0!important;box-shadow:12px 0 35px rgba(0,65,130,.18)}
+body.dark #sideMenu{background:#071a38}
+#sideMenu.show{transform:translateX(0)}
+#sideMenu a{border-radius:14px;margin:5px 0}
+#sideMenu:after{content:'PHONG WEB';position:absolute;top:28px;left:20px;font-weight:900;color:#168cff;letter-spacing:2px}
+.box{border-width:1px}
+.item{border-color:#a8d5ff}
+.search input{border-radius:16px!important}
+.results{overflow:hidden}
+.group{padding:18px}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}}
+
 </style>
 </head>
 <body>
@@ -94,12 +117,37 @@ footer{padding:18px;text-align:center;font-size:13px;border-top:1px solid #9fcff
 </div>
 <audio id="audio" preload="none"></audio>
 
-<footer>© 2026 Nguyễn Văn Phong Website<br><strong>PHONG WEB – Bản HTML tĩnh</strong></footer>
+<footer>© 2026 Nguyễn Văn Phong Website<br><strong>PHONG WEB – Hệ thống đồng bộ</strong></footer>
 
 <script>
 "use strict";
 /* ================= CẤU HÌNH MẶC ĐỊNH ================= */
 const STORE = "phong_web_config_v1";
+const API_BASE = "";
+let adminToken = sessionStorage.getItem("phong_admin_token") || "";
+async function api(path, options={}) {
+  const headers={"Content-Type":"application/json",...(options.headers||{})};
+  if(adminToken) headers.Authorization="Bearer "+adminToken;
+  const res=await fetch(API_BASE+path,{...options,headers});
+  const data=await res.json().catch(()=>({}));
+  if(!res.ok) throw new Error(data.error||"Lỗi máy chủ");
+  return data;
+}
+async function syncConfigToServer(){
+  if(!adminToken)return;
+  try{await api('/api/admin/config',{method:'PUT',body:JSON.stringify({config:cfg})})}
+  catch(e){toast('Không đồng bộ được dữ liệu: '+e.message)}
+}
+async function loadSharedConfig(){
+  try{const data=await api('/api/config');if(data.config){cfg=Object.assign(cfg,data.config);saveLocalOnly()}}
+  catch(e){console.warn('Không tải được cấu hình dùng chung',e)}
+}
+function saveLocalOnly(){try{localStorage.setItem(STORE,JSON.stringify(cfg))}catch(e){}}
+async function refreshGlobalStats(){
+  try{const {stats}=await api('/api/stats');if(stats){cfg.stats=Object.assign(cfg.stats,stats);render()}}
+  catch(e){}
+}
+
 const DEFAULT_CONFIG = {
   siteName: "NGUYỄN VĂN PHONG WEBSITE",
   announcement: { enabled: false, message: "" },
@@ -164,7 +212,7 @@ function loadConfig(){
   return cfg;
 }
 let cfg=loadConfig();
-function save(){try{localStorage.setItem(STORE,JSON.stringify(cfg))}catch(e){toast("Không lưu được dữ liệu trình duyệt.","bad")}}
+function save(){try{localStorage.setItem(STORE,JSON.stringify(cfg))}catch(e){toast("Không lưu được dữ liệu trình duyệt.","bad")} if(adminToken)syncConfigToServer()}
 function toast(msg){
   const t=$("#toast");t.textContent=msg;t.className="show";
   clearTimeout(toast.t);toast.t=setTimeout(()=>t.className="",3500);
@@ -216,13 +264,8 @@ document.addEventListener("click",e=>{if(!$("#sideMenu").contains(e.target))$("#
 /* ================= THỐNG KÊ CỤC BỘ ================= */
 function countVisit(){
   const k="phong_visited_"+today();
-  try{
-    if(sessionStorage.getItem(k))return;
-    sessionStorage.setItem(k,"1");
-  }catch(e){}
-  cfg.stats.visits++;
-  cfg.stats.daily[today()]=(cfg.stats.daily[today()]||0)+1;
-  save();
+  try{if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,"1")}catch(e){}
+  api('/api/visit',{method:'POST',body:'{}'}).then(refreshGlobalStats).catch(()=>{});
 }
 
 /* ================= TRANG ================= */
@@ -279,7 +322,7 @@ function pageHome(){
 
   const s=cfg.stats;
   root.append(el("div",{class:"stats"},
-    el("span",{text:"👁 Lượt truy cập (máy này): "+s.visits}),
+    el("span",{text:"👁 Lượt truy cập toàn website: "+s.visits}),
     el("span",{text:"✅ Vượt link thành công: "+s.success}),
     el("span",{text:"❌ Thất bại: "+s.failed}),
     el("span",{text:"📥 Lượt lấy file: "+s.downloads})));
@@ -329,17 +372,17 @@ function pageDestination(key){
     el("p",{text:"Tên file: "+(d.fileName||"Chưa cập nhật")+(d.size?" | Dung lượng: "+d.size:"")+" | Trạng thái: "+(d.status==="available"?"Sẵn sàng":"Tạm ngưng")}));
   const status=el("div",{class:"status"});
   const btn=el("button",{class:"btn",text:"🔓 VƯỢT LINK"});
-  btn.onclick=()=>{
+  btn.onclick=async()=>{
     if(cfg.maintenance.enabled){status.className="status err";status.textContent=cfg.maintenance.message;return}
     if(d.status!=="available"){status.className="status err";status.textContent="File hiện đang tạm ngưng.";return}
-    if(!httpsUrl(d.shortLink)){
-      cfg.stats.failed++;save();
-      status.className="status err";
-      status.textContent="Admin chưa cấu hình link Link4M cho mục này.";return;
-    }
-    try{localStorage.setItem("phong_pending_"+key,JSON.stringify({t:Date.now(),thanked:false}))}catch(e){}
-    status.className="status ok";status.textContent="Đang chuyển đến Link4M...";
-    location.href=d.shortLink;
+    btn.disabled=true;status.className="status";status.textContent="Đang tạo link Link4M...";
+    try{
+      const data=await api('/api/link4m/create',{method:'POST',body:JSON.stringify({key})});
+      if(!httpsUrl(data.shortenedUrl))throw new Error('Link4M trả về URL không hợp lệ');
+      try{localStorage.setItem("phong_pending_"+key,JSON.stringify({t:Date.now(),thanked:false}))}catch(e){}
+      status.className="status ok";status.textContent="Đang chuyển đến Link4M...";
+      location.href=data.shortenedUrl;
+    }catch(e){status.className="status err";status.textContent="Không tạo được link: "+e.message;btn.disabled=false;}
   };
   box.append(btn,status,el("br"),el("a",{class:"back",href:"#/",text:"← QUAY LẠI TRANG CHỦ"}));
   return root;
@@ -352,6 +395,7 @@ function pageReturn(key){
   }
   const p=pendingGet(key);
   if(!p.counted){
+    api('/api/success',{method:'POST',body:JSON.stringify({key})}).then(refreshGlobalStats).catch(()=>{});
     cfg.stats.success++;save();
     p.counted=true;
     try{localStorage.setItem("phong_pending_"+key,JSON.stringify(p))}catch(e){}
@@ -382,6 +426,7 @@ function resultBox(icon,title,desc,key,d){
   if(d){
     box.append(el("button",{class:"btn green",text:"LẤY FILE",onclick(){
       if(!httpsUrl(d.url)){toast("Đường dẫn LẤY FILE chưa hợp lệ.");return}
+      api('/api/download',{method:'POST',body:JSON.stringify({key})}).then(refreshGlobalStats).catch(()=>{});
       d.downloads=(d.downloads||0)+1;cfg.stats.downloads++;save();
       try{localStorage.removeItem("phong_pending_"+key)}catch(e){}
       window.open(d.url,"_blank","noopener");
@@ -402,14 +447,10 @@ function pageAdmin(){
   if(!adminOK){
     const pw=el("input",{type:"password",placeholder:cfg.adminHash?"Nhập mật khẩu quản trị":"Tạo mật khẩu quản trị mới (≥ 8 ký tự)"});
     const msg=el("div",{class:"status"});
-    const b=el("button",{class:"btn",text:cfg.adminHash?"ĐĂNG NHẬP":"TẠO MẬT KHẨU",onclick:async()=>{
-      const v=pw.value;
-      if(!cfg.adminHash){
-        if(v.length<8){msg.className="status err";msg.textContent="Mật khẩu cần ít nhất 8 ký tự.";return}
-        cfg.adminHash=await sha256(v);save();adminOK=true;render();return;
-      }
-      if(await sha256(v)===cfg.adminHash){adminOK=true;render()}
-      else{msg.className="status err";msg.textContent="Mật khẩu không chính xác."}
+    const b=el("button",{class:"btn",text:"ĐĂNG NHẬP QUẢN TRỊ",onclick:async()=>{
+      try{const data=await api('/api/admin/login',{method:'POST',body:JSON.stringify({password:pw.value})});
+        adminToken=data.token;sessionStorage.setItem('phong_admin_token',adminToken);adminOK=true;await loadSharedConfig();await refreshGlobalStats();render();
+      }catch(e){msg.className="status err";msg.textContent=e.message||"Đăng nhập thất bại"}
     }});
     root.append(el("div",{class:"panel"},el("h2",{text:"🔐 ĐĂNG NHẬP"}),pw,b,msg));
     return root;
@@ -423,7 +464,7 @@ function pageAdmin(){
     body.replaceChildren(views[i]());
   }})));
   root.append(bar,body);body.append(views[0]());
-  root.append(el("button",{class:"btn red",text:"ĐĂNG XUẤT",onclick(){adminOK=false;render()}}));
+  root.append(el("button",{class:"btn red",text:"ĐĂNG XUẤT",onclick(){adminOK=false;adminToken="";sessionStorage.removeItem("phong_admin_token");render()}}));
   return root;
 }
 function adminFiles(){
@@ -564,11 +605,11 @@ function adminSecurity(){
   const n=el("input",{type:"password",placeholder:"Mật khẩu mới (≥ 8 ký tự)"});
   const file=el("input",{type:"file",accept:".json,application/json"});
   w.append(el("div",{class:"panel"},el("h3",{text:"🔑 Đổi mật khẩu"}),o,n,el("button",{class:"btn green",text:"ĐỔI MẬT KHẨU",async onclick(){
-    if(await sha256(o.value)!==cfg.adminHash)return toast("Mật khẩu hiện tại sai.");
-    if(n.value.length<8)return toast("Mật khẩu mới cần ≥ 8 ký tự.");
-    cfg.adminHash=await sha256(n.value);save();toast("Đã đổi mật khẩu.");o.value=n.value="";
+    if(n.value.length<12)return toast("Mật khẩu mới cần ít nhất 12 ký tự.");
+    try{await api('/api/admin/change-password',{method:'POST',body:JSON.stringify({password:n.value})});toast("Đã đổi mật khẩu quản trị trên máy chủ.");o.value=n.value="";}
+    catch(e){toast(e.message||"Không đổi được mật khẩu.");}
   }})),
-  el("div",{class:"panel"},el("h3",{text:"📊 Thống kê (trình duyệt này)"}),
+  el("div",{class:"panel"},el("h3",{text:"📊 Thống kê toàn website (máy chủ)"}),
     el("p",{text:`Truy cập: ${cfg.stats.visits} · Thành công: ${cfg.stats.success} · Thất bại: ${cfg.stats.failed} · Lấy file: ${cfg.stats.downloads}`}),
     el("button",{class:"btn red",text:"XÓA THỐNG KÊ",onclick(){
       if(!confirm("Xóa toàn bộ thống kê?"))return;
@@ -642,6 +683,7 @@ function render(){
 }
 window.addEventListener("hashchange",render);
 applySite();buildMenu();loadPlaylist();countVisit();render();
+loadSharedConfig().then(()=>{applySite();buildMenu();render();refreshGlobalStats()});
 </script>
 </body>
 </html>
