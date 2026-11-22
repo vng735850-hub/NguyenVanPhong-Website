@@ -1,4 +1,3 @@
-
 import os
 import json
 import time
@@ -17,7 +16,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlencode, urlsplit, quote, parse_qs
 
 # =========================================================
-# PHONG WEB V2.7.1
+# PHONG WEB V2.7.2
 # LINK4M ONLY | LOCATION + DETA + PROXY + MIZZE
 # ADVANCED ADMIN | JSON ANALYTICS | SECURITY | CSRF
 # =========================================================
@@ -98,6 +97,10 @@ MIZZE_MEDIAFIRE_LINK = (
     "2plraqmzcl7gk4m/mizze+crack+adr+chs+ff+india.zip/file"
 )
 
+# V2.7.2: link mặc định của 2 mục mới (Admin có thể đổi trong tab quản lý file).
+NVPKEY_LINK = "https://zufile.com/f/2vRmNkma5C"
+YSM_LINK = "https://www.mediafire.com/file/x9xo2468orsfr3l/YSM_TEAM_LIEN_QUAN.apk/file"
+
 DEFAULT_DESTINATIONS = {
     "location": MEDIAFIRE_LINK,
     "deta": DETA_MEDIAFIRE_LINK,
@@ -151,6 +154,28 @@ DEFAULT_FILES = {
         "status": "available",
         "image": "/logo.png"
     }
+}
+
+# V2.7.2: bổ sung 2 mục Liên Quân mà không đổi cấu trúc cũ.
+DEFAULT_DESTINATIONS["nvpkey"] = NVPKEY_LINK
+DEFAULT_DESTINATIONS["ysm"] = YSM_LINK
+DESTINATION_NAMES["nvpkey"] = "Menu Nvp Crack Key"
+DESTINATION_NAMES["ysm"] = "Menu YSM Team Liên Quân"
+DESTINATION_ROUTES["nvpkey"] = "/menu-nvp-crack-key"
+DESTINATION_ROUTES["ysm"] = "/menu-ysm-team-lien-quan"
+DOWNLOAD_ROUTES["nvpkey"] = "/download-nvpkey"
+DOWNLOAD_ROUTES["ysm"] = "/download-ysm"
+DEFAULT_FILES["nvpkey"] = {
+    "name": "Menu Nvp Crack Key",
+    "size": "",
+    "status": "available",
+    "image": "/logo.png"
+}
+DEFAULT_FILES["ysm"] = {
+    "name": "YSM_TEAM_LIEN_QUAN.apk",
+    "size": "",
+    "status": "available",
+    "image": "/logo.png"
 }
 
 SESSIONS = {}
@@ -439,6 +464,14 @@ def validate_mediafire_url(value):
             "mediafire.com"
         )
     )
+
+
+def validate_download_url(value):
+    # V2.7.2: nút LẤY FILE có thể trỏ tới MediaFire, Zufile hoặc bất kỳ link HTTPS hợp lệ.
+    if not validate_http_url(value):
+        return False
+
+    return urlsplit(value.strip()).scheme == "https"
 
 
 def validate_image_url(value):
@@ -846,7 +879,7 @@ HTML = r"""<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#080d20">
+<meta name="theme-color" content="#ffffff">
 <title>NGUYỄN VĂN PHONG WEBSITE</title>
 <style>
 *{box-sizing:border-box}
@@ -1024,7 +1057,7 @@ body.light .link-description{color:#274768}
 .music-mini .music-minimize{width:28px;height:28px;font-size:15px;border-radius:7px}
 
 
-/* PHONG WEB V2.7.1 – Advanced UI */
+/* PHONG WEB V2.7.2 – Advanced UI */
 header,.side-menu,.tag-group,.tag-item-card,.stats-bar span,.home-search input,
 .search-results,.music-mini,.link-box,.menu-card,.location-card{
  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
@@ -1126,6 +1159,47 @@ footer strong{color:#55baff;letter-spacing:1px}
 @media(prefers-reduced-motion:reduce){
  *,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important}
 }
+/* ===== PHONG WEB V2.7.2: giao diện vuông góc + phông trắng (nút sáng/tối vẫn hoạt động) ===== */
+*,*::before,*::after{border-radius:0!important}
+.spinner{border-radius:0!important}
+.menu-card+.menu-card{margin-top:16px}
+body.light{color:#10203c;background:#fff!important}
+body.light:before,body.light #particles{display:none!important}
+body.light header{background:#fff;color:#10203c;border-bottom:1px solid #299cff;box-shadow:0 1px 6px rgba(0,80,160,.12)}
+body.light .header-title{text-shadow:none;color:#0b4f9c}
+body.light .hamburger-button,body.light .theme-button,body.light .clock-box{background:#fff;color:#10203c;border-color:#299cff;box-shadow:none}
+body.light .side-menu{background:#fff;border-color:#299cff;box-shadow:0 4px 14px rgba(0,80,160,.18)}
+body.light .side-menu a{color:#10203c}
+body.light .side-menu a:hover{background:#087ce5;color:#fff}
+body.light h1{text-shadow:none;color:#0b4f9c}
+body.light .location-card,body.light .menu-card,body.light .link-box{background:#fff;color:#10203c;border-color:#299cff;box-shadow:0 2px 10px rgba(0,80,160,.12)}
+body.light .tag-group{background:#fff;border-color:#9fcfff;box-shadow:0 2px 10px rgba(0,80,160,.08)}
+body.light .tag-group-title h3{color:#0b4f9c}
+body.light .tag-group-title small,body.light .tag-item-card small,body.light .directory-heading p{color:#4a6a8a}
+body.light .directory-heading h2{color:#0877c9;text-shadow:none}
+body.light .tag-item-card{background:#f5faff;border-color:#b9dcff;color:#10203c;box-shadow:none}
+body.light .tag-item-card:hover{background:#e6f3ff;border-color:#299cff}
+body.light .tag-count,body.light .tag-menu-count{background:#e6f3ff;border-color:#9fcfff;color:#0b4f9c}
+body.light .stats-bar{color:#274768}
+body.light .stats-bar span{background:#fff;border-color:#9fcfff}
+body.light .stats-bar b{color:#0b4f9c}
+body.light .home-search input{background:#fff;color:#10203c;border-color:#299cff}
+body.light .search-results{background:#fff;border-color:#299cff;box-shadow:0 6px 16px rgba(0,80,160,.18)}
+body.light .search-results a{color:#10203c}
+body.light .search-results a:hover{background:#e6f3ff}
+body.light .announcement{background:#eef7ff;color:#10203c}
+body.light .maintenance{background:#fff6e5;color:#4a3000}
+body.light .catalog-empty{color:#4a6a8a}
+body.light .back-button{background:#eef7ff;color:#0b4f9c;border-color:#299cff}
+body.light .status{color:#8a5a00}
+body.light .status.error{color:#c62828}
+body.light .status.success{color:#0a8a4f}
+body.light .thank-image-button{background:#fff;box-shadow:none}
+body.light footer{background:#fff;color:#274768;border-top:1px solid #9fcfff}
+body.light footer strong{color:#0877c9}
+body.light #toast{background:#fff;color:#10203c}
+body.light #loadingOverlay{background:rgba(255,255,255,.92);color:#10203c}
+body.light .favorite-button{background:#eef7ff;color:#0b4f9c}
 </style>
 </head>
 <body>
@@ -1206,6 +1280,8 @@ footer strong{color:#55baff;letter-spacing:1px}
     </div>
     <div class="tag-items-grid">
      <a class="tag-item-card" href="/?category=lienquan"><span>⚔️</span><b>Hack Liên Quân</b><small>Xem thông tin và cập nhật</small></a>
+     <a class="tag-item-card" href="/menu-nvp-crack-key"><span>🔑</span><b>MENU NVP CRACK KEY</b><small>Mở mục Nvp Crack Key</small></a>
+     <a class="tag-item-card" href="/menu-ysm-team-lien-quan"><span>⚔️</span><b>MENU YSM TEAM LIÊN QUÂN</b><small>Mở mục YSM Team</small></a>
     </div>
    </section>
 
@@ -1237,7 +1313,7 @@ footer strong{color:#55baff;letter-spacing:1px}
 </section>
 
 <section class="page" id="lienQuanPage">
- <div class="link-box"><div class="link-icon">⚔️</div><h2>CHÀO BẠN ĐẾN VỚI HACK LIÊN QUÂN</h2><div class="menu-card"><h2>🔑 MENU NVP CRACK KEY</h2><button class="open-menu-button" onclick="navigate('/menu-nvp-crack-key')">MỞ MỤC</button></div><a class="back-button" href="/" onclick="event.preventDefault();navigateCategory('home')">← TRANG CHỦ</a></div>
+ <div class="link-box"><div class="link-icon">⚔️</div><h2>CHÀO BẠN ĐẾN VỚI HACK LIÊN QUÂN</h2><div class="menu-card" id="card-nvpkey"><h2>🔑 MENU NVP CRACK KEY</h2><button class="open-menu-button" onclick="navigate('/menu-nvp-crack-key')">MỞ MỤC</button></div><div class="menu-card" id="card-ysm"><h2>⚔️ MENU YSM TEAM LIÊN QUÂN</h2><button class="open-menu-button" onclick="navigate('/menu-ysm-team-lien-quan')">MỞ MỤC</button></div><a class="back-button" href="/" onclick="event.preventDefault();navigateCategory('home')">← TRANG CHỦ</a></div>
 </section>
 
 <section class="page" id="robloxPage">
@@ -1288,9 +1364,12 @@ footer strong{color:#55baff;letter-spacing:1px}
  </div>
 </section>
 
-<section class="page" id="nvpKeyPage"><div class="link-box"><div class="link-icon">🔑</div><h2>BẠN CẦN VƯỢT LINK ĐỂ LẤY FILE</h2><button class="cross-link-button" id="nvpKeyCrossButton">🔓 VƯỢT LINK</button><div class="status" id="nvpKeyStatus"></div></div></section>
+<section class="page" id="nvpKeyPage"><div class="link-box"><div class="link-icon">🔑</div><h2>BẠN CẦN VƯỢT LINK ĐỂ LẤY FILE</h2><div class="link-description" id="nvpkeyFileInfo"></div><button class="cross-link-button" id="nvpKeyCrossButton">🔓 VƯỢT LINK</button><div class="status" id="nvpKeyStatus"></div></div></section>
 <section class="page" id="nvpThanksPage"><div class="link-box"><h2>CẢM ƠN BẠN ĐÃ VƯỢT LINK ỦNG HỘ WEBSITE</h2><button class="thank-image-button" id="nvpThankImage"><img src="/cam-on-tu-phong.png" alt="Cảm ơn từ Phong"></button><audio id="nvpThankAudio" src="/cam-on-tu-phong.mp3" preload="none"></audio><div class="status">Nhấn vào hình để phát lời cảm ơn.</div><button class="cross-link-button" id="nvpNextButton">TIẾP THEO</button></div></section>
-<section class="page" id="nvpSuccessPage"><div class="link-box"><div class="link-icon">✅</div><h2>VƯỢT LINK THÀNH CÔNG</h2><a class="result-action" href="https://zufile.com/f/g2zVGalmLs" target="_blank" rel="noopener">LẤY FILE</a></div></section>
+<section class="page" id="nvpSuccessPage"><div class="link-box"><div class="link-icon">✅</div><h2>VƯỢT LINK THÀNH CÔNG</h2><a class="result-action" id="nvpGetFile" href="/menu-nvp-crack-key" target="_blank" rel="noopener">LẤY FILE</a></div></section>
+<section class="page" id="ysmPage"><div class="link-box"><div class="link-icon">⚔️</div><h2>BẠN CẦN VƯỢT LINK ĐỂ LẤY FILE</h2><div class="link-description" id="ysmFileInfo"></div><button class="cross-link-button" id="ysmCrossButton">🔓 VƯỢT LINK</button><div class="status" id="ysmStatus"></div></div></section>
+<section class="page" id="ysmThanksPage"><div class="link-box"><h2>CẢM ƠN BẠN ĐÃ VƯỢT LINK ỦNG HỘ WEBSITE</h2><button class="thank-image-button" id="ysmThankImage"><img src="/cam-on-tu-phong.png" alt="Cảm ơn từ Phong"></button><audio id="ysmThankAudio" src="/cam-on-tu-phong.mp3" preload="none"></audio><div class="status">Nhấn vào hình để phát lời cảm ơn.</div><button class="cross-link-button" id="ysmNextButton">TIẾP THEO</button></div></section>
+<section class="page" id="ysmSuccessPage"><div class="link-box"><div class="link-icon">✅</div><h2>VƯỢT LINK THÀNH CÔNG</h2><a class="result-action" id="ysmGetFile" href="/menu-ysm-team-lien-quan" target="_blank" rel="noopener">LẤY FILE</a></div></section>
 <section class="page" id="thankPage">
  <div class="link-box">
   <div class="link-icon">💙</div>
@@ -1335,7 +1414,7 @@ footer strong{color:#55baff;letter-spacing:1px}
 
 <footer>
  © 2026 Nguyễn Văn Phong Website<br>
- <strong id="footerVersion">PHONG WEB V2.7.1</strong>
+ <strong id="footerVersion">PHONG WEB V2.7.2</strong>
 </footer>
 
 <script>
@@ -1352,7 +1431,10 @@ const pages={
  result:document.getElementById("resultPage"),
  nvpkey:document.getElementById("nvpKeyPage"),
  nvpthanks:document.getElementById("nvpThanksPage"),
- nvpsuccess:document.getElementById("nvpSuccessPage")
+ nvpsuccess:document.getElementById("nvpSuccessPage"),
+ ysm:document.getElementById("ysmPage"),
+ ysmthanks:document.getElementById("ysmThanksPage"),
+ ysmsuccess:document.getElementById("ysmSuccessPage")
 };
 
 const destinationRoutes={
@@ -1362,7 +1444,8 @@ const destinationRoutes={
 
 const downloadRoutes={
  location:"/download-location",deta:"/download-deta",
- proxy:"/download-proxy",mizze:"/download-mizze"
+ proxy:"/download-proxy",mizze:"/download-mizze",
+ nvpkey:"/download-nvpkey",ysm:"/download-ysm"
 };
 
 function toast(message,type="good"){
@@ -1385,8 +1468,8 @@ function applyTheme(theme){
  themeButton.textContent=theme==="light"?"🌙":"☀️";
  try{localStorage.setItem("phong_theme",theme)}catch(e){}
 }
-let savedTheme="dark";
-try{savedTheme=localStorage.getItem("phong_theme")||"dark"}catch(e){}
+let savedTheme="light";
+try{savedTheme=localStorage.getItem("phong_theme")||"light"}catch(e){}
 applyTheme(savedTheme);
 themeButton.addEventListener("click",()=>{
  applyTheme(document.body.classList.contains("light")?"dark":"light");
@@ -1468,7 +1551,18 @@ function showPage(){
  const q=new URLSearchParams(location.search);
  const nvp=q.get("nvpkey");
  if(nvp==="thanks"){pages.nvpthanks.classList.add("active");return;}
- if(nvp==="success"){pages.nvpsuccess.classList.add("active");return;}
+ if(nvp==="success"){
+  const tk=q.get("token"),a=document.getElementById("nvpGetFile");
+  if(a)a.href=tk?"/download-nvpkey?token="+encodeURIComponent(tk):"/menu-nvp-crack-key";
+  pages.nvpsuccess.classList.add("active");return;
+ }
+ const ysmStep=q.get("ysm");
+ if(ysmStep==="thanks"){pages.ysmthanks.classList.add("active");return;}
+ if(ysmStep==="success"){
+  const tk=q.get("token"),a=document.getElementById("ysmGetFile");
+  if(a)a.href=tk?"/download-ysm?token="+encodeURIComponent(tk):"/menu-ysm-team-lien-quan";
+  pages.ysmsuccess.classList.add("active");return;
+ }
  const result=q.get("result");
  const category=q.get("category");
  const customTagQuery=q.get("tag");
@@ -1495,7 +1589,8 @@ function showPage(){
   "/dinh-vi":pages.location,"/menu":pages.deta,
   "/proxy-mod-alen-crack":pages.proxy,
   "/mizze-crack":pages.mizze,
-  "/menu-nvp-crack-key":pages.nvpkey
+  "/menu-nvp-crack-key":pages.nvpkey,
+  "/menu-ysm-team-lien-quan":pages.ysm
  };
  (routes[location.pathname]||pages.home).classList.add("active");
  if(customTagQuery){
@@ -1530,11 +1625,11 @@ async function refreshStats(){
 setInterval(refreshStats,15000);
 refreshStats();
 
-// PHONG WEB V2.7.1: tải tên website, Tag, thông báo và playlist từ cấu hình quản trị.
+// PHONG WEB V2.7.2: tải tên website, Tag, thông báo và playlist từ cấu hình quản trị.
 async function loadPublicConfig(){
  try{const r=await fetch("/public-settings",{cache:"no-store"});const d=await r.json();if(!r.ok)return;
   const name=d.site_name||"NGUYỄN VĂN PHONG WEBSITE";const title=document.getElementById("siteTitle");if(title)title.textContent=name;document.title=name+" | PHONG WEB";
-  const builtinCounts={freefire:Object.values(d.files||{}).filter(x=>x&&x.status==="available").length,lienquan:1,roblox:1};document.querySelectorAll(".tag-group[data-tag]").forEach(section=>{const key=section.dataset.tag;const small=section.querySelector(".tag-group-title small");if(small)small.textContent=""+(builtinCounts[key]||0)+" mục đang hiển thị"});
+  const builtinCounts={freefire:Object.values(d.files||{}).filter(x=>x&&x.status==="available").length,lienquan:3,roblox:1};document.querySelectorAll(".tag-group[data-tag]").forEach(section=>{const key=section.dataset.tag;const small=section.querySelector(".tag-group-title small");if(small)small.textContent=""+(builtinCounts[key]||0)+" mục đang hiển thị"});
   document.querySelectorAll("[data-tag]").forEach(el=>{
    const enabled=!(d.tags&&d.tags[el.dataset.tag]===false);
    el.classList.toggle("hidden",!enabled);
@@ -1547,7 +1642,7 @@ async function loadPublicConfig(){
 }
 loadPublicConfig();
 function updateTrackName(){const el=document.getElementById("musicTrackName");if(el)el.textContent=musicPlaylist[currentMusicIndex]?.name||"Không có bài nhạc"}
-(function(){const input=document.getElementById("homeSearch"),box=document.getElementById("searchResults");if(!input||!box)return;const items=[["Trang Chủ","/","🏠"],["Hack Free Fire","/?category=freefire","🔥"],["Hack Liên Quân","/?category=lienquan","⚔️"],["Hack Roblox","/?category=roblox","🧱"],["Định Vị","/dinh-vi","📍"],["Deta","/menu","🔐"],["Proxy Mod Alen","/proxy-mod-alen-crack","🌐"],["Menu Mizze","/mizze-crack","🎮"],["Quản Trị","/admin","⚙️"]];input.addEventListener("input",()=>{const q=input.value.trim().toLocaleLowerCase("vi");box.innerHTML="";if(!q){box.classList.add("hidden");return}const found=items.filter(x=>x[0].toLocaleLowerCase("vi").includes(q));found.forEach(x=>{const a=document.createElement("a");a.href=x[1];a.textContent=x[2]+" "+x[0];box.append(a)});if(!found.length){const d=document.createElement("div");d.className="small";d.textContent="Không tìm thấy chức năng phù hợp.";box.append(d)}box.classList.remove("hidden")});document.addEventListener("click",e=>{if(e.target!==input&&!box.contains(e.target))box.classList.add("hidden")})})();
+(function(){const input=document.getElementById("homeSearch"),box=document.getElementById("searchResults");if(!input||!box)return;const items=[["Trang Chủ","/","🏠"],["Hack Free Fire","/?category=freefire","🔥"],["Hack Liên Quân","/?category=lienquan","⚔️"],["Hack Roblox","/?category=roblox","🧱"],["Định Vị","/dinh-vi","📍"],["Deta","/menu","🔐"],["Proxy Mod Alen","/proxy-mod-alen-crack","🌐"],["Menu Mizze","/mizze-crack","🎮"],["Menu Nvp Crack Key","/menu-nvp-crack-key","🔑"],["Menu YSM Team Liên Quân","/menu-ysm-team-lien-quan","⚔️"],["Quản Trị","/admin","⚙️"]];input.addEventListener("input",()=>{const q=input.value.trim().toLocaleLowerCase("vi");box.innerHTML="";if(!q){box.classList.add("hidden");return}const found=items.filter(x=>x[0].toLocaleLowerCase("vi").includes(q));found.forEach(x=>{const a=document.createElement("a");a.href=x[1];a.textContent=x[2]+" "+x[0];box.append(a)});if(!found.length){const d=document.createElement("div");d.className="small";d.textContent="Không tìm thấy chức năng phù hợp.";box.append(d)}box.classList.remove("hidden")});document.addEventListener("click",e=>{if(e.target!==input&&!box.contains(e.target))box.classList.add("hidden")})})();
 
 // Cài đặt và thông báo công khai.
 async function refreshPublic(){
@@ -1555,7 +1650,7 @@ async function refreshPublic(){
   const r=await fetch("/public-settings",{cache:"no-store"});
   const d=await r.json();
 
-  for(const key of ["location","deta","proxy","mizze"]){
+  for(const key of ["location","deta","proxy","mizze","nvpkey","ysm"]){
    const card=document.getElementById("card-"+key);
    if(card)card.style.display=d[key]?"":"none";
 
@@ -1586,7 +1681,7 @@ async function refreshPublic(){
 }
 refreshPublic();
 
-// PHONG WEB V2.7.1: danh mục động, menu Tag, thẻ ảnh, số lượng và yêu thích.
+// PHONG WEB V2.7.2: danh mục động, menu Tag, thẻ ảnh, số lượng và yêu thích.
 window.PHONG_CATALOG = [];
 function phongSlug(value){
  return String(value||"").toLowerCase().trim().replace(/[^a-z0-9\-]+/g,"-").replace(/^-+|-+$/g,"");
@@ -1682,7 +1777,7 @@ function setupDynamicSearch(){
   {name:"Trang Chủ",url:"/",icon:"🏠"},{name:"Hack Free Fire",url:"/?category=freefire",icon:"🔥"},
   {name:"Hack Liên Quân",url:"/?category=lienquan",icon:"⚔️"},{name:"Hack Roblox",url:"/?category=roblox",icon:"🧱"},
   {name:"Định Vị",url:"/dinh-vi",icon:"📍"},{name:"Deta",url:"/menu",icon:"🔐"},
-  {name:"Proxy Mod Alen",url:"/proxy-mod-alen-crack",icon:"🌐"},{name:"Menu Mizze",url:"/mizze-crack",icon:"🎮"}
+  {name:"Proxy Mod Alen",url:"/proxy-mod-alen-crack",icon:"🌐"},{name:"Menu Mizze",url:"/mizze-crack",icon:"🎮"},{name:"Menu Nvp Crack Key",url:"/menu-nvp-crack-key",icon:"🔑"},{name:"Menu YSM Team Liên Quân",url:"/menu-ysm-team-lien-quan",icon:"⚔️"}
  ];
  input.addEventListener("input",()=>{
   const q=input.value.trim().toLocaleLowerCase("vi");box.replaceChildren();
@@ -1746,9 +1841,13 @@ function setupCrossButton(key){
  button.addEventListener("click",()=>createShortLink(key,button,status));
 }
 ["location","deta","proxy","mizze"].forEach(setupCrossButton);
-document.getElementById("nvpKeyCrossButton").addEventListener("click",async()=>{const b=document.getElementById("nvpKeyCrossButton"),st=document.getElementById("nvpKeyStatus");b.disabled=true;st.textContent="Đang tạo liên kết Link4M...";try{const r=await fetch("/create-short-link?destination=deta&flow=nvpkey",{cache:"no-store"});const d=await r.json();if(!r.ok||!d.success)throw new Error(d.message||"Không tạo được link");window.location.href=d.url}catch(e){st.textContent=e.message;b.disabled=false}});
+document.getElementById("nvpKeyCrossButton").addEventListener("click",async()=>{const b=document.getElementById("nvpKeyCrossButton"),st=document.getElementById("nvpKeyStatus");b.disabled=true;st.textContent="Đang tạo liên kết Link4M...";try{const r=await fetch("/create-short-link?destination=nvpkey&flow=nvpkey",{cache:"no-store"});const d=await r.json();if(!r.ok||!d.success)throw new Error(d.message||"Không tạo được link");window.location.href=d.url}catch(e){st.textContent=e.message;b.disabled=false}});
 document.getElementById("nvpThankImage").addEventListener("click",()=>document.getElementById("nvpThankAudio").play().catch(()=>{}));
-document.getElementById("nvpNextButton").addEventListener("click",async()=>{const token=new URLSearchParams(location.search).get("token");if(!token){toast("Không tìm thấy phiên vượt link.","bad");return}try{const r=await fetch("/check-session?token="+encodeURIComponent(token),{cache:"no-store"}),d=await r.json();if(!r.ok||!d.success||!d.returned)throw new Error("API chưa xác nhận vượt link thành công.");history.pushState({},"","/?nvpkey=success");showPage();window.scrollTo(0,0)}catch(e){toast(e.message,"bad")}});
+document.getElementById("nvpNextButton").addEventListener("click",async()=>{const token=new URLSearchParams(location.search).get("token");if(!token){toast("Không tìm thấy phiên vượt link.","bad");return}try{const r=await fetch("/check-session?token="+encodeURIComponent(token),{cache:"no-store"}),d=await r.json();if(!r.ok||!d.success||!d.returned)throw new Error("API chưa xác nhận vượt link thành công.");history.pushState({},"","/?nvpkey=success&token="+encodeURIComponent(token));showPage();window.scrollTo(0,0)}catch(e){toast(e.message,"bad")}});
+// V2.7.2: Menu YSM Team Liên Quân (cùng luồng với Menu Nvp Crack Key).
+document.getElementById("ysmCrossButton").addEventListener("click",async()=>{const b=document.getElementById("ysmCrossButton"),st=document.getElementById("ysmStatus");b.disabled=true;st.textContent="Đang tạo liên kết Link4M...";try{const r=await fetch("/create-short-link?destination=ysm&flow=ysm",{cache:"no-store"});const d=await r.json();if(!r.ok||!d.success)throw new Error(d.message||"Không tạo được link");window.location.href=d.url}catch(e){st.textContent=e.message;b.disabled=false}});
+document.getElementById("ysmThankImage").addEventListener("click",()=>document.getElementById("ysmThankAudio").play().catch(()=>{}));
+document.getElementById("ysmNextButton").addEventListener("click",async()=>{const token=new URLSearchParams(location.search).get("token");if(!token){toast("Không tìm thấy phiên vượt link.","bad");return}try{const r=await fetch("/check-session?token="+encodeURIComponent(token),{cache:"no-store"}),d=await r.json();if(!r.ok||!d.success||!d.returned)throw new Error("API chưa xác nhận vượt link thành công.");history.pushState({},"","/?ysm=success&token="+encodeURIComponent(token));showPage();window.scrollTo(0,0)}catch(e){toast(e.message,"bad")}});
 
 // Âm thanh cảm ơn.
 const thankAudio=document.getElementById("thankAudio");
@@ -1998,7 +2097,7 @@ ADMIN_HTML = r"""<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>PHONG WEB V2.7.1 ADMIN</title>
+<title>PHONG WEB V2.7.2 ADMIN</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;padding:15px;background:#071022;color:white;font-family:Arial,sans-serif}
@@ -2042,11 +2141,13 @@ canvas.chart{width:100%;height:230px;background:#07152d;border-radius:10px}
  .panel{padding:12px}
 }
 @media(max-width:390px){.grid{grid-template-columns:1fr}}
+/* V2.7.2: vuông góc */
+*,*::before,*::after{border-radius:0!important}
 </style>
 </head>
 <body>
 <main>
-<h1>⚙️ PHONG WEB V2.7.1 - ADMIN</h1>
+<h1>⚙️ PHONG WEB V2.7.2 - ADMIN</h1>
 <p class="small">Quản lý website, thống kê, lịch sử và bảo mật.</p>
 
 <section class="panel" id="loginPanel">
@@ -2097,7 +2198,7 @@ canvas.chart{width:100%;height:230px;background:#07152d;border-radius:10px}
 <section class="tabpage hidden" id="files">
  <div class="panel">
   <h2>🗂️ QUẢN LÝ CÁC MỤC TẢI FILE</h2>
-  <p class="small">Bật/tắt, sửa link MediaFire và cập nhật thông tin file.</p>
+  <p class="small">Bật/tắt, đổi link nút LẤY FILE của tất cả các mục (MediaFire, Zufile hoặc link HTTPS khác) và cập nhật thông tin file.</p>
   <div id="items"></div>
   <button class="good" onclick="saveSettings()">LƯU THAY ĐỔI</button>
  </div>
@@ -2189,7 +2290,7 @@ canvas.chart{width:100%;height:230px;background:#07152d;border-radius:10px}
   <button class="danger" onclick="logout()">ĐĂNG XUẤT</button>
  </div>
  <div class="panel">
-  <h2>🗄️ SAO LƯU & KHÔI PHỤC CẤU HÌNH — V2.7.1</h2>
+  <h2>🗄️ SAO LƯU & KHÔI PHỤC CẤU HÌNH — V2.7.2</h2>
   <p class="small">Tải bản sao lưu các thiết lập website, danh mục, nội dung, nhạc và thông báo. Khi khôi phục, dữ liệu thống kê, lịch sử và nhật ký bảo mật sẽ được giữ nguyên.</p>
   <div class="row">
    <button class="good" onclick="downloadBackup()">⬇ TẢI BACKUP JSON</button>
@@ -2380,7 +2481,7 @@ async function loadSettings(){
 
   const url=document.createElement("input");
   url.type="url";url.id="url-"+key;
-  url.value=item.url;url.placeholder="https://www.mediafire.com/...";
+  url.value=item.url;url.placeholder="https://www.mediafire.com/... hoặc https://zufile.com/...";
 
   const fileName=document.createElement("input");
   fileName.id="file-name-"+key;
@@ -2407,7 +2508,7 @@ async function loadSettings(){
   image.placeholder="Ảnh đại diện: /logo.png hoặc URL HTTPS";
 
   box.append(title,label);
-  const l1=document.createElement("label");l1.textContent="Link MediaFire";l1.append(url);
+  const l1=document.createElement("label");l1.textContent="Link nút LẤY FILE (đổi được)";l1.append(url);
   const l2=document.createElement("label");l2.textContent="Tên file";l2.append(fileName);
   const l3=document.createElement("label");l3.textContent="Dung lượng";l3.append(size);
   const l4=document.createElement("label");l4.textContent="Trạng thái";l4.append(status);
@@ -2584,7 +2685,7 @@ async function restoreBackup(){
  if(!confirm("Khôi phục cấu hình từ file đã chọn? Các thiết lập hiện tại sẽ được thay thế. Thống kê và lịch sử được giữ nguyên."))return;
  try{
   const raw=await file.text(),payload=JSON.parse(raw);
-  if(payload.format!=="PHONG_WEB_BACKUP"||(payload.version!=="2.6.0"&&payload.version!=="2.7.0"&&payload.version!=="2.7.1")||!payload.config)throw new Error("File backup không đúng định dạng PHONG WEB V2.7.1.");
+  if(payload.format!=="PHONG_WEB_BACKUP"||(payload.version!=="2.6.0"&&payload.version!=="2.7.0"&&payload.version!=="2.7.1"&&payload.version!=="2.7.2")||!payload.config)throw new Error("File backup không đúng định dạng PHONG WEB V2.7.2.");
   const result=await api("/admin/restore-backup",payload);
   status.textContent=result.message||"Khôi phục thành công.";
   input.value="";
@@ -2614,7 +2715,7 @@ checkAdmin();
 
 class Website(BaseHTTPRequestHandler):
 
-    server_version = "PhongWeb/2.7.1"
+    server_version = "PhongWeb/2.7.2"
     sys_version = ""
 
     def client_ip(self):
@@ -2828,7 +2929,8 @@ class Website(BaseHTTPRequestHandler):
         # Public pages.
         if path in (
             "/", "/index.html", "/dinh-vi", "/menu",
-            "/proxy-mod-alen-crack", "/mizze-crack", "/menu-nvp-crack-key"
+            "/proxy-mod-alen-crack", "/mizze-crack", "/menu-nvp-crack-key",
+            "/menu-ysm-team-lien-quan"
         ):
             visitor = self.get_cookie("ph_visitor")
             headers = {}
@@ -3064,6 +3166,8 @@ class Website(BaseHTTPRequestHandler):
                 flow = SESSIONS.get(token, {}).get("flow", "")
             if flow == "nvpkey":
                 self.redirect("/?nvpkey=thanks&token=" + quote(token, safe=""))
+            elif flow == "ysm":
+                self.redirect("/?ysm=thanks&token=" + quote(token, safe=""))
             else:
                 self.redirect(
                     "/?result=thanks&destination=" +
@@ -3133,10 +3237,10 @@ class Website(BaseHTTPRequestHandler):
                 DEFAULT_DESTINATIONS[destination]
             )
 
-            if not validate_mediafire_url(target):
+            if not validate_download_url(target):
                 self.send_json(500, {
                     "success": False,
-                    "message": "Đường dẫn MediaFire chưa hợp lệ."
+                    "message": "Đường dẫn LẤY FILE chưa hợp lệ."
                 })
                 return
 
@@ -3258,14 +3362,14 @@ class Website(BaseHTTPRequestHandler):
             }
             payload = {
                 "format": "PHONG_WEB_BACKUP",
-                "version": "2.7.1",
+                "version": "2.7.2",
                 "created_at": vietnam_now().isoformat(),
                 "config": config
             }
             raw = json.dumps(payload, ensure_ascii=False, indent=2).encode("utf-8")
             self.send_response(200)
             self.send_header("Content-Type", "application/json; charset=utf-8")
-            self.send_header("Content-Disposition", 'attachment; filename="phong-web-backup-v2.7.1.json"')
+            self.send_header("Content-Disposition", 'attachment; filename="phong-web-backup-v2.7.2.json"')
             self.send_header("Content-Length", str(len(raw)))
             self.send_security_headers()
             self.end_headers()
@@ -3558,7 +3662,7 @@ class Website(BaseHTTPRequestHandler):
                 return
 
         if path == "/admin/restore-backup":
-            if data.get("format") != "PHONG_WEB_BACKUP" or data.get("version") not in ("2.6.0", "2.7.0", "2.7.1"):
+            if data.get("format") != "PHONG_WEB_BACKUP" or data.get("version") not in ("2.6.0", "2.7.0", "2.7.1", "2.7.2"):
                 self.send_json(400, {"success": False, "message": "Định dạng backup không hợp lệ."})
                 return
             config = data.get("config")
@@ -3677,7 +3781,7 @@ class Website(BaseHTTPRequestHandler):
                 stored["content_items"] = clean_contents
                 save_data_unlocked(stored)
 
-            add_admin_log("RESTORE_BACKUP", self.client_ip(), "Khôi phục cấu hình V2.7.1")
+            add_admin_log("RESTORE_BACKUP", self.client_ip(), "Khôi phục cấu hình V2.7.2")
             self.send_json(200, {"success": True, "message": "Đã khôi phục cấu hình website. Thống kê, lịch sử và nhật ký được giữ nguyên."})
             return
 
@@ -3772,12 +3876,12 @@ class Website(BaseHTTPRequestHandler):
                     })
                     return
 
-                if not validate_mediafire_url(item.get("url")):
+                if not validate_download_url(item.get("url")):
                     self.send_json(400, {
                         "success": False,
                         "message": (
                             "Link của " + DESTINATION_NAMES[key] +
-                            " phải là MediaFire HTTPS hợp lệ."
+                            " phải là liên kết HTTPS hợp lệ."
                         )
                     })
                     return
@@ -4032,7 +4136,7 @@ class Website(BaseHTTPRequestHandler):
         })
 
     def log_message(self, fmt, *args):
-        print("[PHONG WEB V2.7.1]", fmt % args)
+        print("[PHONG WEB V2.7.2]", fmt % args)
 
 
 # =========================================================
@@ -4092,6 +4196,8 @@ if __name__ == "__main__":
     print("Deta: /menu")
     print("Proxy: /proxy-mod-alen-crack")
     print("Mizze: /mizze-crack")
+    print("Nvp Crack Key: /menu-nvp-crack-key")
+    print("YSM Team Liên Quân: /menu-ysm-team-lien-quan")
 
     print("Callback: /provider-return")
     print("Session check: /check-session")
