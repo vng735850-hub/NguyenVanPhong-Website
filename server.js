@@ -38,9 +38,22 @@ app.post('/api/link4m/create',async(req,res)=>{
     // Reuse cached Link4M URL only if the exact return destination has already been created.
     const cached=db.shortlinks[key];if(cached&&cached.target===target)return res.json({shortenedUrl:cached.url,cached:true});
     const endpoint=new URL('https://link4m.co/api-shorten/v2');endpoint.searchParams.set('api',API_TOKEN);endpoint.searchParams.set('url',target);
-    const response=await fetch(endpoint,{signal:AbortSignal.timeout(15000)});if(!response.ok)throw new Error('Link4M HTTP '+response.status);
-    const result=await response.json();if(result.status!=='success'||!/^https:\/\/link4m\.com\//i.test(result.shortenedUrl||''))return res.status(502).json({error:result.message||'Link4M không tạo được link'});
-    db.shortlinks[key]={target,url:result.shortenedUrl,createdAt:new Date().toISOString()};persist();res.json({shortenedUrl:result.shortenedUrl});
+    const response=await fetch(endpoint,{signal:AbortSignal.timeout(20000),headers:{Accept:'application/json'}});
+    const raw=await response.text();
+    let result;try{result=JSON.parse(raw)}catch{console.error('Link4M non-JSON response:',response.status,raw.slice(0,500));return res.status(502).json({error:'Link4M trả về dữ liệu không phải JSON (HTTP '+response.status+'). Kiểm tra API token hoặc trạng thái tài khoản.'})}
+    if(!response.ok){console.error('Link4M HTTP error:',response.status,JSON.stringify(result).slice(0,500));return res.status(502).json({error:result.message||result.error||('Link4M HTTP '+response.status)})}
+    // API response fields may differ between Link4M versions; support common names and nested data.
+    const candidates=[result.shortenedUrl,result.shortened_url,result.shortUrl,result.short_url,result.url,result.data?.shortenedUrl,result.data?.shortened_url,result.data?.shortUrl,result.data?.short_url,result.data?.url];
+    let shortUrl=candidates.find(v=>typeof v==='string'&&v.trim());
+    if(shortUrl){shortUrl=shortUrl.trim();if(/^link4m\.com\//i.test(shortUrl))shortUrl='https://'+shortUrl;}
+    let parsed;try{parsed=new URL(shortUrl)}catch{}
+    const trustedHost=parsed&&(/(^|\.)link4m\.com$/i.test(parsed.hostname)||/(^|\.)link4m\.co$/i.test(parsed.hostname));
+    if(String(result.status||'').toLowerCase()!=='success'||!parsed||parsed.protocol!=='https:'||!trustedHost){
+      console.error('Link4M unexpected response:',JSON.stringify(result).slice(0,1000));
+      return res.status(502).json({error:result.message||result.error||'Link4M chưa trả về shortenedUrl HTTPS hợp lệ. Hãy kiểm tra token/API trong Render Logs.'});
+    }
+    shortUrl=parsed.toString();
+    db.shortlinks[key]={target,url:shortUrl,createdAt:new Date().toISOString()};persist();res.json({shortenedUrl:shortUrl});
   }catch(e){console.error('Link4M error',e);res.status(502).json({error:'Không kết nối được Link4M. Vui lòng thử lại.'})}
 });
 app.post('/api/admin/login',(req,res)=>{const pass=String(req.body?.password||'');const stored=db.adminPasswordHash;if(!stored)return res.status(503).json({error:'Chưa cấu hình ADMIN_PASSWORD trên Render'});const hash=crypto.scryptSync(pass,stored.salt,64);if(!crypto.timingSafeEqual(hash,Buffer.from(stored.hash,'hex')))return res.status(401).json({error:'Mật khẩu quản trị không chính xác'});res.json({token:sign({exp:Date.now()+8*60*60*1000,role:'admin'})})});
