@@ -1,0 +1,116 @@
+{
+  "siteName": "NGUYỄN VĂN PHONG WEBSITE",
+  "announcement": {
+    "enabled": false,
+    "message": ""
+  },
+  "maintenance": {
+    "enabled": false,
+    "message": "Website đang bảo trì. Vui lòng quay lại sau."
+  },
+  "tags": {
+    "freefire": true,
+    "lienquan": true,
+    "roblox": true
+  },
+  "musicVolume": 1,
+  "playlist": [
+    {
+      "name": "Nhạc nền",
+      "src": "music.mp3",
+      "enabled": true
+    },
+    {
+      "name": "Nhạc 1",
+      "src": "Nhac1.mp3",
+      "enabled": true
+    },
+    {
+      "name": "Nhạc 2",
+      "src": "Nhac2.mp3",
+      "enabled": true
+    }
+  ],
+  "destinations": [
+    {
+      "key": "location",
+      "tag": "freefire",
+      "icon": "📍",
+      "name": "Định Vị Xanh Tím OB55",
+      "enabled": true,
+      "status": "available",
+      "url": "https://www.mediafire.com/file/yen60lu05hfnng4/DINH_VI_BT.zip/file",
+      "shortLink": "",
+      "fileName": "DINH_VI_BT.zip",
+      "size": "",
+      "downloads": 0
+    },
+    {
+      "key": "deta",
+      "tag": "freefire",
+      "icon": "🔐",
+      "name": "Deta IPA Crack Nokey",
+      "enabled": true,
+      "status": "available",
+      "url": "https://www.mediafire.com/file/wohet4glfwyn5j0/Deta_Crack.7z/file",
+      "shortLink": "",
+      "fileName": "Deta_Crack.7z",
+      "size": "",
+      "downloads": 0
+    },
+    {
+      "key": "proxy",
+      "tag": "freefire",
+      "icon": "🌐",
+      "name": "Proxy Mod Alen Crack",
+      "enabled": true,
+      "status": "available",
+      "url": "https://www.mediafire.com/file/zdoapnkcx9v70gq/PROXY+MOD+ALEN+Crack.zip/file",
+      "shortLink": "",
+      "fileName": "PROXY MOD ALEN Crack.zip",
+      "size": "",
+      "downloads": 0
+    },
+    {
+      "key": "mizze",
+      "tag": "freefire",
+      "icon": "🎮",
+      "name": "Menu Mizze Crack",
+      "enabled": true,
+      "status": "available",
+      "url": "https://www.mediafire.com/file/2plraqmzcl7gk4m/mizze+crack+adr+chs+ff+india.zip/file",
+      "shortLink": "",
+      "fileName": "Menu Mizze Crack",
+      "size": "",
+      "downloads": 0
+    },
+    {
+      "key": "nvpkey",
+      "tag": "lienquan",
+      "icon": "🔑",
+      "name": "Menu Nvp Crack Key",
+      "enabled": true,
+      "status": "available",
+      "url": "https://zufile.com/f/2vRmNkma5C",
+      "shortLink": "",
+      "fileName": "Menu Nvp Crack Key",
+      "size": "",
+      "downloads": 0
+    },
+    {
+      "key": "ysm",
+      "tag": "lienquan",
+      "icon": "⚔️",
+      "name": "Menu YSM Team Liên Quân",
+      "enabled": true,
+      "status": "available",
+      "url": "https://www.mediafire.com/file/x9xo2468orsfr3l/YSM_TEAM_LIEN_QUAN.apk/file",
+      "shortLink": "",
+      "fileName": "YSM_TEAM_LIEN_QUAN.apk",
+      "size": "",
+      "downloads": 0
+    }
+  ],
+  "customTags": [],
+  "contentItems": []
+}
