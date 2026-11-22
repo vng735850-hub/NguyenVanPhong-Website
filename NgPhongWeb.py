@@ -16,7 +16,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlencode, urlsplit, quote, parse_qs
 
 # =========================================================
-# PHONG WEB V2.4.2
+# PHONG WEB V2.7.0
 # LINK4M ONLY | LOCATION + DETA + PROXY + MIZZE
 # ADVANCED ADMIN | JSON ANALYTICS | SECURITY | CSRF
 # =========================================================
@@ -41,6 +41,9 @@ LINK4M_ENDPOINT = "https://link4m.co/api-shorten/v2"
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "152012")
 
 SESSION_TTL = 30 * 60
+ADMIN_IDLE_TTL = 30 * 60
+MAX_ADMIN_SESSIONS = 3
+MAX_REQUEST_BODY = 2 * 1024 * 1024
 VISITOR_TIMEOUT = 120
 ADMIN_TTL = 8 * 60 * 60
 
@@ -128,6 +131,7 @@ SESSIONS = {}
 ADMIN_SESSIONS = {}
 RATE_LIMITS = {}
 API_RATE_LIMITS = {}
+ADMIN_WRITE_LIMITS = {}
 
 LOCK = threading.RLock()
 JSON_LOCK = threading.RLock()
@@ -454,7 +458,7 @@ def cleanup_sessions():
             if now - ADMIN_SESSIONS[token]["created"] > ADMIN_TTL:
                 ADMIN_SESSIONS.pop(token, None)
 
-        for table in (RATE_LIMITS, API_RATE_LIMITS):
+        for table in (RATE_LIMITS, API_RATE_LIMITS, ADMIN_WRITE_LIMITS):
             for ip in list(table):
                 table[ip] = [
                     t for t in table[ip] if now - t < 60
@@ -993,6 +997,26 @@ body.light .link-description{color:#274768}
 .music-mini.minimized{display:none!important}.music-restore{position:fixed;z-index:9001;right:16px;bottom:16px;width:52px;height:52px;border-radius:50%;border:1px solid #8bd7ff;color:white;background:linear-gradient(135deg,#086de0,#13b5ff);font-size:25px;box-shadow:0 0 18px #168cff}
 .music-mini .music-minimize{width:28px;height:28px;font-size:15px;border-radius:7px}
 
+
+/* PHONG WEB V2.7.0 – Advanced UI */
+header,.side-menu,.tag-group,.tag-item-card,.stats-bar span,.home-search input,
+.search-results,.music-mini,.link-box,.menu-card,.location-card{
+ backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+}
+header{background:rgba(4,12,34,.72);border-bottom-color:rgba(91,190,255,.58)}
+.side-menu{background:rgba(5,18,45,.78);border-color:rgba(91,190,255,.62)}
+.tag-group{background:linear-gradient(135deg,rgba(8,42,85,.62),rgba(5,20,49,.68));border-color:rgba(91,190,255,.48);transition:transform .22s,border-color .22s,box-shadow .22s}
+.tag-group:hover{border-color:rgba(100,200,255,.72);box-shadow:0 12px 32px rgba(0,100,220,.16)}
+.tag-item-card{background:rgba(10,45,87,.48);box-shadow:inset 0 1px rgba(255,255,255,.06)}
+.tag-item-card img{width:100%;height:118px;object-fit:cover;border-radius:9px;border:1px solid rgba(120,200,255,.25)}
+.tag-count{margin-left:auto;padding:5px 9px;border-radius:999px;background:rgba(0,135,255,.2);border:1px solid rgba(91,190,255,.4);font-size:11px;color:#d9f2ff;white-space:nowrap}
+.tag-menu-count{float:right;opacity:.8;font-size:11px;border-radius:20px;padding:2px 7px;background:rgba(0,130,255,.2)}
+.favorite-button{align-self:flex-end;padding:6px 9px;border-radius:8px;border:1px solid rgba(105,190,255,.4);background:rgba(0,95,180,.22);color:#dff4ff;cursor:pointer}
+.favorite-button.active{background:rgba(255,184,0,.18);border-color:#ffcf62;color:#ffe39a}
+.catalog-empty{padding:18px;border:1px dashed rgba(100,180,255,.4);border-radius:12px;color:#b8d8f5;text-align:center}
+.page{animation:pageIn .32s cubic-bezier(.2,.75,.25,1) both}
+@media(max-width:600px){.tag-item-card img{height:145px}.tag-count{font-size:10px}}
+
 .all-tags-directory{max-width:980px;margin:28px auto 38px;text-align:left}
 .directory-heading{text-align:center;margin:0 0 22px}
 .directory-heading h2{color:#9cddff;text-shadow:0 0 14px rgba(35,155,255,.45);margin:0 0 7px}
@@ -1098,6 +1122,7 @@ footer strong{color:#55baff;letter-spacing:1px}
   <a href="/?category=freefire" id="freeFireMenuButton" data-tag="freefire">🔥 HACK FREE FIRE</a>
   <a href="/?category=lienquan" id="lienQuanMenuButton" data-tag="lienquan">⚔️ HACK LIÊN QUÂN</a>
   <a href="/?category=roblox" id="robloxMenuButton" data-tag="roblox">🧱 HACK ROBLOX</a>
+  <div id="dynamicTagMenu"></div>
   <a href="/admin">⚙️ QUẢN TRỊ</a>
  </nav>
 </header>
@@ -1328,7 +1353,7 @@ footer strong{color:#55baff;letter-spacing:1px}
 
 <footer>
  © 2026 Nguyễn Văn Phong Website<br>
- <strong id="footerVersion">PHONG WEB V2.4.2</strong>
+ <strong id="footerVersion">PHONG WEB V2.7.0</strong>
 </footer>
 
 <script>
@@ -1464,6 +1489,7 @@ function showPage(){
  if(nvp==="success"){pages.nvpsuccess.classList.add("active");return;}
  const result=q.get("result");
  const category=q.get("category");
+ const customTagQuery=q.get("tag");
 
  if(category==="freefire"){
   pages.freefire.classList.add("active");return;
@@ -1490,6 +1516,13 @@ function showPage(){
   "/menu-nvp-crack-key":pages.nvpkey
  };
  (routes[location.pathname]||pages.home).classList.add("active");
+ if(customTagQuery){
+  setTimeout(()=>{
+   const root=document.getElementById("allTagsDirectory");
+   const target=root&&root.querySelector('[data-tag="'+customTagQuery+'"]');
+   if(target)target.scrollIntoView({behavior:"smooth",block:"start"});
+  },100);
+ }
 }
 window.addEventListener("popstate",showPage);
 
@@ -1515,7 +1548,7 @@ async function refreshStats(){
 setInterval(refreshStats,15000);
 refreshStats();
 
-// PHONG WEB V2.4.2: tải tên website, Tag, thông báo và playlist từ cấu hình quản trị.
+// PHONG WEB V2.7.0: tải tên website, Tag, thông báo và playlist từ cấu hình quản trị.
 async function loadPublicConfig(){
  try{const r=await fetch("/public-settings",{cache:"no-store"});const d=await r.json();if(!r.ok)return;
   const name=d.site_name||"NGUYỄN VĂN PHONG WEBSITE";const title=document.getElementById("siteTitle");if(title)title.textContent=name;document.title=name+" | PHONG WEB";
@@ -1571,8 +1604,122 @@ async function refreshPublic(){
 }
 refreshPublic();
 
-// Dữ liệu Tag/nội dung do Admin quản lý (các mục mới được hiển thị trên Trang Chủ).
-(async()=>{try{const r=await fetch("/public-settings",{cache:"no-store"});const d=await r.json();const root=document.getElementById("allTagsDirectory");for(const tag of (d.custom_tags||[])){if(tag.enabled===false)continue;const section=document.createElement("section");section.className="tag-group";section.dataset.customTag=tag.slug;const head=document.createElement("div");head.className="tag-group-title";const title=document.createElement("h3");title.textContent=(tag.icon||"🏷️")+" "+tag.name;head.append(title);section.append(head);const grid=document.createElement("div");grid.className="tag-items-grid";for(const item of (d.content_items||[]).filter(x=>x.tag===tag.slug&&x.enabled!==false)){const a=document.createElement("a");a.className="tag-item-card";a.href=item.url;a.target="_blank";a.rel="noopener";const b=document.createElement("b");b.textContent=item.name;const small=document.createElement("small");small.textContent=item.description||"Mở nội dung";a.append(b,small);grid.append(a)}section.append(grid);root.append(section)}}catch(e){}})();
+// PHONG WEB V2.7.0: danh mục động, menu Tag, thẻ ảnh, số lượng và yêu thích.
+window.PHONG_CATALOG = [];
+function phongSlug(value){
+ return String(value||"").toLowerCase().trim().replace(/[^a-z0-9\-]+/g,"-").replace(/^-+|-+$/g,"");
+}
+function getFavorites(){
+ try{return JSON.parse(localStorage.getItem("phong_favorites")||"[]")}catch(e){return []}
+}
+function setFavorite(slug,active){
+ const list=getFavorites().filter(x=>x!==slug);
+ if(active)list.push(slug);
+ try{localStorage.setItem("phong_favorites",JSON.stringify(list))}catch(e){}
+}
+function createCatalogCard(item){
+ const a=document.createElement("a");
+ a.className="tag-item-card";
+ a.href=item.url||"#";
+ if(/^https:\/\//i.test(a.href)){a.target="_blank";a.rel="noopener noreferrer"}
+ if(item.image){
+  const img=document.createElement("img");img.src=item.image;img.alt=item.name||"";
+  img.loading="lazy";img.onerror=()=>img.remove();a.append(img);
+ }else{
+  const icon=document.createElement("span");icon.textContent=item.icon||"📦";a.append(icon);
+ }
+ const b=document.createElement("b");b.textContent=item.name||"Nội dung";a.append(b);
+ const small=document.createElement("small");small.textContent=item.description||"Mở nội dung";a.append(small);
+ const fav=document.createElement("button");fav.type="button";fav.className="favorite-button";
+ const slug=item.slug||phongSlug(item.name);const selected=getFavorites().includes(slug);
+ fav.classList.toggle("active",selected);fav.textContent=selected?"★ Đã lưu":"☆ Yêu thích";
+ fav.addEventListener("click",e=>{e.preventDefault();e.stopPropagation();const on=!fav.classList.contains("active");setFavorite(slug,on);fav.classList.toggle("active",on);fav.textContent=on?"★ Đã lưu":"☆ Yêu thích";});
+ a.append(fav);
+ return a;
+}
+function renderPublicCatalog(data){
+ const root=document.getElementById("allTagsDirectory");
+ const menuRoot=document.getElementById("dynamicTagMenu");
+ if(!root)return;
+ root.querySelectorAll("[data-generated-tag]").forEach(x=>x.remove());
+ if(menuRoot)menuRoot.replaceChildren();
+ const builtins=[
+  {slug:"freefire",name:"HACK FREE FIRE",icon:"🔥"},
+  {slug:"lienquan",name:"HACK LIÊN QUÂN",icon:"⚔️"},
+  {slug:"roblox",name:"HACK ROBLOX",icon:"🧱"}
+ ];
+ const custom=(data.custom_tags||[]).filter(t=>t&&t.enabled!==false);
+ const tags=[...builtins,...custom];
+ const content=(data.content_items||[]).filter(x=>x&&x.enabled!==false);
+ window.PHONG_CATALOG=content.map(x=>({...x,slug:x.slug||phongSlug(x.name)}));
+ for(const tag of tags){
+  const items=content.filter(x=>String(x.tag||"").toLowerCase()===String(tag.slug).toLowerCase());
+  let section=root.querySelector('.tag-group[data-tag="'+tag.slug+'"]');
+  if(!section){
+   section=document.createElement("section");section.className="tag-group";section.dataset.generatedTag="1";section.dataset.tag=tag.slug;
+   const head=document.createElement("div");head.className="tag-group-title";
+   const icon=document.createElement("span");icon.textContent=tag.icon||"🏷️";
+   const wrap=document.createElement("div");const h=document.createElement("h3");h.textContent=tag.name||tag.slug;
+   const sub=document.createElement("small");sub.textContent="Danh mục nội dung";wrap.append(h,sub);
+   const count=document.createElement("span");count.className="tag-count";count.textContent=items.length+" mục";
+   head.append(icon,wrap,count);section.append(head);
+   const grid=document.createElement("div");grid.className="tag-items-grid";section.append(grid);root.append(section);
+  }else{
+   let count=section.querySelector(".tag-count");
+   if(!count){count=document.createElement("span");count.className="tag-count";section.querySelector(".tag-group-title")?.append(count)}
+   count.textContent=items.length+" mục mới";
+  }
+  const grid=section.querySelector(".tag-items-grid");
+  if(grid){
+   items.forEach(item=>grid.append(createCatalogCard(item)));
+   if(items.length===0 && section.dataset.generatedTag==="1"){
+    const empty=document.createElement("div");empty.className="catalog-empty";empty.textContent="Chưa có nội dung trong danh mục này.";grid.append(empty);
+   }
+   const countLabel=section.querySelector(".tag-count");
+   if(countLabel)countLabel.textContent=grid.querySelectorAll(".tag-item-card").length+" mục";
+  }
+  if(menuRoot && tag.slug!=="home"){
+   const link=document.createElement("a");link.href="/?tag="+encodeURIComponent(tag.slug);
+   link.textContent=(tag.icon||"🏷️")+" "+(tag.name||tag.slug);
+   const badge=document.createElement("span");badge.className="tag-menu-count";badge.textContent=String(items.length);
+   link.append(badge);
+   link.addEventListener("click",e=>{
+    e.preventDefault();menu.classList.remove("show");
+    history.pushState({},"","/?tag="+encodeURIComponent(tag.slug));showPage();
+    setTimeout(()=>{const target=root.querySelector('[data-tag="'+tag.slug+'"]');target?.scrollIntoView({behavior:"smooth",block:"start"});},100);
+   });
+   menuRoot.append(link);
+  }
+ }
+}
+function setupDynamicSearch(){
+ const input=document.getElementById("homeSearch"),box=document.getElementById("searchResults");
+ if(!input||!box||input.dataset.v250==="1")return;
+ input.dataset.v250="1";
+ const base=[
+  {name:"Trang Chủ",url:"/",icon:"🏠"},{name:"Hack Free Fire",url:"/?category=freefire",icon:"🔥"},
+  {name:"Hack Liên Quân",url:"/?category=lienquan",icon:"⚔️"},{name:"Hack Roblox",url:"/?category=roblox",icon:"🧱"},
+  {name:"Định Vị",url:"/dinh-vi",icon:"📍"},{name:"Deta",url:"/menu",icon:"🔐"},
+  {name:"Proxy Mod Alen",url:"/proxy-mod-alen-crack",icon:"🌐"},{name:"Menu Mizze",url:"/mizze-crack",icon:"🎮"}
+ ];
+ input.addEventListener("input",()=>{
+  const q=input.value.trim().toLocaleLowerCase("vi");box.replaceChildren();
+  if(!q){box.classList.add("hidden");return}
+  const all=[...base,...(window.PHONG_CATALOG||[]).map(x=>({name:x.name,url:x.url,icon:x.icon||"📦",description:x.description}))];
+  const found=all.filter(x=>(x.name+" "+(x.description||"")).toLocaleLowerCase("vi").includes(q)).slice(0,20);
+  found.forEach(x=>{const a=document.createElement("a");a.href=x.url||"#";a.textContent=(x.icon||"🔎")+" "+x.name;box.append(a)});
+  if(!found.length){const d=document.createElement("div");d.className="catalog-empty";d.textContent="Không tìm thấy nội dung phù hợp.";box.append(d)}
+  box.classList.remove("hidden");
+ });
+ document.addEventListener("click",e=>{if(e.target!==input&&!box.contains(e.target))box.classList.add("hidden")});
+}
+async function loadPublicCatalogV250(){
+ try{
+  const r=await fetch("/public-settings",{cache:"no-store"});const d=await r.json();
+  if(r.ok){renderPublicCatalog(d);setupDynamicSearch()}
+ }catch(e){console.warn("Không tải được danh mục động:",e)}
+}
+loadPublicCatalogV250();
 
 // Tạo link.
 async function createShortLink(destination,button,status){
@@ -1869,7 +2016,7 @@ ADMIN_HTML = r"""<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>PHONG WEB V2.4.2 ADMIN</title>
+<title>PHONG WEB V2.7.0 ADMIN</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;padding:15px;background:#071022;color:white;font-family:Arial,sans-serif}
@@ -1917,7 +2064,7 @@ canvas.chart{width:100%;height:230px;background:#07152d;border-radius:10px}
 </head>
 <body>
 <main>
-<h1>⚙️ PHONG WEB V2.4.2 - ADMIN</h1>
+<h1>⚙️ PHONG WEB V2.7.0 - ADMIN</h1>
 <p class="small">Quản lý website, thống kê, lịch sử và bảo mật.</p>
 
 <section class="panel" id="loginPanel">
@@ -2055,8 +2202,26 @@ canvas.chart{width:100%;height:230px;background:#07152d;border-radius:10px}
  </div>
  <div class="panel">
   <h2>⏱️ PHIÊN QUẢN TRỊ</h2>
-  <p class="small">Phiên đăng nhập hết hạn sau 8 giờ. Trình duyệt tự kiểm tra trạng thái đăng nhập.</p>
+  <p class="small">Phiên tự hết hạn sau 30 phút không hoạt động hoặc tối đa 8 giờ. Tối đa 3 phiên Admin cùng lúc.</p>
+  <button class="warning" onclick="revokeOtherSessions()">🚫 THU HỒI PHIÊN KHÁC</button>
   <button class="danger" onclick="logout()">ĐĂNG XUẤT</button>
+ </div>
+ <div class="panel">
+  <h2>🗄️ SAO LƯU & KHÔI PHỤC CẤU HÌNH — V2.7.0</h2>
+  <p class="small">Tải bản sao lưu các thiết lập website, danh mục, nội dung, nhạc và thông báo. Khi khôi phục, dữ liệu thống kê, lịch sử và nhật ký bảo mật sẽ được giữ nguyên.</p>
+  <div class="row">
+   <button class="good" onclick="downloadBackup()">⬇ TẢI BACKUP JSON</button>
+   <input type="file" id="backupFile" accept=".json,application/json">
+   <button class="warning" onclick="restoreBackup()">↻ KHÔI PHỤC BACKUP</button>
+  </div>
+  <p class="small">Chỉ chọn file JSON được xuất từ PHONG WEB. Hãy tải backup hiện tại trước khi khôi phục.</p>
+  <div id="backupStatus" class="small" aria-live="polite"></div>
+ </div>
+ <div class="panel">
+  <h2>🧭 KIỂM TRA CẤU HÌNH</h2>
+  <p class="small">Kiểm tra nhanh cấu trúc dữ liệu website và số lượng nội dung đang quản lý.</p>
+  <button onclick="runConfigCheck()">🔎 KIỂM TRA NGAY</button>
+  <div id="configCheckResult" class="small" aria-live="polite"></div>
  </div>
 </section>
 </div>
@@ -2389,6 +2554,11 @@ async function loadAdminLogs(){
  }catch(e){message(e.message,true);}
 }
 
+async function revokeOtherSessions(){
+ if(!confirm("Thu hồi tất cả phiên Admin khác? Phiên hiện tại vẫn được giữ."))return;
+ try{const d=await api("/admin/revoke-sessions",{});message(d.message||"Đã thu hồi các phiên khác.");}
+ catch(e){message(e.message,true);}
+}
 async function logout(){
  try{await api("/admin/logout",{});}catch(e){}
  logoutLocal();
@@ -2413,6 +2583,41 @@ function renderContent(){const root=document.getElementById("contentItems");root
 function addContent(){const v={name:document.getElementById("newContentName").value.trim(),slug:document.getElementById("newContentSlug").value.trim().toLowerCase(),tag:document.getElementById("newContentTag").value.trim().toLowerCase(),description:document.getElementById("newContentDesc").value.trim(),image:document.getElementById("newContentImage").value.trim()||"/logo.png",url:document.getElementById("newContentUrl").value.trim(),enabled:true};if(!v.name||!v.slug||!v.url){message("Nhập tên, slug và đường dẫn tải.",true);return}contentAdminList.push(v);renderContent();["newContentName","newContentSlug","newContentTag","newContentDesc","newContentImage","newContentUrl"].forEach(id=>document.getElementById(id).value="")}
 async function saveContent(){try{const d=await api("/admin/content",{items:contentAdminList});message(d.message);await loadContent()}catch(e){message(e.message,true)}}
 function exportCSV(){location.href="/admin/export.csv"}
+async function downloadBackup(){
+ const status=document.getElementById("backupStatus");
+ try{
+  status.textContent="Đang tạo bản sao lưu...";
+  const response=await fetch("/admin/backup.json",{cache:"no-store",credentials:"same-origin"});
+  if(!response.ok){let d={};try{d=await response.json()}catch(e){}throw new Error(d.message||"Không thể tải backup.");}
+  const blob=await response.blob(),url=URL.createObjectURL(blob),a=document.createElement("a");
+  a.href=url;a.download="phong-web-backup-"+new Date().toISOString().slice(0,10)+".json";
+  document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
+  status.textContent="Đã tải bản sao lưu cấu hình.";
+ }catch(e){status.textContent=e.message;message(e.message,true);}
+}
+async function restoreBackup(){
+ const input=document.getElementById("backupFile"),status=document.getElementById("backupStatus"),file=input.files&&input.files[0];
+ if(!file){message("Hãy chọn file backup JSON trước.",true);return;}
+ if(file.size>2*1024*1024){message("File backup vượt quá giới hạn 2 MB.",true);return;}
+ if(!confirm("Khôi phục cấu hình từ file đã chọn? Các thiết lập hiện tại sẽ được thay thế. Thống kê và lịch sử được giữ nguyên."))return;
+ try{
+  const raw=await file.text(),payload=JSON.parse(raw);
+  if(payload.format!=="PHONG_WEB_BACKUP"||(payload.version!=="2.6.0"&&payload.version!=="2.7.0")||!payload.config)throw new Error("File backup không đúng định dạng PHONG WEB V2.7.0.");
+  const result=await api("/admin/restore-backup",payload);
+  status.textContent=result.message||"Khôi phục thành công.";
+  input.value="";
+  await Promise.all([loadSettings(),loadSiteConfig(),loadTags(),loadContent(),loadNotice()]);
+  message("Đã khôi phục cấu hình. Thống kê và lịch sử không bị thay đổi.");
+ }catch(e){status.textContent=e.message;message(e.message,true);}
+}
+async function runConfigCheck(){
+ const root=document.getElementById("configCheckResult");
+ try{
+  const [a,b,c,d]=await Promise.all([api("/admin/settings"),api("/admin/site-config"),api("/admin/tags"),api("/admin/content")]);
+  const destinations=Object.keys(a.items||{}).length,tags=(c.items||[]).length,contents=(d.items||[]).length,tracks=(b.music_playlist||[]).length;
+  root.textContent="✓ Kết nối Admin OK · "+destinations+" mục tải · "+tags+" Tag · "+contents+" nội dung · "+tracks+" bài nhạc.";
+ }catch(e){root.textContent="✕ Kiểm tra thất bại: "+e.message;}
+}
 
 checkAdmin();
 </script>
@@ -2427,7 +2632,7 @@ checkAdmin();
 
 class Website(BaseHTTPRequestHandler):
 
-    server_version = "PhongWeb/2.4.2"
+    server_version = "PhongWeb/2.7.0"
     sys_version = ""
 
     def client_ip(self):
@@ -2438,6 +2643,11 @@ class Website(BaseHTTPRequestHandler):
     def send_security_headers(self):
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("X-Frame-Options", "DENY")
+        self.send_header("Cross-Origin-Resource-Policy", "same-origin")
+        self.send_header("Cross-Origin-Opener-Policy", "same-origin")
+        self.send_header("X-Permitted-Cross-Domain-Policies", "none")
+        if SITE_URL.startswith("https://"):
+            self.send_header("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
         self.send_header(
             "Referrer-Policy",
             "strict-origin-when-cross-origin"
@@ -2512,7 +2722,7 @@ class Website(BaseHTTPRequestHandler):
         except ValueError:
             return None
 
-        if length <= 0 or length > 20000:
+        if length <= 0 or length > MAX_REQUEST_BODY:
             return None
 
         try:
@@ -2547,11 +2757,14 @@ class Website(BaseHTTPRequestHandler):
             if not session:
                 return False
 
-            if time.time() - session["created"] > ADMIN_TTL:
+            now = time.time()
+            if now - session["created"] > ADMIN_TTL:
                 ADMIN_SESSIONS.pop(token, None)
                 return False
-
-            session["last_seen"] = time.time()
+            if now - session.get("last_seen", session["created"]) > ADMIN_IDLE_TTL:
+                ADMIN_SESSIONS.pop(token, None)
+                return False
+            session["last_seen"] = now
             return True
 
     def require_admin(self):
@@ -2567,6 +2780,15 @@ class Website(BaseHTTPRequestHandler):
     def require_csrf(self):
         if not self.require_admin():
             return False
+
+        origin = self.headers.get("Origin", "").strip()
+        if origin:
+            origin_host = urlsplit(origin).netloc.lower()
+            request_host = self.headers.get("Host", "").lower()
+            configured_host = urlsplit(SITE_URL).netloc.lower()
+            if origin_host not in {h for h in (request_host, configured_host) if h}:
+                self.send_json(403, {"success": False, "message": "Yêu cầu khác nguồn bị từ chối."})
+                return False
 
         token = self.admin_token()
         supplied = self.headers.get("X-CSRF-Token", "")
@@ -3038,6 +3260,36 @@ class Website(BaseHTTPRequestHandler):
             self.send_json(200, {"success": True, "items": stored.get("content_items", [])})
             return
 
+        if path == "/admin/backup.json":
+            if not self.require_admin(): return
+            with JSON_LOCK:
+                stored = load_data_unlocked()
+            config = {
+                "settings": stored.get("settings", {}),
+                "files": stored.get("files", {}),
+                "announcement": stored.get("announcement", {}),
+                "maintenance": stored.get("maintenance", {}),
+                "music_playlist": stored.get("music_playlist", []),
+                "music_volume": stored.get("music_volume", 0.7),
+                "tags_custom": stored.get("tags_custom", []),
+                "content_items": stored.get("content_items", [])
+            }
+            payload = {
+                "format": "PHONG_WEB_BACKUP",
+                "version": "2.7.0",
+                "created_at": vietnam_now().isoformat(),
+                "config": config
+            }
+            raw = json.dumps(payload, ensure_ascii=False, indent=2).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Disposition", 'attachment; filename="phong-web-backup-v2.7.0.json"')
+            self.send_header("Content-Length", str(len(raw)))
+            self.send_security_headers()
+            self.end_headers()
+            self.wfile.write(raw)
+            return
+
         if path == "/admin/export.csv":
             if not self.require_admin(): return
             with JSON_LOCK:
@@ -3284,9 +3536,18 @@ class Website(BaseHTTPRequestHandler):
             csrf = secrets.token_urlsafe(32)
 
             with LOCK:
+                now = time.time()
+                for old_token in list(ADMIN_SESSIONS):
+                    old_session = ADMIN_SESSIONS[old_token]
+                    if (now - old_session.get("created", 0) > ADMIN_TTL or
+                        now - old_session.get("last_seen", old_session.get("created", 0)) > ADMIN_IDLE_TTL):
+                        ADMIN_SESSIONS.pop(old_token, None)
+                if len(ADMIN_SESSIONS) >= MAX_ADMIN_SESSIONS:
+                    self.send_json(429, {"success": False, "message": "Đã đạt giới hạn 3 phiên Admin. Hãy thu hồi phiên cũ."})
+                    return
                 ADMIN_SESSIONS[token] = {
-                    "created": time.time(),
-                    "last_seen": time.time(),
+                    "created": now,
+                    "last_seen": now,
                     "csrf": csrf
                 }
 
@@ -3310,6 +3571,133 @@ class Website(BaseHTTPRequestHandler):
         if path.startswith("/admin/") and path != "/admin/login":
             if not self.require_csrf():
                 return
+            if rate_limited("admin:" + self.admin_token(), 90, ADMIN_WRITE_LIMITS):
+                self.send_json(429, {"success": False, "message": "Bạn thao tác quá nhanh. Vui lòng chờ một phút."})
+                return
+
+        if path == "/admin/restore-backup":
+            if data.get("format") != "PHONG_WEB_BACKUP" or data.get("version") not in ("2.6.0", "2.7.0"):
+                self.send_json(400, {"success": False, "message": "Định dạng backup không hợp lệ."})
+                return
+            config = data.get("config")
+            if not isinstance(config, dict):
+                self.send_json(400, {"success": False, "message": "Thiếu phần cấu hình trong backup."})
+                return
+
+            settings = config.get("settings")
+            files = config.get("files")
+            announcement = config.get("announcement")
+            maintenance = config.get("maintenance")
+            playlist = config.get("music_playlist")
+            tags = config.get("tags_custom")
+            contents = config.get("content_items")
+            if not all(isinstance(v, dict) for v in (settings, files, announcement, maintenance)):
+                self.send_json(400, {"success": False, "message": "Cấu trúc thiết lập hoặc file không hợp lệ."})
+                return
+            if not isinstance(playlist, list) or not 1 <= len(playlist) <= 50:
+                self.send_json(400, {"success": False, "message": "Danh sách nhạc phải có từ 1 đến 50 bài."})
+                return
+            if not isinstance(tags, list) or len(tags) > 40 or not isinstance(contents, list) or len(contents) > 200:
+                self.send_json(400, {"success": False, "message": "Danh sách Tag hoặc nội dung vượt giới hạn."})
+                return
+
+            clean_playlist = []
+            for track in playlist:
+                if not isinstance(track, dict):
+                    self.send_json(400, {"success": False, "message": "Dữ liệu bài nhạc không hợp lệ."})
+                    return
+                name = safe_text(track.get("name"), 80)
+                src = safe_text(track.get("src"), 500)
+                local_ok = src in ("/music.mp3", "/Nhac1.mp3", "/Nhac2.mp3")
+                remote_ok = validate_http_url(src) and urlsplit(src).scheme == "https"
+                if not name or not (local_ok or remote_ok):
+                    self.send_json(400, {"success": False, "message": "Đường dẫn nhạc trong backup không hợp lệ."})
+                    return
+                clean_playlist.append({"name": name, "src": src, "enabled": track.get("enabled", True) is not False})
+
+            clean_tags = []
+            seen_tags = set()
+            for item in tags:
+                if not isinstance(item, dict):
+                    continue
+                name = safe_text(item.get("name"), 60)
+                slug = safe_text(item.get("slug"), 40).lower()
+                icon = safe_text(item.get("icon", "🏷️"), 12)
+                if not name or not slug or not slug.replace("-", "").isalnum() or slug in seen_tags:
+                    self.send_json(400, {"success": False, "message": "Tag trong backup không hợp lệ hoặc bị trùng slug."})
+                    return
+                seen_tags.add(slug)
+                clean_tags.append({"name": name, "slug": slug, "icon": icon, "enabled": item.get("enabled") is not False, "order": len(clean_tags)})
+
+            clean_contents = []
+            seen_content = set()
+            for item in contents:
+                if not isinstance(item, dict):
+                    continue
+                slug = safe_text(item.get("slug"), 50).lower()
+                name = safe_text(item.get("name"), 120)
+                tag = safe_text(item.get("tag"), 40).lower()
+                description = safe_text(item.get("description"), 500)
+                image = safe_text(item.get("image", "/logo.png"), 500)
+                url = safe_text(item.get("url"), 1000)
+                if not slug or not slug.replace("-", "").isalnum() or slug in seen_content or not name or not validate_http_url(url):
+                    self.send_json(400, {"success": False, "message": "Nội dung trong backup không hợp lệ."})
+                    return
+                if not validate_image_url(image):
+                    image = "/logo.png"
+                seen_content.add(slug)
+                clean_contents.append({"slug": slug, "name": name, "tag": tag, "description": description, "image": image, "url": url, "enabled": item.get("enabled") is not False, "order": len(clean_contents)})
+
+            clean_settings = {}
+            for key, value in settings.items():
+                key = safe_text(key, 100)
+                if key.startswith(("url_", "enabled_", "tag_")) or key == "site_name":
+                    clean_settings[key] = safe_text(str(value), 1000)
+            clean_files = {}
+            for key, value in files.items():
+                if key not in DEFAULT_FILES or not isinstance(value, dict):
+                    continue
+                image = safe_text(value.get("image", "/logo.png"), 500)
+                if not validate_image_url(image):
+                    image = "/logo.png"
+                clean_files[key] = {
+                    "name": safe_text(value.get("name"), 120),
+                    "size": safe_text(value.get("size"), 40),
+                    "status": value.get("status") if value.get("status") in ("available", "unavailable") else "available",
+                    "image": image,
+                    "downloads": safe_count(value.get("downloads", 0))
+                }
+
+            try:
+                music_volume = max(0.0, min(1.0, float(config.get("music_volume", 0.7))))
+            except (TypeError, ValueError):
+                music_volume = 0.7
+            clean_announcement = {
+                "enabled": announcement.get("enabled") is True,
+                "message": safe_text(announcement.get("message"), 1000)
+            }
+            clean_maintenance = {
+                "enabled": maintenance.get("enabled") is True,
+                "message": safe_text(maintenance.get("message"), 1000) or "Website đang bảo trì. Vui lòng quay lại sau."
+            }
+
+            with JSON_LOCK:
+                stored = load_data_unlocked()
+                stored["settings"].update(clean_settings)
+                for key in DEFAULT_FILES:
+                    if key in clean_files:
+                        stored["files"][key] = clean_files[key]
+                stored["announcement"] = clean_announcement
+                stored["maintenance"] = clean_maintenance
+                stored["music_playlist"] = clean_playlist
+                stored["music_volume"] = music_volume
+                stored["tags_custom"] = clean_tags
+                stored["content_items"] = clean_contents
+                save_data_unlocked(stored)
+
+            add_admin_log("RESTORE_BACKUP", self.client_ip(), "Khôi phục cấu hình V2.6.0")
+            self.send_json(200, {"success": True, "message": "Đã khôi phục cấu hình website. Thống kê, lịch sử và nhật ký được giữ nguyên."})
+            return
 
         if path == "/admin/tags":
             items = data.get("items")
@@ -3345,6 +3733,19 @@ class Website(BaseHTTPRequestHandler):
                 stored=load_data_unlocked(); stored["content_items"]=clean; save_data_unlocked(stored)
             add_admin_log("UPDATE_CONTENT",self.client_ip(),f"Lưu {len(clean)} mục nội dung")
             self.send_json(200,{"success":True,"message":"Đã lưu nội dung website."}); return
+
+        # Revoke all other admin sessions while preserving the current session.
+        if path == "/admin/revoke-sessions":
+            current_token = self.admin_token()
+            with LOCK:
+                revoked = 0
+                for other_token in list(ADMIN_SESSIONS):
+                    if other_token != current_token:
+                        ADMIN_SESSIONS.pop(other_token, None)
+                        revoked += 1
+            add_admin_log("REVOKE_SESSIONS", self.client_ip(), f"Thu hồi {revoked} phiên khác")
+            self.send_json(200, {"success": True, "message": f"Đã thu hồi {revoked} phiên Admin khác."})
+            return
 
         # Admin logout.
         if path == "/admin/logout":
@@ -3649,7 +4050,7 @@ class Website(BaseHTTPRequestHandler):
         })
 
     def log_message(self, fmt, *args):
-        print("[PHONG WEB V2.4.2]", fmt % args)
+        print("[PHONG WEB V2.7.0]", fmt % args)
 
 
 # =========================================================
@@ -3682,6 +4083,8 @@ if __name__ == "__main__":
 
     print("Admin page: /admin")
     print("Admin password: Set by ADMIN_PASSWORD")
+    if ADMIN_PASSWORD == "152012":
+        print("[SECURITY WARNING] ADMIN_PASSWORD đang dùng mật khẩu mặc định. Hãy đổi trong Render Environment.")
     print("Storage: JSON")
     print("SQLite: DISABLED")
 
@@ -3697,7 +4100,9 @@ if __name__ == "__main__":
     print("Animated particles: ENABLED")
 
     print("Online timeout:", VISITOR_TIMEOUT, "seconds")
-    print("Session TTL:", SESSION_TTL, "seconds")
+    print("Visitor Session TTL:", SESSION_TTL, "seconds")
+    print("Admin idle TTL:", ADMIN_IDLE_TTL, "seconds")
+    print("Max Admin Sessions:", MAX_ADMIN_SESSIONS)
     print("Admin TTL:", ADMIN_TTL, "seconds")
 
     print("Categories: /?category=freefire | lienquan | roblox")
