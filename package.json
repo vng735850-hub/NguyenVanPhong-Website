@@ -1,12 +1,8 @@
 {
-  "name": "phong-web-link4m",
-  "version": "2.1.0",
-  "private": true,
+  "name": "phong-web",
+  "version": "2.7.2",
+  "description": "NGUYỄN VĂN PHONG WEBSITE - bản Node.js",
   "main": "server.js",
-  "scripts": {
-    "start": "node server.js"
-  },
-  "dependencies": {
-    "express": "^4.21.2"
-  }
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=18" }
 }

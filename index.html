@@ -3,689 +3,1209 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#ffffff">
 <title>NGUYỄN VĂN PHONG WEBSITE</title>
 <style>
-*,*::before,*::after{box-sizing:border-box;border-radius:0}
-body{margin:0;min-height:100vh;font-family:Arial,sans-serif;background:#fff;color:#10203c}
-body.dark{background:#080d20;color:#fff}
-header{display:grid;grid-template-columns:43px 1fr 105px 43px;gap:8px;align-items:center;padding:10px 15px;background:#fff;border-bottom:1px solid #299cff;position:relative;z-index:20}
-body.dark header{background:#04122a}
-header button{height:43px;border:1px solid #299cff;background:inherit;color:inherit;font-size:20px;cursor:pointer}
-.title{text-align:center;font-weight:900;color:#0b4f9c;font-size:clamp(11px,3vw,22px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-body.dark .title{color:#8acaff}
-.clock{height:43px;display:flex;align-items:center;justify-content:center;border:1px solid #299cff;font:900 13px monospace}
-#sideMenu{display:none;position:absolute;top:68px;left:12px;width:230px;padding:8px;background:#fff;border:1px solid #299cff;box-shadow:0 4px 14px rgba(0,80,160,.2)}
-body.dark #sideMenu{background:#071a38}
-#sideMenu.show{display:block}
-#sideMenu a{display:block;padding:12px;color:inherit;text-decoration:none}
-#sideMenu a:hover{background:#087ce5;color:#fff}
-main{width:min(900px,92%);margin:25px auto;text-align:center}
-.page{display:none}.page.active{display:block}
-.hero{width:110px;height:110px;object-fit:contain;margin:10px auto}
-h1{color:#0b4f9c;font-size:clamp(22px,5vw,32px)}
-body.dark h1{color:#8acaff}
-.box{max-width:570px;margin:30px auto;padding:26px 18px;border:1px solid #299cff;background:#fff;box-shadow:0 2px 10px rgba(0,80,160,.12)}
-body.dark .box,body.dark .card{background:#071531}
-.box h2{color:#0877c9;line-height:1.5}
-.icon{font-size:46px}
-.btn{display:inline-block;padding:12px 22px;border:0;background:linear-gradient(120deg,#0877e8,#12a8ff);color:#fff;font-weight:700;cursor:pointer;text-decoration:none;margin:4px}
-.btn:disabled{opacity:.6}
-.btn.green{background:linear-gradient(120deg,#08a75d,#16d68b)}
-.btn.red{background:#b52c42}.btn.gray{background:#18375e}
-.back{display:inline-block;padding:10px 16px;border:1px solid #299cff;color:#0b4f9c;text-decoration:none;font-weight:700;font-size:13px;margin-top:12px;background:#eef7ff}
-.status{min-height:22px;margin:12px 0;font-size:13px;color:#8a5a00;overflow-wrap:anywhere}
-.status.err{color:#c62828}.status.ok{color:#0a8a4f;font-weight:700}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+ margin:0;min-height:100vh;font-family:Arial,sans-serif;color:white;
+ background:linear-gradient(rgba(3,7,25,.84),rgba(3,7,25,.9)),
+ url('/background.jpg') center/cover fixed no-repeat,#080d20;
+ overflow-x:hidden;transition:background .3s,color .3s
+}
+body.light{
+ color:#10203c;
+ background:linear-gradient(rgba(224,241,255,.9),rgba(235,247,255,.94)),
+ url('/background.jpg') center/cover fixed no-repeat,#e8f4ff
+}
+body:before{
+ content:"";position:fixed;inset:-50%;z-index:-2;pointer-events:none;
+ background:
+ radial-gradient(circle at 20% 30%,rgba(0,130,255,.2),transparent 28%),
+ radial-gradient(circle at 80% 60%,rgba(0,210,255,.13),transparent 30%);
+ animation:glowMove 13s ease-in-out infinite alternate
+}
+@keyframes glowMove{
+ from{transform:translate(-3%,-2%) rotate(0deg)}
+ to{transform:translate(3%,2%) rotate(8deg)}
+}
+#particles{
+ position:fixed;inset:0;width:100%;height:100%;
+ pointer-events:none;z-index:-1
+}
+header{
+ position:relative;z-index:20;width:100%;min-height:75px;
+ display:grid;grid-template-columns:43px minmax(0,1fr) 105px 42px;
+ align-items:center;gap:8px;padding:10px 15px;
+ background:rgba(4,10,30,.91);
+ border-bottom:1px solid #299cff;
+ box-shadow:0 0 22px rgba(0,130,255,.22)
+}
+body.light header{background:rgba(230,244,255,.95);color:#10203c}
+.hamburger-button,.theme-button{
+ width:43px;height:43px;border:1px solid #55baff;border-radius:10px;
+ background:rgba(0,120,255,.2);color:inherit;font-size:23px;cursor:pointer
+}
+.header-title{
+ min-width:0;text-align:center;font-size:clamp(11px,3vw,23px);
+ font-weight:900;letter-spacing:1px;text-shadow:0 0 12px #168cff;
+ white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+}
+.clock-box{
+ width:105px;height:43px;display:flex;align-items:center;
+ justify-content:center;background:rgba(0,120,255,.2);
+ border:1px solid #55baff;border-radius:10px;
+ box-shadow:0 0 12px #168cff;font-family:monospace;
+ font-size:14px;font-weight:900;white-space:nowrap
+}
+.side-menu{
+ display:none;position:absolute;top:67px;left:12px;width:220px;
+ padding:9px;background:rgba(5,14,38,.98);
+ border:1px solid #299cff;border-radius:12px;
+ box-shadow:0 0 20px #073c70
+}
+.side-menu.show{display:block;animation:pageIn .2s ease}
+.side-menu a{display:block;padding:13px;color:white;text-decoration:none}
+.side-menu a:hover{background:#087ce5;border-radius:8px}
+.container{width:min(900px,92%);margin:25px auto;text-align:center}
+.page{display:none;animation:pageIn .38s ease both}
+.page.active{display:block}
+@keyframes pageIn{
+ from{opacity:0;transform:translateY(12px)}
+ to{opacity:1;transform:translateY(0)}
+}
+.hero-logo{
+ width:125px;height:125px;object-fit:contain;margin:20px auto;
+ border-radius:50%;filter:drop-shadow(0 0 17px #168cff)
+}
+h1{font-size:clamp(23px,5vw,34px);text-shadow:0 0 15px #168cff}
+.subtitle{color:#d2e7ff;font-size:14px;line-height:1.8;margin:15px auto 25px}
+body.light .subtitle{color:#274768}
+.location-container,.menu-container{margin:18px auto}
+.location-link{display:block;color:inherit;text-decoration:none}
+.location-card{
+ backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+ display:flex;align-items:center;justify-content:center;gap:20px;
+ padding:22px 15px;background:rgba(10,27,60,.9);
+ border:1px solid #459fff;border-radius:15px;
+ box-shadow:0 0 18px rgba(0,130,255,.18);transition:.25s
+}
+body.light .location-card,body.light .menu-card,body.light .link-box{
+ background:rgba(255,255,255,.9);color:#10203c
+}
+.location-card:hover,.menu-card:hover,.link-box:hover{
+ transform:translateY(-3px);box-shadow:0 0 28px rgba(0,140,255,.4)
+}
+.location-emoji{font-size:43px}
+.location-info{text-align:left}
+.location-info h2{margin:0 0 9px;font-size:19px}
+.location-info p{margin:0 0 12px;color:#c6e1ff;font-size:13px}
+body.light .location-info p{color:#365979}
+.location-button,.open-menu-button,.cross-link-button{
+ display:inline-block;padding:12px 22px;color:white;font-weight:bold;
+ background:linear-gradient(120deg,#0877e8,#12a8ff);
+ border:0;border-radius:9px;cursor:pointer;text-decoration:none;
+ box-shadow:0 0 13px rgba(0,130,255,.22);transition:.2s
+}
+.menu-card{
+ backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+ padding:23px 15px;background:rgba(9,24,55,.9);
+ border:1px solid rgba(64,157,255,.65);border-radius:15px;transition:.25s
+}
+.menu-card h2{font-size:18px;margin:0 0 17px}
+.link-box{
+ backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+ max-width:570px;margin:35px auto;padding:28px 20px;
+ background:rgba(7,21,49,.96);border:1px solid #399cff;
+ border-radius:17px;box-shadow:0 0 25px rgba(0,110,255,.2);
+ transition:.25s
+}
+.link-icon{font-size:48px;margin-bottom:12px}
+.link-box h2{color:#8acaff;font-size:20px;line-height:1.5}
+body.light .link-box h2{color:#0877c9}
+.link-description{color:#d1e5ff;font-size:14px;line-height:1.8;margin:15px auto 22px}
+body.light .link-description{color:#274768}
+.cross-link-button{padding:14px 25px}
+.cross-link-button:disabled{opacity:.6;cursor:wait}
+.back-button{
+ display:inline-block;padding:11px 18px;color:white;font-size:13px;
+ font-weight:bold;text-decoration:none;background:rgba(20,65,120,.8);
+ border:1px solid #4caeff;border-radius:9px
+}
+.status{min-height:24px;margin:17px auto;color:#ffe18b;font-size:13px;line-height:1.7;overflow-wrap:anywhere}
+.status.error{color:#ff7777}.status.success{color:#5dffac;font-weight:bold}
+.result-action{
+ display:inline-block;margin:12px auto;padding:14px 30px;color:white;
+ font-weight:bold;text-decoration:none;background:linear-gradient(120deg,#08a75d,#16d68b);
+ border-radius:10px;cursor:pointer
+}
 .hidden{display:none!important}
-.notice{margin:15px auto;padding:13px;border:1px solid #50baff;background:#eef7ff;color:#10203c}
-.maint{margin:40px auto;max-width:650px;padding:25px;border:1px solid #ffb84d;background:#fff6e5;color:#4a3000}
-.search{position:relative;max-width:650px;margin:20px auto;text-align:left}
-.search input{width:100%;padding:13px;border:1px solid #299cff;font-size:15px;background:#fff;color:#10203c}
-.results{position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #299cff;z-index:50}
-.results a{display:block;padding:11px;color:#10203c;text-decoration:none}.results a:hover{background:#e6f3ff}
-.stats{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:14px 0;font-size:12px}
-.stats span{padding:10px 13px;border:1px solid #9fcfff;min-width:140px}
-.group{margin:18px 0;padding:16px;border:1px solid #9fcfff;text-align:left}
-.group h3{margin:0 0 12px;color:#0b4f9c;display:flex;justify-content:space-between;gap:8px}
-.group h3 a{font-size:13px;color:#0877c9;text-decoration:none}
-.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-.item{display:flex;flex-direction:column;gap:5px;padding:13px;border:1px solid #b9dcff;background:#f5faff;color:#10203c;text-decoration:none}
-body.dark .item{background:#0a2d57;color:#fff}
-.item:hover{background:#e6f3ff;border-color:#299cff}
-body.dark .item:hover{background:#0f4378}
-.item small{color:#4a6a8a}
-.card{margin:16px 0;padding:20px;border:1px solid #299cff;background:#fff}
-.thank{display:block;width:min(260px,90%);margin:18px auto;padding:0;border:2px solid #299cff;background:#fff;cursor:pointer}
-.thank img{display:block;width:100%}
-footer{padding:18px;text-align:center;font-size:13px;border-top:1px solid #9fcfff}
-#toast{position:fixed;top:88px;left:50%;transform:translateX(-50%);padding:13px 17px;background:#fff;color:#10203c;border:1px solid #299cff;opacity:0;pointer-events:none;transition:.25s;z-index:999;max-width:90%}
-#toast.show{opacity:1}
-#player{position:fixed;right:14px;bottom:14px;z-index:900;display:flex;align-items:center;gap:10px;padding:8px 12px;background:#0b4f9c;color:#fff;border:1px solid #8bd7ff}
-#player button{width:34px;height:34px;border:1px solid #8bd7ff;background:#087ce5;color:#fff;cursor:pointer}
-#trackName{max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:700}
-/* admin */
-.adm{text-align:left}
-.adm input,.adm select,.adm textarea{width:100%;padding:10px;margin:5px 0;border:1px solid #299cff;background:#fff;color:#10203c}
-.adm .panel{margin:14px 0;padding:16px;border:1px solid #299cff}
-.tabs{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0}
-.tabs .btn{margin:0}
-.adm table{width:100%;border-collapse:collapse;font-size:13px}
-.adm td,.adm th{padding:8px;border-bottom:1px solid #cfe3f7;text-align:left}
-.adm label{display:block;margin:8px 0;font-size:13px}
-.adm label input[type=checkbox]{width:auto}
-@media(max-width:600px){.grid{grid-template-columns:1fr}header{grid-template-columns:40px 1fr 88px 40px}.clock{font-size:11px}}
+.thank-image-button{
+ display:block;width:min(260px,90%);margin:20px auto;padding:0;
+ border:2px solid #55baff;border-radius:12px;overflow:hidden;
+ background:rgba(0,100,220,.2);cursor:pointer;box-shadow:0 0 18px #168cff
+}
+.thank-image-button img{display:block;width:100%;height:auto;object-fit:contain}
+.music-mini{
+ display:flex;align-items:center;justify-content:center;gap:15px;
+ width:min(230px,90%);min-height:58px;margin:25px auto 15px;
+ padding:9px 15px;border:1px solid #55baff;border-radius:13px;
+ background:linear-gradient(135deg,rgba(5,34,75,.96),rgba(0,91,170,.9));
+ box-shadow:0 0 18px rgba(22,140,255,.35)
+}
+.music-bars{height:28px;display:flex;align-items:center;gap:4px}
+.music-bars i{
+ display:block;width:4px;height:7px;border-radius:5px;
+ background:#79d2ff;box-shadow:0 0 7px #36baff
+}
+.music-mini.playing .music-bars i{animation:musicBeat .65s ease-in-out infinite alternate}
+.music-mini.playing .music-bars i:nth-child(2){animation-delay:.15s}
+.music-mini.playing .music-bars i:nth-child(3){animation-delay:.3s}
+.music-mini.playing .music-bars i:nth-child(4){animation-delay:.45s}
+@keyframes musicBeat{from{height:6px}to{height:26px}}
+.music-mini button{
+ width:39px;height:39px;border:1px solid #8bd7ff;border-radius:10px;
+ color:white;background:linear-gradient(135deg,#086de0,#13b5ff);
+ font-size:18px;font-weight:bold;cursor:pointer;box-shadow:0 0 12px #168cff
+}
+.music-mini button:active{transform:scale(.96)}
+.home-search{max-width:650px;margin:22px auto;position:relative;text-align:left}
+.home-search input{width:100%;padding:14px 16px;border:1px solid #45aaff;border-radius:12px;background:rgba(5,22,52,.94);color:#fff;font-size:15px}
+.search-results{position:absolute;z-index:1200;top:calc(100% + 5px);left:0;right:0;padding:8px;background:#071a38;border:1px solid #369eff;border-radius:12px;box-shadow:0 12px 30px #00152e}
+.search-results a{display:block;padding:11px;color:#d9efff;text-decoration:none;border-radius:8px}
+.search-results a:hover{background:#123c70}
+.music-mini{position:fixed;z-index:9000;right:14px;bottom:14px;width:auto;max-width:min(92vw,350px);margin:0;justify-content:flex-start;cursor:grab;touch-action:none}
+.music-mini.dragging{cursor:grabbing;opacity:.9}.music-track-name{max-width:105px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#e3f5ff;font-size:12px;font-weight:bold}
+.music-mini.minimized{display:none!important}.music-restore{position:fixed;z-index:9001;right:16px;bottom:16px;width:52px;height:52px;border-radius:50%;border:1px solid #8bd7ff;color:white;background:linear-gradient(135deg,#086de0,#13b5ff);font-size:25px;box-shadow:0 0 18px #168cff}
+.music-mini .music-minimize{width:28px;height:28px;font-size:15px;border-radius:7px}
 
-/* ===== PHONG WEB UI UPGRADE ===== */
-*,*::before,*::after{box-sizing:border-box;border-radius:0}
-:root{--blue:#168cff;--glow:0 0 0 1px rgba(22,140,255,.28),0 8px 28px rgba(22,140,255,.13)}
-body{background:radial-gradient(ellipse at top,#edf7ff 0,#fff 58%);transition:background .3s,color .3s}
-body.dark{background:radial-gradient(ellipse at top,#10294b 0,#080d20 62%)}
-header{position:sticky;top:0;backdrop-filter:blur(14px);box-shadow:0 4px 24px rgba(0,75,150,.08)}
-.box,.card,.group,.item,.adm .panel,.notice,.maint,.stats span,.back,.search input,.results,.thank{border-radius:24px!important;box-shadow:var(--glow);transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease}
-.item:hover,.card:hover,.box:hover{transform:translateY(-3px);box-shadow:0 0 0 1px rgba(22,140,255,.4),0 12px 34px rgba(22,140,255,.2)}
-.btn,header button,#player button{border-radius:14px!important;transition:transform .2s,filter .2s,box-shadow .2s}
-.btn:hover,header button:hover,#player button:hover{transform:translateY(-2px);filter:brightness(1.08);box-shadow:0 5px 18px rgba(22,140,255,.24)}
-#sideMenu{display:block;position:fixed;top:0;left:0;height:100dvh;width:min(290px,82vw);padding:84px 14px 20px;transform:translateX(-110%);transition:transform .28s ease;z-index:100;background:#fff;border:0;border-right:1px solid #299cff;border-radius:0 24px 24px 0!important;box-shadow:12px 0 35px rgba(0,65,130,.18)}
-body.dark #sideMenu{background:#071a38}
-#sideMenu.show{transform:translateX(0)}
-#sideMenu a{border-radius:14px;margin:5px 0}
-#sideMenu:after{content:'PHONG WEB';position:absolute;top:28px;left:20px;font-weight:900;color:#168cff;letter-spacing:2px}
-.box{border-width:1px}
-.item{border-color:#a8d5ff}
-.search input{border-radius:16px!important}
-.results{overflow:hidden}
-.group{padding:18px}
-@media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}}
 
+/* PHONG WEB V2.7.2 – Advanced UI */
+header,.side-menu,.tag-group,.tag-item-card,.stats-bar span,.home-search input,
+.search-results,.music-mini,.link-box,.menu-card,.location-card{
+ backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+}
+header{background:rgba(4,12,34,.72);border-bottom-color:rgba(91,190,255,.58)}
+.side-menu{background:rgba(5,18,45,.78);border-color:rgba(91,190,255,.62)}
+.tag-group{background:linear-gradient(135deg,rgba(8,42,85,.62),rgba(5,20,49,.68));border-color:rgba(91,190,255,.48);transition:transform .22s,border-color .22s,box-shadow .22s}
+.tag-group:hover{border-color:rgba(100,200,255,.72);box-shadow:0 12px 32px rgba(0,100,220,.16)}
+.tag-item-card{background:rgba(10,45,87,.48);box-shadow:inset 0 1px rgba(255,255,255,.06)}
+.tag-item-card img{width:100%;height:118px;object-fit:cover;border-radius:9px;border:1px solid rgba(120,200,255,.25)}
+.tag-count{margin-left:auto;padding:5px 9px;border-radius:999px;background:rgba(0,135,255,.2);border:1px solid rgba(91,190,255,.4);font-size:11px;color:#d9f2ff;white-space:nowrap}
+.tag-menu-count{float:right;opacity:.8;font-size:11px;border-radius:20px;padding:2px 7px;background:rgba(0,130,255,.2)}
+.favorite-button{align-self:flex-end;padding:6px 9px;border-radius:8px;border:1px solid rgba(105,190,255,.4);background:rgba(0,95,180,.22);color:#dff4ff;cursor:pointer}
+.favorite-button.active{background:rgba(255,184,0,.18);border-color:#ffcf62;color:#ffe39a}
+.catalog-empty{padding:18px;border:1px dashed rgba(100,180,255,.4);border-radius:12px;color:#b8d8f5;text-align:center}
+.page{animation:pageIn .32s cubic-bezier(.2,.75,.25,1) both}
+@media(max-width:600px){.tag-item-card img{height:145px}.tag-count{font-size:10px}}
+
+.all-tags-directory{max-width:980px;margin:28px auto 38px;text-align:left}
+.directory-heading{text-align:center;margin:0 0 22px}
+.directory-heading h2{color:#9cddff;text-shadow:0 0 14px rgba(35,155,255,.45);margin:0 0 7px}
+.directory-heading p{color:#a9c8e8;margin:0;font-size:13px}
+.tag-group{margin:18px 0;padding:17px;border:1px solid rgba(65,166,255,.42);border-radius:17px;background:linear-gradient(135deg,rgba(8,35,75,.92),rgba(5,17,43,.92));box-shadow:0 8px 25px rgba(0,0,0,.18)}
+.tag-group-title{display:flex;align-items:center;gap:11px;margin-bottom:14px}
+.tag-group-title>span{font-size:28px}
+.tag-group-title h3{margin:0;color:#e1f4ff;font-size:17px}
+.tag-group-title small{display:block;color:#9ab8d8;margin-top:4px}
+.tag-group-title>a{margin-left:auto;color:#69c7ff;text-decoration:none;font-weight:700;font-size:13px;white-space:nowrap}
+.tag-items-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.tag-item-card{min-width:0;display:flex;flex-direction:column;gap:6px;padding:14px;border-radius:12px;border:1px solid rgba(80,168,255,.3);background:rgba(10,45,87,.7);color:#eaf7ff;text-decoration:none;transition:transform .2s,border-color .2s,background .2s}
+.tag-item-card:hover{transform:translateY(-2px);border-color:#50baff;background:rgba(15,67,120,.85)}
+.tag-item-card>span{font-size:23px}
+.tag-item-card b{font-size:13px;line-height:1.4}
+.tag-item-card small{font-size:11px;color:#a9c9e9}
+@media(max-width:600px){
+ .all-tags-directory{margin:22px 3px 30px}
+ .tag-group{padding:13px}
+ .tag-items-grid{grid-template-columns:1fr}
+ .tag-group-title h3{font-size:15px}
+}
+footer{
+ padding:18px 10px 22px;text-align:center;color:#c1dcff;
+ font-size:13px;line-height:1.9;background:rgba(3,8,23,.9);
+ border-top:1px solid rgba(80,170,255,.3)
+}
+footer strong{color:#55baff;letter-spacing:1px}
+#toast{
+ position:fixed;z-index:10000;top:88px;left:50%;
+ transform:translate(-50%,-15px);opacity:0;pointer-events:none;
+ width:min(90%,430px);padding:14px 17px;border-radius:11px;
+ background:rgba(5,22,52,.97);border:1px solid #48baff;
+ box-shadow:0 0 22px rgba(0,140,255,.4);text-align:center;
+ transition:.25s;font-size:14px;color:white
+}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+#toast.bad{border-color:#ff6565}
+#toast.good{border-color:#48e8a0}
+.stats-bar{
+ display:flex;justify-content:center;gap:10px;flex-wrap:wrap;
+ margin:15px auto;color:#cce8ff;font-size:12px
+}
+.stats-bar span{
+ padding:10px 13px;border:1px solid rgba(75,165,255,.5);
+ border-radius:9px;background:rgba(4,20,48,.75);min-width:140px
+}
+.stats-bar b{color:#fff;font-size:14px}
+.announcement{
+ margin:15px auto;padding:13px;border:1px solid #50baff;
+ border-radius:10px;background:rgba(0,100,220,.16);
+ line-height:1.7
+}
+#loadingOverlay{
+ position:fixed;inset:0;z-index:9999;background:rgba(2,8,25,.9);
+ display:none;align-items:center;justify-content:center;flex-direction:column;
+ color:white;text-align:center
+}
+#loadingOverlay.show{display:flex}
+.spinner{
+ width:55px;height:55px;border:5px solid rgba(255,255,255,.2);
+ border-top-color:#29aaff;border-radius:50%;animation:spin .8s linear infinite;
+ margin-bottom:17px
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.maintenance{
+ max-width:650px;margin:40px auto;padding:25px;
+ border:1px solid #ffb84d;border-radius:16px;
+ background:rgba(70,40,0,.45);line-height:1.8
+}
+@media(max-width:600px){
+ header{grid-template-columns:40px minmax(0,1fr) 90px 38px;gap:5px;padding:8px;min-height:65px}
+ .hamburger-button,.theme-button{width:38px;height:41px;font-size:20px}
+ .header-title{font-size:clamp(10px,3vw,15px);letter-spacing:0}
+ .clock-box{width:90px;height:41px;font-size:11px}
+ .side-menu{top:60px}.location-card{gap:12px}
+ .location-info h2{font-size:16px}
+ .link-box{margin:22px auto;padding:23px 15px}
+ .stats-bar span{flex:1 1 135px}
+}
+@media(prefers-reduced-motion:reduce){
+ *,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+/* ===== PHONG WEB V2.7.2: giao diện vuông góc + phông trắng (nút sáng/tối vẫn hoạt động) ===== */
+*,*::before,*::after{border-radius:0!important}
+.spinner{border-radius:0!important}
+.menu-card+.menu-card{margin-top:16px}
+body.light{color:#10203c;background:#fff!important}
+body.light:before,body.light #particles{display:none!important}
+body.light header{background:#fff;color:#10203c;border-bottom:1px solid #299cff;box-shadow:0 1px 6px rgba(0,80,160,.12)}
+body.light .header-title{text-shadow:none;color:#0b4f9c}
+body.light .hamburger-button,body.light .theme-button,body.light .clock-box{background:#fff;color:#10203c;border-color:#299cff;box-shadow:none}
+body.light .side-menu{background:#fff;border-color:#299cff;box-shadow:0 4px 14px rgba(0,80,160,.18)}
+body.light .side-menu a{color:#10203c}
+body.light .side-menu a:hover{background:#087ce5;color:#fff}
+body.light h1{text-shadow:none;color:#0b4f9c}
+body.light .location-card,body.light .menu-card,body.light .link-box{background:#fff;color:#10203c;border-color:#299cff;box-shadow:0 2px 10px rgba(0,80,160,.12)}
+body.light .tag-group{background:#fff;border-color:#9fcfff;box-shadow:0 2px 10px rgba(0,80,160,.08)}
+body.light .tag-group-title h3{color:#0b4f9c}
+body.light .tag-group-title small,body.light .tag-item-card small,body.light .directory-heading p{color:#4a6a8a}
+body.light .directory-heading h2{color:#0877c9;text-shadow:none}
+body.light .tag-item-card{background:#f5faff;border-color:#b9dcff;color:#10203c;box-shadow:none}
+body.light .tag-item-card:hover{background:#e6f3ff;border-color:#299cff}
+body.light .tag-count,body.light .tag-menu-count{background:#e6f3ff;border-color:#9fcfff;color:#0b4f9c}
+body.light .stats-bar{color:#274768}
+body.light .stats-bar span{background:#fff;border-color:#9fcfff}
+body.light .stats-bar b{color:#0b4f9c}
+body.light .home-search input{background:#fff;color:#10203c;border-color:#299cff}
+body.light .search-results{background:#fff;border-color:#299cff;box-shadow:0 6px 16px rgba(0,80,160,.18)}
+body.light .search-results a{color:#10203c}
+body.light .search-results a:hover{background:#e6f3ff}
+body.light .announcement{background:#eef7ff;color:#10203c}
+body.light .maintenance{background:#fff6e5;color:#4a3000}
+body.light .catalog-empty{color:#4a6a8a}
+body.light .back-button{background:#eef7ff;color:#0b4f9c;border-color:#299cff}
+body.light .status{color:#8a5a00}
+body.light .status.error{color:#c62828}
+body.light .status.success{color:#0a8a4f}
+body.light .thank-image-button{background:#fff;box-shadow:none}
+body.light footer{background:#fff;color:#274768;border-top:1px solid #9fcfff}
+body.light footer strong{color:#0877c9}
+body.light #toast{background:#fff;color:#10203c}
+body.light #loadingOverlay{background:rgba(255,255,255,.92);color:#10203c}
+body.light .favorite-button{background:#eef7ff;color:#0b4f9c}
 </style>
 </head>
 <body>
+
+<canvas id="particles"></canvas>
 <div id="toast"></div>
+
+<div id="loadingOverlay">
+ <div class="spinner"></div>
+ <b id="loadingText">Đang xử lý...</b>
+</div>
+
 <header>
- <button id="burger" aria-label="Menu">☰</button>
- <div class="title" id="siteTitle">NGUYỄN VĂN PHONG WEBSITE</div>
- <div class="clock" id="clock">00:00:00</div>
- <button id="themeBtn" title="Đổi giao diện">🌙</button>
- <nav id="sideMenu"></nav>
+ <button class="hamburger-button" id="hamburgerButton">☰</button>
+ <div class="header-title" id="siteTitle">NGUYỄN VĂN PHONG WEBSITE</div>
+ <div class="clock-box"><span id="liveClock">🌙 00:00:00</span></div>
+ <button class="theme-button" id="themeButton" title="Đổi giao diện">☀️</button>
+ <nav class="side-menu" id="sideMenu">
+  <a href="/" id="homeMenuButton" data-tag="home">🏠 TRANG CHỦ</a>
+  <a href="/?category=freefire" id="freeFireMenuButton" data-tag="freefire">🔥 HACK FREE FIRE</a>
+  <a href="/?category=lienquan" id="lienQuanMenuButton" data-tag="lienquan">⚔️ HACK LIÊN QUÂN</a>
+  <a href="/?category=roblox" id="robloxMenuButton" data-tag="roblox">🧱 HACK ROBLOX</a>
+  <div id="dynamicTagMenu"></div>
+  <a href="/admin">⚙️ QUẢN TRỊ</a>
+ </nav>
 </header>
 
-<main id="app"></main>
+<main class="container">
 
-<div id="player">
- <span id="trackName">Chưa phát nhạc</span>
- <button id="playBtn" aria-label="Phát/Tạm dừng">▶</button>
- <button id="nextBtn" aria-label="Bài kế">⏭</button>
+<section class="page" id="homePage">
+ <div id="maintenanceBox" class="maintenance hidden"></div>
+ <div id="normalHome">
+  <img class="hero-logo" src="/logo.png" alt="PHONG WEB">
+  <h1>WELCOME TO PHONG WEB</h1>
+  <div class="subtitle">
+   Chào mừng bạn đến với website của Nguyễn Văn Phong.
+   <br>📍 ĐỊNH VỊ XANH TÍM OB55
+  </div>
+
+  <div id="announcement" class="announcement hidden"></div>
+  <div class="home-search"><input id="homeSearch" type="search" placeholder="🔎 Tìm nhanh chức năng, danh mục..." autocomplete="off"><div id="searchResults" class="search-results hidden"></div></div>
+
+  <div class="stats-bar">
+   <span>🟢 Online: <b id="onlineCount">...</b></span>
+   <span>👁 Tổng truy cập: <b id="totalCount">...</b></span>
+   <span>🤖 Android: <b id="androidCount">...</b></span>
+   <span>🍎 iPhone: <b id="iphoneCount">...</b></span>
+  </div>
+
+  <div class="stats-bar">
+   <span>✅ Vượt link thành công: <b id="successCount">...</b></span>
+   <span>❌ Vượt link thất bại: <b id="failedCount">...</b></span>
+   <span>📥 Lượt lấy file: <b id="downloadCount">...</b></span>
+  </div>
+
+  <!-- V2.4.0: Trang Chủ tổng hợp nội dung từ tất cả Tag -->
+  <section class="all-tags-directory" id="allTagsDirectory">
+   <div class="directory-heading">
+    <h2>🌐 KHÁM PHÁ TẤT CẢ DANH MỤC</h2>
+    <p>Tổng hợp các mục đang có trong tất cả Tag ngay tại Trang Chủ.</p>
+   </div>
+
+   <section class="tag-group" data-tag="freefire">
+    <div class="tag-group-title"><span>🔥</span><div><h3>HACK FREE FIRE</h3><small>Các mục thuộc Tag Free Fire</small></div>
+     <a href="/?category=freefire">Xem Tag →</a>
+    </div>
+    <div class="tag-items-grid">
+     <a class="tag-item-card" href="/dinh-vi"><span>📍</span><b>Định Vị Xanh Tím OB55</b><small>Mở mục định vị</small></a>
+     <a class="tag-item-card" href="/menu"><span>🔐</span><b>DETA IPA CRACK NOKЕY</b><small>Mở menu Deta</small></a>
+     <a class="tag-item-card" href="/proxy-mod-alen-crack"><span>🌐</span><b>PROXY MOD ALEN CRACK</b><small>Mở mục Proxy</small></a>
+     <a class="tag-item-card" href="/mizze-crack"><span>🎮</span><b>MENU MIZZE CRACK</b><small>Mở mục Mizze</small></a>
+    </div>
+   </section>
+
+   <section class="tag-group" data-tag="lienquan">
+    <div class="tag-group-title"><span>⚔️</span><div><h3>HACK LIÊN QUÂN</h3><small>Nội dung thuộc Tag Liên Quân</small></div>
+     <a href="/?category=lienquan">Xem Tag →</a>
+    </div>
+    <div class="tag-items-grid">
+     <a class="tag-item-card" href="/?category=lienquan"><span>⚔️</span><b>Hack Liên Quân</b><small>Xem thông tin và cập nhật</small></a>
+     <a class="tag-item-card" href="/menu-nvp-crack-key"><span>🔑</span><b>MENU NVP CRACK KEY</b><small>Mở mục Nvp Crack Key</small></a>
+     <a class="tag-item-card" href="/menu-ysm-team-lien-quan"><span>⚔️</span><b>MENU YSM TEAM LIÊN QUÂN</b><small>Mở mục YSM Team</small></a>
+    </div>
+   </section>
+
+   <section class="tag-group" data-tag="roblox">
+    <div class="tag-group-title"><span>🧱</span><div><h3>HACK ROBLOX</h3><small>Nội dung thuộc Tag Roblox</small></div>
+     <a href="/?category=roblox">Xem Tag →</a>
+    </div>
+    <div class="tag-items-grid">
+     <a class="tag-item-card" href="/?category=roblox"><span>🧱</span><b>Hack Roblox</b><small>Xem thông tin và cập nhật</small></a>
+    </div>
+   </section>
+  </section>
+ </div>
+</section>
+
+<section class="page" id="freeFirePage">
+ <div class="link-box">
+  <div class="link-icon">🔥</div>
+  <h2>CHÀO BẠN ĐẾN VỚI HACK FREE FIRE</h2>
+  <div class="link-description">Chọn một trong các mục bên dưới để tiếp tục.</div>
+ </div>
+ <section class="location-container">
+  <a class="location-link" href="/dinh-vi"><div class="location-card"><div class="location-emoji">📍</div><div class="location-info"><h2>ĐỊNH VỊ XANH TÍM OB55</h2><p>Nhấn vào đây để tiếp tục</p><span class="location-button">MỞ MỤC</span></div></div></a>
+ </section>
+ <section class="menu-container"><div class="menu-card"><h2>🔐 DETA IPA CRACK NOKЕY</h2><button class="open-menu-button" onclick="navigate('/menu')">MỞ MENU</button></div></section>
+ <section class="menu-container"><div class="menu-card"><h2>🌐 PROXY MOD ALEN CRACK</h2><button class="open-menu-button" onclick="navigate('/proxy-mod-alen-crack')">MỞ MỤC</button></div></section>
+ <section class="menu-container"><div class="menu-card"><h2>🎮 MENU MIZZE CRACK</h2><button class="open-menu-button" onclick="navigate('/mizze-crack')">MỞ MỤC</button></div></section>
+ <a class="back-button" href="/" onclick="event.preventDefault();navigateCategory('home')">← TRANG CHỦ</a>
+</section>
+
+<section class="page" id="lienQuanPage">
+ <div class="link-box"><div class="link-icon">⚔️</div><h2>CHÀO BẠN ĐẾN VỚI HACK LIÊN QUÂN</h2><div class="menu-card" id="card-nvpkey"><h2>🔑 MENU NVP CRACK KEY</h2><button class="open-menu-button" onclick="navigate('/menu-nvp-crack-key')">MỞ MỤC</button></div><div class="menu-card" id="card-ysm"><h2>⚔️ MENU YSM TEAM LIÊN QUÂN</h2><button class="open-menu-button" onclick="navigate('/menu-ysm-team-lien-quan')">MỞ MỤC</button></div><a class="back-button" href="/" onclick="event.preventDefault();navigateCategory('home')">← TRANG CHỦ</a></div>
+</section>
+
+<section class="page" id="robloxPage">
+ <div class="link-box"><div class="link-icon">🧱</div><h2>CHÀO BẠN ĐẾN VỚI HACK ROBLOX</h2><div class="maintenance"><h3>🚧 WEBSITE ĐANG CẬP NHẬT</h3>Vui lòng chờ. Chúng tôi sẽ cập nhật nội dung sớm nhất.</div><a class="back-button" href="/" onclick="event.preventDefault();navigateCategory('home')">← TRANG CHỦ</a></div>
+</section>
+
+<section class="page" id="locationPage">
+ <div class="link-box">
+  <div class="link-icon">📍</div>
+  <h2>BẠN CẦN VƯỢT LINK ĐỂ LẤY FILE MEDIAFIRE</h2>
+  <div class="link-description" id="locationFileInfo"></div>
+  <button class="cross-link-button" id="locationCrossButton">🔓 VƯỢT LINK</button>
+  <div class="status" id="locationStatus"></div><br>
+  <a class="back-button" href="/">← QUAY LẠI TRANG CHỦ</a>
+ </div>
+</section>
+
+<section class="page" id="detaPage">
+ <div class="link-box">
+  <div class="link-icon">🔐</div>
+  <h2>BẠN CẦN VƯỢT LINK ĐỂ LẤY FILE DETA</h2>
+  <div class="link-description" id="detaFileInfo"></div>
+  <button class="cross-link-button" id="detaCrossButton">🔓 VƯỢT LINK</button>
+  <div class="status" id="detaStatus"></div><br>
+  <a class="back-button" href="/">← QUAY LẠI TRANG CHỦ</a>
+ </div>
+</section>
+
+<section class="page" id="proxyPage">
+ <div class="link-box">
+  <div class="link-icon">🌐</div>
+  <h2>BẠN CẦN VƯỢT LINK ĐỂ LẤY FILE PROXY MOD ALEN CRACK</h2>
+  <div class="link-description" id="proxyFileInfo"></div>
+  <button class="cross-link-button" id="proxyCrossButton">🔓 VƯỢT LINK</button>
+  <div class="status" id="proxyStatus"></div><br>
+  <a class="back-button" href="/">← QUAY LẠI TRANG CHỦ</a>
+ </div>
+</section>
+
+<section class="page" id="mizzePage">
+ <div class="link-box">
+  <div class="link-icon">🎮</div>
+  <h2>BẠN CẦN VƯỢT LINK ĐỂ LẤY FILE MENU MIZZE CRACK</h2>
+  <div class="link-description" id="mizzeFileInfo"></div>
+  <button class="cross-link-button" id="mizzeCrossButton">🔓 VƯỢT LINK</button>
+  <div class="status" id="mizzeStatus"></div><br>
+  <a class="back-button" href="/">← QUAY LẠI TRANG CHỦ</a>
+ </div>
+</section>
+
+<section class="page" id="nvpKeyPage"><div class="link-box"><div class="link-icon">🔑</div><h2>BẠN CẦN VƯỢT LINK ĐỂ LẤY FILE</h2><div class="link-description" id="nvpkeyFileInfo"></div><button class="cross-link-button" id="nvpKeyCrossButton">🔓 VƯỢT LINK</button><div class="status" id="nvpKeyStatus"></div></div></section>
+<section class="page" id="nvpThanksPage"><div class="link-box"><h2>CẢM ƠN BẠN ĐÃ VƯỢT LINK ỦNG HỘ WEBSITE</h2><button class="thank-image-button" id="nvpThankImage"><img src="/cam-on-tu-phong.png" alt="Cảm ơn từ Phong"></button><audio id="nvpThankAudio" src="/cam-on-tu-phong.mp3" preload="none"></audio><div class="status">Nhấn vào hình để phát lời cảm ơn.</div><button class="cross-link-button" id="nvpNextButton">TIẾP THEO</button></div></section>
+<section class="page" id="nvpSuccessPage"><div class="link-box"><div class="link-icon">✅</div><h2>VƯỢT LINK THÀNH CÔNG</h2><a class="result-action" id="nvpGetFile" href="/menu-nvp-crack-key" target="_blank" rel="noopener">LẤY FILE</a></div></section>
+<section class="page" id="ysmPage"><div class="link-box"><div class="link-icon">⚔️</div><h2>BẠN CẦN VƯỢT LINK ĐỂ LẤY FILE</h2><div class="link-description" id="ysmFileInfo"></div><button class="cross-link-button" id="ysmCrossButton">🔓 VƯỢT LINK</button><div class="status" id="ysmStatus"></div></div></section>
+<section class="page" id="ysmThanksPage"><div class="link-box"><h2>CẢM ƠN BẠN ĐÃ VƯỢT LINK ỦNG HỘ WEBSITE</h2><button class="thank-image-button" id="ysmThankImage"><img src="/cam-on-tu-phong.png" alt="Cảm ơn từ Phong"></button><audio id="ysmThankAudio" src="/cam-on-tu-phong.mp3" preload="none"></audio><div class="status">Nhấn vào hình để phát lời cảm ơn.</div><button class="cross-link-button" id="ysmNextButton">TIẾP THEO</button></div></section>
+<section class="page" id="ysmSuccessPage"><div class="link-box"><div class="link-icon">✅</div><h2>VƯỢT LINK THÀNH CÔNG</h2><a class="result-action" id="ysmGetFile" href="/menu-ysm-team-lien-quan" target="_blank" rel="noopener">LẤY FILE</a></div></section>
+<section class="page" id="thankPage">
+ <div class="link-box">
+  <div class="link-icon">💙</div>
+  <h2>Cảm Ơn Vì Đã Ủng Hộ Cho Phong</h2>
+  <div class="link-description">
+   Phong chân thành cảm ơn bạn đã dành thời gian ủng hộ website.
+   <br>Nhấn vào hình bên dưới để nghe lời cảm ơn nhé!
+  </div>
+  <button class="thank-image-button" id="thankAudioButton">
+   <img src="/cam-on-tu-phong.png" alt="Cảm Ơn Từ Phong">
+  </button>
+  <div class="status" id="thankStatus">🔊 Nhấn vào ảnh để phát âm thanh cảm ơn.</div>
+  <button class="cross-link-button" id="continueButton">TIẾP THEO →</button>
+  <audio id="thankAudio" src="/cam-on-tu-phong.mp3" preload="none"></audio>
+ </div>
+</section>
+
+<section class="page" id="resultPage">
+ <div class="link-box">
+  <div class="link-icon" id="resultIcon">✅</div>
+  <h2 id="resultTitle">Vượt Link Thành Công</h2>
+  <div class="link-description" id="resultDescription"></div>
+  <a class="result-action hidden" id="resultAction" href="/">LẤY FILE</a>
+  <button class="cross-link-button hidden" id="retryButton">🔄 VƯỢT LINK MỚI</button>
+  <div class="status" id="resultStatus"></div><br>
+  <a class="back-button" id="resultBack" href="/">← QUAY LẠI TRANG CHỦ</a>
+ </div>
+</section>
+
+</main>
+
+<div class="music-mini" id="musicPlayer" aria-label="Trình phát nhạc">
+ <div class="music-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+ <div class="music-track-name" id="musicTrackName">Chưa phát nhạc</div>
+ <button id="musicButton" type="button" aria-label="Bật hoặc tắt nhạc">
+  <span id="musicIcon">▶</span>
+ </button>
+ <button class="music-minimize" id="musicMinimize" type="button" title="Thu nhỏ">−</button>
 </div>
-<audio id="audio" preload="none"></audio>
+<button id="musicRestore" class="music-restore hidden" type="button" title="Mở trình phát nhạc">♫</button>
+<audio id="backgroundMusic" preload="none"></audio>
 
-<footer>© 2026 Nguyễn Văn Phong Website<br><strong>PHONG WEB – Hệ thống đồng bộ</strong></footer>
+<footer>
+ © 2026 Nguyễn Văn Phong Website<br>
+ <strong id="footerVersion">PHONG WEB V2.7.2</strong>
+</footer>
 
 <script>
-"use strict";
-/* ================= CẤU HÌNH MẶC ĐỊNH ================= */
-const STORE = "phong_web_config_v1";
-const API_BASE = "";
-let adminToken = sessionStorage.getItem("phong_admin_token") || "";
-async function api(path, options={}) {
-  const headers={"Content-Type":"application/json",...(options.headers||{})};
-  if(adminToken) headers.Authorization="Bearer "+adminToken;
-  const res=await fetch(API_BASE+path,{...options,headers});
-  const data=await res.json().catch(()=>({}));
-  if(!res.ok) throw new Error(data.error||"Lỗi máy chủ");
-  return data;
-}
-async function syncConfigToServer(){
-  if(!adminToken)throw new Error('Bạn chưa đăng nhập quản trị máy chủ.');
-  await api('/api/admin/config',{method:'PUT',body:JSON.stringify({config:cfg})});
-  return true;
-}
-async function loadSharedConfig(){
-  try{const data=await api('/api/config');if(data.config){cfg=Object.assign(cfg,data.config);saveLocalOnly()}}
-  catch(e){console.warn('Không tải được cấu hình dùng chung',e)}
-}
-function saveLocalOnly(){try{localStorage.setItem(STORE,JSON.stringify(cfg))}catch(e){}}
-async function refreshGlobalStats(){
-  try{const {stats}=await api('/api/stats');if(stats){cfg.stats=Object.assign(cfg.stats,stats);render()}}
-  catch(e){}
-}
-
-const DEFAULT_CONFIG = {
-  siteName: "NGUYỄN VĂN PHONG WEBSITE",
-  announcement: { enabled: false, message: "" },
-  maintenance: { enabled: false, message: "Website đang bảo trì. Vui lòng quay lại sau." },
-  tags: { freefire: true, lienquan: true, roblox: true },
-  musicVolume: 0.7,
-  playlist: [
-    { name: "Nhạc nền", src: "music.mp3", enabled: true },
-    { name: "Nhạc 1", src: "Nhac1.mp3", enabled: true },
-    { name: "Nhạc 2", src: "Nhac2.mp3", enabled: true }
-  ],
-  // shortLink: link rút gọn Link4M tạo sẵn trong trang quản lý Link4M.
-  // Hãy đặt "URL đích" của link đó là:  <địa chỉ trang này>#/return/<key>
-  destinations: [
-    { key:"location", tag:"freefire", icon:"📍", name:"Định Vị Xanh Tím OB55", enabled:true, status:"available",
-      url:"https://www.mediafire.com/file/yen60lu05hfnng4/DINH_VI_BT.zip/file", shortLink:"", fileName:"DINH_VI_BT.zip", size:"", downloads:0 },
-    { key:"deta", tag:"freefire", icon:"🔐", name:"Deta IPA Crack Nokey", enabled:true, status:"available",
-      url:"https://www.mediafire.com/file/wohet4glfwyn5j0/Deta_Crack.7z/file", shortLink:"", fileName:"Deta_Crack.7z", size:"", downloads:0 },
-    { key:"proxy", tag:"freefire", icon:"🌐", name:"Proxy Mod Alen Crack", enabled:true, status:"available",
-      url:"https://www.mediafire.com/file/zdoapnkcx9v70gq/PROXY+MOD+ALEN+Crack.zip/file", shortLink:"", fileName:"PROXY MOD ALEN Crack.zip", size:"", downloads:0 },
-    { key:"mizze", tag:"freefire", icon:"🎮", name:"Menu Mizze Crack", enabled:true, status:"available",
-      url:"https://www.mediafire.com/file/2plraqmzcl7gk4m/mizze+crack+adr+chs+ff+india.zip/file", shortLink:"", fileName:"Menu Mizze Crack", size:"", downloads:0 },
-    { key:"nvpkey", tag:"lienquan", icon:"🔑", name:"Menu Nvp Crack Key", enabled:true, status:"available",
-      url:"https://zufile.com/f/2vRmNkma5C", shortLink:"", fileName:"Menu Nvp Crack Key", size:"", downloads:0 },
-    { key:"ysm", tag:"lienquan", icon:"⚔️", name:"Menu YSM Team Liên Quân", enabled:true, status:"available",
-      url:"https://www.mediafire.com/file/x9xo2468orsfr3l/YSM_TEAM_LIEN_QUAN.apk/file", shortLink:"", fileName:"YSM_TEAM_LIEN_QUAN.apk", size:"", downloads:0 }
-  ],
-  customTags: [],      // {slug,name,icon,enabled}
-  contentItems: [],    // {slug,name,tag,description,url,icon,enabled}
-  stats: { visits:0, success:0, failed:0, downloads:0, daily:{} },
-  adminHash: ""
+const pages={
+ home:document.getElementById("homePage"),
+ freefire:document.getElementById("freeFirePage"),
+ lienquan:document.getElementById("lienQuanPage"),
+ roblox:document.getElementById("robloxPage"),
+ location:document.getElementById("locationPage"),
+ deta:document.getElementById("detaPage"),
+ proxy:document.getElementById("proxyPage"),
+ mizze:document.getElementById("mizzePage"),
+ thank:document.getElementById("thankPage"),
+ result:document.getElementById("resultPage"),
+ nvpkey:document.getElementById("nvpKeyPage"),
+ nvpthanks:document.getElementById("nvpThanksPage"),
+ nvpsuccess:document.getElementById("nvpSuccessPage"),
+ ysm:document.getElementById("ysmPage"),
+ ysmthanks:document.getElementById("ysmThanksPage"),
+ ysmsuccess:document.getElementById("ysmSuccessPage")
 };
-const TAGS = {
-  freefire:{name:"HACK FREE FIRE",icon:"🔥"},
-  lienquan:{name:"HACK LIÊN QUÂN",icon:"⚔️"},
-  roblox:{name:"HACK ROBLOX",icon:"🧱"}
+
+const destinationRoutes={
+ location:"/dinh-vi",deta:"/menu",
+ proxy:"/proxy-mod-alen-crack",mizze:"/mizze-crack"
 };
-const SESSION_TTL = 30*60*1000;
 
-/* ================= TIỆN ÍCH ================= */
-const $ = (s,r=document)=>r.querySelector(s);
-function el(tag,props={},...kids){
-  const e=document.createElement(tag);
-  for(const [k,v] of Object.entries(props)){
-    if(k==="class")e.className=v;
-    else if(k.startsWith("on"))e.addEventListener(k.slice(2),v);
-    else if(k==="text")e.textContent=v;
-    else e[k]=v;
+const downloadRoutes={
+ location:"/download-location",deta:"/download-deta",
+ proxy:"/download-proxy",mizze:"/download-mizze",
+ nvpkey:"/download-nvpkey",ysm:"/download-ysm"
+};
+
+function toast(message,type="good"){
+ const el=document.getElementById("toast");
+ el.textContent=message;
+ el.className="show "+(type==="bad"?"bad":"good");
+ clearTimeout(window.toastTimer);
+ window.toastTimer=setTimeout(()=>el.className="",3800);
+}
+
+function loading(show,message="Đang xử lý..."){
+ document.getElementById("loadingText").textContent=message;
+ document.getElementById("loadingOverlay").classList.toggle("show",show);
+}
+
+// Theme sáng/tối.
+const themeButton=document.getElementById("themeButton");
+function applyTheme(theme){
+ document.body.classList.toggle("light",theme==="light");
+ themeButton.textContent=theme==="light"?"🌙":"☀️";
+ try{localStorage.setItem("phong_theme",theme)}catch(e){}
+}
+let savedTheme="light";
+try{savedTheme=localStorage.getItem("phong_theme")||"light"}catch(e){}
+applyTheme(savedTheme);
+themeButton.addEventListener("click",()=>{
+ applyTheme(document.body.classList.contains("light")?"dark":"light");
+});
+
+// Nền hạt ánh sáng xanh.
+(function(){
+ const canvas=document.getElementById("particles");
+ const ctx=canvas.getContext("2d");
+ let w=0,h=0,particles=[];
+ function resize(){
+  w=canvas.width=window.innerWidth;
+  h=canvas.height=window.innerHeight;
+  const count=Math.min(65,Math.floor(w*h/18000));
+  particles=Array.from({length:count},()=>({
+   x:Math.random()*w,y:Math.random()*h,
+   r:Math.random()*2+0.5,
+   vx:(Math.random()-.5)*.35,
+   vy:(Math.random()-.5)*.35
+  }));
+ }
+ function draw(){
+  ctx.clearRect(0,0,w,h);
+  for(const p of particles){
+   p.x+=p.vx;p.y+=p.vy;
+   if(p.x<0||p.x>w)p.vx*=-1;
+   if(p.y<0||p.y>h)p.vy*=-1;
+   ctx.beginPath();
+   ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+   ctx.fillStyle="rgba(70,175,255,.65)";
+   ctx.fill();
   }
-  kids.flat().forEach(c=>e.append(c));
-  return e;
-}
-function loadConfig(){
-  let saved={};
-  try{saved=JSON.parse(localStorage.getItem(STORE)||"{}")}catch(e){}
-  const cfg=Object.assign(structuredClone(DEFAULT_CONFIG),saved);
-  // gộp các mục mặc định còn thiếu
-  for(const d of DEFAULT_CONFIG.destinations){
-    if(!cfg.destinations.some(x=>x.key===d.key))cfg.destinations.push(structuredClone(d));
-  }
-  cfg.stats=Object.assign({visits:0,success:0,failed:0,downloads:0,daily:{}},cfg.stats||{});
-  return cfg;
-}
-let cfg=loadConfig();
-function save(){try{localStorage.setItem(STORE,JSON.stringify(cfg))}catch(e){toast("Không lưu được dữ liệu trình duyệt.","bad")} if(adminToken)syncConfigToServer().catch(e=>toast("Đã lưu trên trình duyệt nhưng chưa đồng bộ Render: "+e.message))}
-function toast(msg){
-  const t=$("#toast");t.textContent=msg;t.className="show";
-  clearTimeout(toast.t);toast.t=setTimeout(()=>t.className="",3500);
-}
-function httpsUrl(v){
-  try{const u=new URL(String(v).trim());return u.protocol==="https:"&&!u.username&&!u.password}catch(e){return false}
-}
-function slugOk(s){return /^[a-z0-9-]{1,50}$/.test(s)}
-async function sha256(text){
-  const buf=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(text));
-  return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,"0")).join("");
-}
-function today(){
-  return new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Ho_Chi_Minh"}).format(new Date());
-}
-function dest(key){return cfg.destinations.find(d=>d.key===key)}
-function returnUrl(key){return location.origin+location.pathname+"#/return/"+key}
+  requestAnimationFrame(draw);
+ }
+ resize();draw();
+ window.addEventListener("resize",resize);
+})();
 
-/* ================= GIAO DIỆN SÁNG/TỐI + ĐỒNG HỒ ================= */
-function applyTheme(t){
-  document.body.classList.toggle("dark",t==="dark");
-  $("#themeBtn").textContent=t==="dark"?"☀️":"🌙";
-  try{localStorage.setItem("phong_theme",t)}catch(e){}
-}
-let theme="light";try{theme=localStorage.getItem("phong_theme")||"light"}catch(e){}
-applyTheme(theme);
-$("#themeBtn").onclick=()=>applyTheme(document.body.classList.contains("dark")?"light":"dark");
-function tick(){
-  const p={};
-  new Intl.DateTimeFormat("en-GB",{timeZone:"Asia/Ho_Chi_Minh",hour:"2-digit",minute:"2-digit",second:"2-digit",hourCycle:"h23"})
-    .formatToParts(new Date()).forEach(x=>p[x.type]=x.value);
-  const h=+p.hour;
-  $("#clock").textContent=(h>=6&&h<13?"🌅":h>=13&&h<19?"☀️":"🌙")+" "+p.hour+":"+p.minute+":"+p.second;
-}
-tick();setInterval(tick,1000);
+// Đồng hồ Việt Nam.
+function updateClock(){
+ const parts=new Intl.DateTimeFormat("en-GB",{
+  timeZone:"Asia/Ho_Chi_Minh",
+  hour:"2-digit",minute:"2-digit",second:"2-digit",
+  hourCycle:"h23"
+ }).formatToParts(new Date());
 
-/* ================= MENU ================= */
-function buildMenu(){
-  const m=$("#sideMenu");m.replaceChildren();
-  const add=(href,text)=>m.append(el("a",{href,text,onclick:()=>m.classList.remove("show")}));
-  add("#/","🏠 TRANG CHỦ");
-  for(const [k,t] of Object.entries(TAGS))if(cfg.tags[k]!==false)add("#/"+k,t.icon+" "+t.name);
-  cfg.customTags.filter(t=>t.enabled!==false).forEach(t=>add("#/tag/"+t.slug,(t.icon||"🏷️")+" "+t.name));
-  add("#/admin","⚙️ QUẢN TRỊ");
-}
-$("#burger").onclick=e=>{e.stopPropagation();$("#sideMenu").classList.toggle("show")};
-document.addEventListener("click",e=>{if(!$("#sideMenu").contains(e.target))$("#sideMenu").classList.remove("show")});
+ const values={};
+ parts.forEach(p=>values[p.type]=p.value);
 
-/* ================= THỐNG KÊ CỤC BỘ ================= */
-function countVisit(){
-  const k="phong_visited_"+today();
-  try{if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,"1")}catch(e){}
-  api('/api/visit',{method:'POST',body:'{}'}).then(refreshGlobalStats).catch(()=>{});
-}
+ const hour=Number(values.hour);
+ let icon="🌙";
+ if(hour>=6&&hour<13)icon="🌅";
+ else if(hour>=13&&hour<19)icon="☀️";
 
-/* ================= TRANG ================= */
-function card(item){
-  const a=el("a",{class:"item",href:item.href});
-  if(/^https:\/\//.test(item.href)){a.target="_blank";a.rel="noopener noreferrer"}
-  a.append(el("span",{text:item.icon||"📦",style:"font-size:24px"}),el("b",{text:item.name}),el("small",{text:item.desc||"Mở mục"}));
-  return a;
+ document.getElementById("liveClock").textContent=
+  icon+" "+values.hour+":"+values.minute+":"+values.second;
 }
-function destItems(tag){
-  return cfg.destinations.filter(d=>d.tag===tag&&d.enabled).map(d=>({icon:d.icon,name:d.name,href:"#/d/"+d.key,desc:"Mở mục"}));
-}
-function contentItems(tag){
-  return cfg.contentItems.filter(c=>c.tag===tag&&c.enabled!==false).map(c=>({icon:c.icon||"📦",name:c.name,href:c.url,desc:c.description}));
-}
-function group(slug,name,icon,items){
-  const g=el("section",{class:"group"});
-  g.append(el("h3",{},el("span",{text:icon+" "+name+" ("+items.length+")"}),el("a",{href:"#/"+(TAGS[slug]?slug:"tag/"+slug),text:"Xem Tag →"})));
-  const grid=el("div",{class:"grid"});
-  if(!items.length)grid.append(el("small",{text:"Chưa có nội dung trong danh mục này."}));
-  items.forEach(i=>grid.append(card(i)));
-  g.append(grid);return g;
-}
-function allSearchItems(){
-  const base=[["Trang Chủ","#/","🏠"],["Hack Free Fire","#/freefire","🔥"],["Hack Liên Quân","#/lienquan","⚔️"],["Hack Roblox","#/roblox","🧱"],["Quản Trị","#/admin","⚙️"]];
-  const list=base.map(x=>({name:x[0],href:x[1],icon:x[2]}));
-  cfg.destinations.filter(d=>d.enabled).forEach(d=>list.push({name:d.name,href:"#/d/"+d.key,icon:d.icon}));
-  cfg.contentItems.filter(c=>c.enabled!==false).forEach(c=>list.push({name:c.name,href:c.url,icon:c.icon||"📦"}));
-  return list;
-}
-function pageHome(){
-  const root=el("div");
-  if(cfg.maintenance.enabled){
-    root.append(el("div",{class:"maint",text:cfg.maintenance.message||"Website đang bảo trì."}));
-    return root;
-  }
-  root.append(el("img",{class:"hero",src:"logo.png",alt:"PHONG WEB",onerror(){this.remove()}}));
-  root.append(el("h1",{text:"WELCOME TO PHONG WEB"}));
-  root.append(el("p",{text:"Chào mừng bạn đến với website của Nguyễn Văn Phong. 📍 ĐỊNH VỊ XANH TÍM OB55"}));
-  if(cfg.announcement.enabled&&cfg.announcement.message)
-    root.append(el("div",{class:"notice",text:"📢 "+cfg.announcement.message}));
+updateClock();
+setInterval(updateClock,1000);
 
-  const input=el("input",{type:"search",placeholder:"🔎 Tìm nhanh chức năng, danh mục...",autocomplete:"off"});
-  const box=el("div",{class:"results hidden"});
-  input.oninput=()=>{
-    const q=input.value.trim().toLocaleLowerCase("vi");box.replaceChildren();
-    if(!q){box.classList.add("hidden");return}
-    const found=allSearchItems().filter(x=>x.name.toLocaleLowerCase("vi").includes(q)).slice(0,20);
-    found.forEach(x=>box.append(el("a",{href:x.href,text:x.icon+" "+x.name})));
-    if(!found.length)box.append(el("div",{text:"Không tìm thấy.",style:"padding:11px"}));
-    box.classList.remove("hidden");
+// Chuyển trang.
+function hideAllPages(){
+ Object.values(pages).forEach(p=>p.classList.remove("active"));
+}
+function navigate(path){
+ history.pushState({},"",path);
+ showPage();
+ window.scrollTo(0,0);
+}
+function navigateCategory(category){
+ menu.classList.remove("show");
+ const value=category==="home"?"":"?category="+encodeURIComponent(category);
+ history.pushState({},"","/"+value);
+ showPage();
+ window.scrollTo(0,0);
+}
+function showPage(){
+ hideAllPages();
+ const q=new URLSearchParams(location.search);
+ const nvp=q.get("nvpkey");
+ if(nvp==="thanks"){pages.nvpthanks.classList.add("active");return;}
+ if(nvp==="success"){
+  const tk=q.get("token"),a=document.getElementById("nvpGetFile");
+  if(a)a.href=tk?"/download-nvpkey?token="+encodeURIComponent(tk):"/menu-nvp-crack-key";
+  pages.nvpsuccess.classList.add("active");return;
+ }
+ const ysmStep=q.get("ysm");
+ if(ysmStep==="thanks"){pages.ysmthanks.classList.add("active");return;}
+ if(ysmStep==="success"){
+  const tk=q.get("token"),a=document.getElementById("ysmGetFile");
+  if(a)a.href=tk?"/download-ysm?token="+encodeURIComponent(tk):"/menu-ysm-team-lien-quan";
+  pages.ysmsuccess.classList.add("active");return;
+ }
+ const result=q.get("result");
+ const category=q.get("category");
+ const customTagQuery=q.get("tag");
+
+ if(category==="freefire"){
+  pages.freefire.classList.add("active");return;
+ }
+ if(category==="lienquan"){
+  pages.lienquan.classList.add("active");return;
+ }
+ if(category==="roblox"){
+  pages.roblox.classList.add("active");return;
+ }
+
+ if(result==="thanks"){
+  pages.thank.classList.add("active");return;
+ }
+ if(result==="success"||result==="failed"){
+  pages.result.classList.add("active");checkResult();return;
+ }
+
+ const routes={
+  "/":pages.home,"/index.html":pages.home,
+  "/dinh-vi":pages.location,"/menu":pages.deta,
+  "/proxy-mod-alen-crack":pages.proxy,
+  "/mizze-crack":pages.mizze,
+  "/menu-nvp-crack-key":pages.nvpkey,
+  "/menu-ysm-team-lien-quan":pages.ysm
+ };
+ (routes[location.pathname]||pages.home).classList.add("active");
+ if(customTagQuery){
+  setTimeout(()=>{
+   const root=document.getElementById("allTagsDirectory");
+   const target=root&&root.querySelector('[data-tag="'+customTagQuery+'"]');
+   if(target)target.scrollIntoView({behavior:"smooth",block:"start"});
+  },100);
+ }
+}
+window.addEventListener("popstate",showPage);
+
+// Thống kê.
+async function refreshStats(){
+ try{
+  const r=await fetch("/stats",{cache:"no-store"});
+  const d=await r.json();
+  if(!r.ok||!d.success)return;
+
+  const fields={
+   online:"onlineCount",total:"totalCount",
+   android:"androidCount",iphone:"iphoneCount",
+   success:"successCount",failed:"failedCount",
+   downloads:"downloadCount"
   };
-  root.append(el("div",{class:"search"},input,box));
+  for(const [key,id] of Object.entries(fields)){
+   const el=document.getElementById(id);
+   if(el)el.textContent=Number(d[key]||0).toLocaleString("vi-VN");
+  }
+ }catch(e){}
+}
+setInterval(refreshStats,15000);
+refreshStats();
 
-  const s=cfg.stats;
-  root.append(el("div",{class:"stats"},
-    el("span",{text:"👁 Lượt truy cập toàn website: "+s.visits}),
-    el("span",{text:"✅ Vượt link thành công: "+s.success}),
-    el("span",{text:"❌ Thất bại: "+s.failed}),
-    el("span",{text:"📥 Lượt lấy file: "+s.downloads})));
-
-  const dir=el("section",{style:"max-width:980px;margin:28px auto"});
-  dir.append(el("h2",{text:"🌐 KHÁM PHÁ TẤT CẢ DANH MỤC",style:"color:#0877c9"}));
-  for(const [k,t] of Object.entries(TAGS)){
-    if(cfg.tags[k]===false)continue;
-    dir.append(group(k,t.name,t.icon,[...destItems(k),...contentItems(k)]));
-  }
-  cfg.customTags.filter(t=>t.enabled!==false).forEach(t=>dir.append(group(t.slug,t.name,t.icon||"🏷️",contentItems(t.slug))));
-  root.append(dir);
-  return root;
-}
-function pageTag(slug){
-  const builtin=TAGS[slug];
-  const custom=cfg.customTags.find(t=>t.slug===slug);
-  const root=el("div");
-  const box=el("div",{class:"box"});
-  if(!builtin&&!custom){box.append(el("h2",{text:"Không tìm thấy danh mục"}))}
-  else{
-    const name=builtin?builtin.name:custom.name,icon=builtin?builtin.icon:(custom.icon||"🏷️");
-    box.append(el("div",{class:"icon",text:icon}),el("h2",{text:"CHÀO BẠN ĐẾN VỚI "+name}));
-    const items=[...destItems(slug),...contentItems(slug)];
-    if(!items.length)box.append(el("div",{class:"maint",text:"🚧 Website đang cập nhật. Vui lòng chờ nội dung sớm nhất."}));
-    const grid=el("div",{class:"grid",style:"margin-top:14px"});
-    items.forEach(i=>grid.append(card(i)));box.append(grid);
-  }
-  box.append(el("a",{class:"back",href:"#/",text:"← TRANG CHỦ"}));
-  root.append(box);return root;
-}
-
-/* ---- Luồng vượt link ---- */
-function pendingGet(key){
-  try{
-    const p=JSON.parse(localStorage.getItem("phong_pending_"+key)||"null");
-    if(p&&Date.now()-p.t<=SESSION_TTL)return p;
-  }catch(e){}
-  return null;
-}
-function pageDestination(key){
-  const d=dest(key);
-  const root=el("div"),box=el("div",{class:"box"});root.append(box);
-  if(!d||!d.enabled){box.append(el("h2",{text:"Mục này hiện đang tạm khóa."}),el("a",{class:"back",href:"#/",text:"← TRANG CHỦ"}));return root}
-  box.append(el("div",{class:"icon",text:d.icon}),
-    el("h2",{text:"BẠN CẦN VƯỢT LINK ĐỂ LẤY FILE "+d.name.toUpperCase()}),
-    el("p",{text:"Tên file: "+(d.fileName||"Chưa cập nhật")+(d.size?" | Dung lượng: "+d.size:"")+" | Trạng thái: "+(d.status==="available"?"Sẵn sàng":"Tạm ngưng")}));
-  const status=el("div",{class:"status"});
-  const btn=el("button",{class:"btn",text:"🔓 VƯỢT LINK"});
-  btn.onclick=async()=>{
-    if(cfg.maintenance.enabled){status.className="status err";status.textContent=cfg.maintenance.message;return}
-    if(d.status!=="available"){status.className="status err";status.textContent="File hiện đang tạm ngưng.";return}
-    btn.disabled=true;status.className="status";status.textContent="Đang tạo link Link4M...";
-    try{
-      const data=await api('/api/link4m/create',{method:'POST',body:JSON.stringify({key})});
-      if(!httpsUrl(data.shortenedUrl))throw new Error('Link4M trả về URL không hợp lệ');
-      try{localStorage.setItem("phong_pending_"+key,JSON.stringify({t:Date.now(),thanked:false}))}catch(e){}
-      status.className="status ok";status.textContent="Đang chuyển đến Link4M...";
-      location.href=data.shortenedUrl;
-    }catch(e){status.className="status err";status.textContent="Không tạo được link: "+e.message;btn.disabled=false;}
-  };
-  box.append(btn,status,el("br"),el("a",{class:"back",href:"#/",text:"← QUAY LẠI TRANG CHỦ"}));
-  return root;
-}
-function pageReturn(key){
-  const d=dest(key);
-  if(!d||!pendingGet(key)){
-    cfg.stats.failed++;save();
-    return resultBox("❌","Vượt Link Không Thành Công","Phiên vượt link chưa được xác nhận hoặc đã hết hạn.",key,null);
-  }
-  const p=pendingGet(key);
-  if(!p.counted){
-    api('/api/success',{method:'POST',body:JSON.stringify({key})}).then(refreshGlobalStats).catch(()=>{});
-    cfg.stats.success++;save();
-    p.counted=true;
-    try{localStorage.setItem("phong_pending_"+key,JSON.stringify(p))}catch(e){}
-  }
-  location.replace("#/thanks/"+key);
-  return el("div");
-}
-function pageThanks(key){
-  const root=el("div"),box=el("div",{class:"box"});root.append(box);
-  if(!pendingGet(key)){return resultBox("❌","Phiên hết hạn","Vui lòng vượt link mới.",key,null)}
-  const audio=el("audio",{src:"cam-on-tu-phong.mp3",preload:"none"});
-  box.append(el("div",{class:"icon",text:"💙"}),
-    el("h2",{text:"CẢM ƠN BẠN ĐÃ VƯỢT LINK ỦNG HỘ WEBSITE"}),
-    el("p",{text:"Nhấn vào hình để nghe lời cảm ơn từ Phong."}));
-  const img=el("button",{class:"thank",type:"button",onclick:()=>{audio.paused?audio.play().catch(()=>toast("Không phát được âm thanh.")):audio.pause()}},
-    el("img",{src:"cam-on-tu-phong.png",alt:"Cảm ơn từ Phong",onerror(){this.replaceWith(document.createTextNode("🔊 Phát lời cảm ơn"))}}));
-  box.append(img,audio,el("button",{class:"btn",text:"TIẾP THEO →",onclick:()=>{location.hash="#/success/"+key}}));
-  return root;
-}
-function pageSuccess(key){
-  const d=dest(key);
-  if(!d||!pendingGet(key))return resultBox("❌","Phiên hết hạn","Vui lòng vượt link mới.",key,null);
-  return resultBox("✅","Vượt Link Thành Công","Bạn đã quay lại PHONG WEB. Nhấn LẤY FILE để mở liên kết tải.",key,d);
-}
-function resultBox(icon,title,desc,key,d){
-  const root=el("div"),box=el("div",{class:"box"});root.append(box);
-  box.append(el("div",{class:"icon",text:icon}),el("h2",{text:title}),el("p",{text:desc}));
-  if(d){
-    box.append(el("button",{class:"btn green",text:"LẤY FILE",onclick(){
-      if(!httpsUrl(d.url)){toast("Đường dẫn LẤY FILE chưa hợp lệ.");return}
-      api('/api/download',{method:'POST',body:JSON.stringify({key})}).then(refreshGlobalStats).catch(()=>{});
-      d.downloads=(d.downloads||0)+1;cfg.stats.downloads++;save();
-      try{localStorage.removeItem("phong_pending_"+key)}catch(e){}
-      window.open(d.url,"_blank","noopener");
-    }}));
-  }else if(dest(key)){
-    box.append(el("a",{class:"btn",href:"#/d/"+key,text:"🔄 VƯỢT LINK MỚI"}));
-  }
-  box.append(el("br"),el("a",{class:"back",href:"#/",text:"← QUAY LẠI TRANG CHỦ"}));
-  return root;
-}
-
-/* ================= ADMIN (lưu trong trình duyệt) ================= */
-let adminOK=false;
-function pageAdmin(){
-  const root=el("div",{class:"adm"});
-  root.append(el("h1",{text:"⚙️ QUẢN TRỊ"}));
-  root.append(el("p",{class:"status",text:"Lưu ý: trang quản trị này chạy hoàn toàn trên trình duyệt. Mọi thay đổi chỉ áp dụng cho trình duyệt này (localStorage). Dùng Backup để chuyển cấu hình sang máy khác."}));
-  if(!adminOK){
-    const pw=el("input",{type:"password",placeholder:cfg.adminHash?"Nhập mật khẩu quản trị":"Tạo mật khẩu quản trị mới (≥ 8 ký tự)"});
-    const msg=el("div",{class:"status"});
-    const b=el("button",{class:"btn",text:"ĐĂNG NHẬP QUẢN TRỊ",onclick:async()=>{
-      try{const data=await api('/api/admin/login',{method:'POST',body:JSON.stringify({password:pw.value})});
-        adminToken=data.token;sessionStorage.setItem('phong_admin_token',adminToken);adminOK=true;await loadSharedConfig();await refreshGlobalStats();render();
-      }catch(e){msg.className="status err";msg.textContent=e.message||"Đăng nhập thất bại"}
-    }});
-    root.append(el("div",{class:"panel"},el("h2",{text:"🔐 ĐĂNG NHẬP"}),pw,b,msg));
-    return root;
-  }
-  const tabs=["Mục tải file","Thông báo","Tag & Nội dung","Nhạc","Bảo mật & Backup"];
-  const body=el("div");
-  const views=[adminFiles,adminNotice,adminContent,adminMusic,adminSecurity];
-  const bar=el("div",{class:"tabs"});
-  tabs.forEach((t,i)=>bar.append(el("button",{class:"btn "+(i?"gray":""),text:t,onclick(){
-    [...bar.children].forEach((c,j)=>c.className="btn "+(j===i?"":"gray"));
-    body.replaceChildren(views[i]());
-  }})));
-  root.append(bar,body);body.append(views[0]());
-  root.append(el("button",{class:"btn red",text:"ĐĂNG XUẤT",onclick(){adminOK=false;adminToken="";sessionStorage.removeItem("phong_admin_token");render()}}));
-  return root;
-}
-function adminFiles(){
-  const w=el("div");
-  const inputs={};
-  cfg.destinations.forEach(d=>{
-    const p=el("div",{class:"panel"});
-    const f={};
-    const mk=(k,label,val,ph="")=>{f[k]=el("input",{value:val||"",placeholder:ph});p.append(el("label",{text:label},f[k]))};
-    p.append(el("h3",{text:d.icon+" "+d.name}));
-    f.enabled=el("input",{type:"checkbox",checked:d.enabled});
-    p.append(el("label",{},f.enabled,document.createTextNode(" Hiển thị mục này")));
-    mk("name","Tên hiển thị",d.name);
-    mk("url","Link nút LẤY FILE (HTTPS)",d.url,"https://www.mediafire.com/... hoặc https://zufile.com/...");
-    mk("shortLink","Link rút gọn Link4M (đích trả về: "+returnUrl(d.key)+")",d.shortLink,"https://link4m.co/...");
-    mk("fileName","Tên file",d.fileName);
-    mk("size","Dung lượng",d.size,"25 MB");
-    f.status=el("select",{},el("option",{value:"available",text:"Sẵn sàng"}),el("option",{value:"unavailable",text:"Tạm ngưng"}));
-    f.status.value=d.status;
-    p.append(el("label",{text:"Trạng thái"},f.status),el("small",{text:"Lượt lấy file: "+(d.downloads||0)}));
-    inputs[d.key]=f;w.append(p);
+// PHONG WEB V2.7.2: tải tên website, Tag, thông báo và playlist từ cấu hình quản trị.
+async function loadPublicConfig(){
+ try{const r=await fetch("/public-settings",{cache:"no-store"});const d=await r.json();if(!r.ok)return;
+  const name=d.site_name||"NGUYỄN VĂN PHONG WEBSITE";const title=document.getElementById("siteTitle");if(title)title.textContent=name;document.title=name+" | PHONG WEB";
+  const builtinCounts={freefire:Object.values(d.files||{}).filter(x=>x&&x.status==="available").length,lienquan:3,roblox:1};document.querySelectorAll(".tag-group[data-tag]").forEach(section=>{const key=section.dataset.tag;const small=section.querySelector(".tag-group-title small");if(small)small.textContent=""+(builtinCounts[key]||0)+" mục đang hiển thị"});
+  document.querySelectorAll("[data-tag]").forEach(el=>{
+   const enabled=!(d.tags&&d.tags[el.dataset.tag]===false);
+   el.classList.toggle("hidden",!enabled);
+   if(el.classList.contains("tag-group"))el.style.display=enabled?"":"none";
   });
-  w.append(el("button",{class:"btn green",text:"LƯU THAY ĐỔI",onclick:async()=>{
-    for(const d of cfg.destinations){
-      const f=inputs[d.key];
-      if(!httpsUrl(f.url.value)){toast("Link LẤY FILE của "+d.name+" phải là HTTPS hợp lệ.");return}
-      if(f.shortLink.value.trim()&&!httpsUrl(f.shortLink.value)){toast("Link Link4M của "+d.name+" không hợp lệ.");return}
-    }
-    for(const d of cfg.destinations){
-      const f=inputs[d.key];
-      d.enabled=f.enabled.checked;d.name=f.name.value.trim().slice(0,120)||d.name;
-      d.url=f.url.value.trim();d.shortLink=f.shortLink.value.trim();
-      d.fileName=f.fileName.value.trim().slice(0,120);d.size=f.size.value.trim().slice(0,40);
-      d.status=f.status.value;
-    }
-    saveLocalOnly();buildMenu();
-    try{await syncConfigToServer();toast("Đã lưu và đồng bộ 6 mục tải lên Render.");}
-    catch(e){toast("Đã lưu trên trình duyệt nhưng đồng bộ Render thất bại: "+e.message);}
-  }}));
-  return w;
+  const ann=document.getElementById("announcement");if(ann){if(d.announcement&&d.announcement.enabled&&d.announcement.message){ann.textContent="📢 "+d.announcement.message;ann.classList.remove("hidden")}else ann.classList.add("hidden")}
+  if(Array.isArray(d.music_playlist)&&d.music_playlist.length){musicPlaylist=d.music_playlist.filter(x=>x.enabled!==false);currentMusicIndex=0;updateTrackName();music.volume=Math.max(0,Math.min(1,Number(d.music_volume??.7)))}
+  const m=document.getElementById("maintenanceBox"),n=document.getElementById("normalHome");if(d.maintenance&&d.maintenance.enabled&&m&&n){m.textContent=d.maintenance.message||"Website đang bảo trì.";m.classList.remove("hidden");n.classList.add("hidden")}
+ }catch(e){}
 }
-function adminNotice(){
-  const w=el("div");
-  const name=el("input",{value:cfg.siteName,maxLength:80});
-  const ae=el("input",{type:"checkbox",checked:cfg.announcement.enabled});
-  const am=el("textarea",{value:cfg.announcement.message,rows:3});
-  const me=el("input",{type:"checkbox",checked:cfg.maintenance.enabled});
-  const mm=el("textarea",{value:cfg.maintenance.message,rows:3});
-  const tg={};
-  const tagRow=el("div");
-  for(const [k,t] of Object.entries(TAGS)){
-    tg[k]=el("input",{type:"checkbox",checked:cfg.tags[k]!==false});
-    tagRow.append(el("label",{},tg[k],document.createTextNode(" "+t.icon+" "+t.name)));
-  }
-  w.append(el("div",{class:"panel"},el("h3",{text:"Tên website & Tag"}),name,tagRow),
-    el("div",{class:"panel"},el("h3",{text:"📢 Thông báo"}),el("label",{},ae,document.createTextNode(" Hiển thị")),am),
-    el("div",{class:"panel"},el("h3",{text:"🛠️ Bảo trì"}),el("label",{},me,document.createTextNode(" Bật bảo trì")),mm),
-    el("button",{class:"btn green",text:"LƯU",onclick(){
-      cfg.siteName=name.value.trim().slice(0,80)||DEFAULT_CONFIG.siteName;
-      for(const k in TAGS)cfg.tags[k]=tg[k].checked;
-      cfg.announcement={enabled:ae.checked,message:am.value.trim().slice(0,1000)};
-      cfg.maintenance={enabled:me.checked,message:mm.value.trim().slice(0,1000)||DEFAULT_CONFIG.maintenance.message};
-      save();applySite();buildMenu();toast("Đã lưu.");
-    }}));
-  return w;
-}
-function adminContent(){
-  const w=el("div");
-  const tagList=el("div"),contList=el("div");
-  function drawTags(){
-    tagList.replaceChildren();
-    cfg.customTags.forEach((t,i)=>{
-      const icon=el("input",{value:t.icon||"🏷️",oninput(){t.icon=this.value}});
-      const name=el("input",{value:t.name,oninput(){t.name=this.value}});
-      const slug=el("input",{value:t.slug,oninput(){t.slug=this.value.toLowerCase()}});
-      const en=el("input",{type:"checkbox",checked:t.enabled!==false,onchange(){t.enabled=this.checked}});
-      tagList.append(el("div",{class:"panel"},icon,name,slug,el("label",{},en,document.createTextNode(" Bật")),
-        el("button",{class:"btn red",text:"XÓA",onclick(){cfg.customTags.splice(i,1);drawTags()}})));
-    });
-  }
-  function drawContent(){
-    contList.replaceChildren();
-    cfg.contentItems.forEach((c,i)=>{
-      const p=el("div",{class:"panel"});
-      for(const k of ["name","slug","tag","description","icon","url"])
-        p.append(el("input",{value:c[k]||"",placeholder:k,oninput(){c[k]=this.value}}));
-      p.append(el("label",{},el("input",{type:"checkbox",checked:c.enabled!==false,onchange(){c.enabled=this.checked}}),document.createTextNode(" Hiển thị")),
-        el("button",{class:"btn red",text:"XÓA MỤC",onclick(){cfg.contentItems.splice(i,1);drawContent()}}));
-      contList.append(p);
-    });
-  }
-  drawTags();drawContent();
-  w.append(el("div",{class:"panel"},el("h3",{text:"🏷️ Tag tùy chỉnh"}),tagList,
-    el("button",{class:"btn",text:"+ THÊM TAG",onclick(){cfg.customTags.push({name:"Tag mới",slug:"tag-"+(cfg.customTags.length+1),icon:"🏷️",enabled:true});drawTags()}})),
-    el("div",{class:"panel"},el("h3",{text:"🧩 Nội dung tùy chỉnh"}),contList,
-    el("button",{class:"btn",text:"+ THÊM MỤC",onclick(){cfg.contentItems.push({name:"Mục mới",slug:"muc-"+(cfg.contentItems.length+1),tag:"freefire",description:"",icon:"📦",url:"https://",enabled:true});drawContent()}})),
-    el("button",{class:"btn green",text:"LƯU",onclick(){
-      const seenT=new Set();
-      for(const t of cfg.customTags){
-        t.slug=String(t.slug||"").toLowerCase().trim();
-        if(!t.name||!slugOk(t.slug)||seenT.has(t.slug)||TAGS[t.slug]){toast("Tag không hợp lệ hoặc trùng slug: "+t.slug);return}
-        seenT.add(t.slug);
-      }
-      const seenC=new Set();
-      for(const c of cfg.contentItems){
-        c.slug=String(c.slug||"").toLowerCase().trim();c.tag=String(c.tag||"").toLowerCase().trim();
-        if(!c.name||!slugOk(c.slug)||seenC.has(c.slug)||!httpsUrl(c.url)){toast("Nội dung không hợp lệ (cần slug duy nhất và URL HTTPS): "+(c.name||c.slug));return}
-        seenC.add(c.slug);
-      }
-      save();buildMenu();toast("Đã lưu danh mục và nội dung.");
-    }}));
-  return w;
-}
-function adminMusic(){
-  const w=el("div"),list=el("div");
-  const vol=el("input",{type:"range",min:0,max:100,value:Math.round(cfg.musicVolume*100)});
-  function draw(){
-    list.replaceChildren();
-    cfg.playlist.forEach((t,i)=>list.append(el("div",{class:"panel"},
-      el("input",{value:t.name,placeholder:"Tên bài",oninput(){t.name=this.value}}),
-      el("input",{value:t.src,placeholder:"music.mp3 hoặc URL HTTPS",oninput(){t.src=this.value}}),
-      el("label",{},el("input",{type:"checkbox",checked:t.enabled!==false,onchange(){t.enabled=this.checked}}),document.createTextNode(" Bật")),
-      el("button",{class:"btn red",text:"XÓA",onclick(){cfg.playlist.splice(i,1);draw()}}))));
-  }
-  draw();
-  w.append(el("div",{class:"panel"},el("h3",{text:"🎵 Danh sách nhạc (tối đa 50)"}),el("label",{text:"Âm lượng mặc định"},vol),list,
-    el("button",{class:"btn",text:"+ THÊM BÀI",onclick(){if(cfg.playlist.length>=50)return toast("Tối đa 50 bài.");cfg.playlist.push({name:"Bài mới",src:"",enabled:true});draw()}})),
-    el("button",{class:"btn green",text:"LƯU NHẠC",onclick(){
-      for(const t of cfg.playlist){
-        if(!t.name||!(/^[\w\-. ]+\.(mp3|ogg|wav|m4a)$/i.test(t.src)||httpsUrl(t.src))){toast("Bài nhạc cần tên và đường dẫn file nội bộ hoặc HTTPS.");return}
-      }
-      if(!cfg.playlist.length){toast("Cần ít nhất 1 bài.");return}
-      cfg.musicVolume=vol.value/100;save();loadPlaylist();toast("Đã lưu nhạc.");
-    }}));
-  return w;
-}
-function adminSecurity(){
-  const w=el("div");
-  const o=el("input",{type:"password",placeholder:"Mật khẩu hiện tại"});
-  const n=el("input",{type:"password",placeholder:"Mật khẩu mới (≥ 8 ký tự)"});
-  const file=el("input",{type:"file",accept:".json,application/json"});
-  w.append(el("div",{class:"panel"},el("h3",{text:"🔑 Đổi mật khẩu"}),o,n,el("button",{class:"btn green",text:"ĐỔI MẬT KHẨU",async onclick(){
-    if(n.value.length<12)return toast("Mật khẩu mới cần ít nhất 12 ký tự.");
-    try{await api('/api/admin/change-password',{method:'POST',body:JSON.stringify({password:n.value})});toast("Đã đổi mật khẩu quản trị trên máy chủ.");o.value=n.value="";}
-    catch(e){toast(e.message||"Không đổi được mật khẩu.");}
-  }})),
-  el("div",{class:"panel"},el("h3",{text:"📊 Thống kê toàn website (máy chủ)"}),
-    el("p",{text:`Truy cập: ${cfg.stats.visits} · Thành công: ${cfg.stats.success} · Thất bại: ${cfg.stats.failed} · Lấy file: ${cfg.stats.downloads}`}),
-    el("button",{class:"btn red",text:"XÓA THỐNG KÊ",onclick(){
-      if(!confirm("Xóa toàn bộ thống kê?"))return;
-      cfg.stats={visits:0,success:0,failed:0,downloads:0,daily:{}};cfg.destinations.forEach(d=>d.downloads=0);save();render();
-    }})),
-  el("div",{class:"panel"},el("h3",{text:"🗄️ Sao lưu & Khôi phục"}),
-    el("button",{class:"btn green",text:"⬇ TẢI BACKUP JSON",onclick(){
-      const {adminHash,stats,...config}=cfg;
-      const blob=new Blob([JSON.stringify({format:"PHONG_WEB_STATIC_BACKUP",version:1,config},null,2)],{type:"application/json"});
-      const a=el("a",{href:URL.createObjectURL(blob),download:"phong-web-backup-"+today()+".json"});
-      document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
-    }}),file,
-    el("button",{class:"btn",text:"↻ KHÔI PHỤC",async onclick(){
-      const f=file.files[0];
-      if(!f)return toast("Chọn file backup trước.");
-      if(f.size>2*1024*1024)return toast("File vượt quá 2 MB.");
-      try{
-        const j=JSON.parse(await f.text());
-        if(j.format!=="PHONG_WEB_STATIC_BACKUP"||typeof j.config!=="object")throw 0;
-        if(!confirm("Thay thế cấu hình hiện tại bằng backup?"))return;
-        const c=j.config;
-        const bad=[...(c.destinations||[]).map(d=>d.url),...(c.contentItems||[]).map(x=>x.url)].some(u=>!httpsUrl(u));
-        if(bad)return toast("Backup chứa URL không hợp lệ.");
-        cfg=Object.assign(structuredClone(DEFAULT_CONFIG),c,{adminHash:cfg.adminHash,stats:cfg.stats});
-        save();applySite();buildMenu();loadPlaylist();render();toast("Đã khôi phục cấu hình.");
-      }catch(e){toast("File backup không hợp lệ.")}
-    }})));
-  return w;
-}
+loadPublicConfig();
+function updateTrackName(){const el=document.getElementById("musicTrackName");if(el)el.textContent=musicPlaylist[currentMusicIndex]?.name||"Không có bài nhạc"}
+(function(){const input=document.getElementById("homeSearch"),box=document.getElementById("searchResults");if(!input||!box)return;const items=[["Trang Chủ","/","🏠"],["Hack Free Fire","/?category=freefire","🔥"],["Hack Liên Quân","/?category=lienquan","⚔️"],["Hack Roblox","/?category=roblox","🧱"],["Định Vị","/dinh-vi","📍"],["Deta","/menu","🔐"],["Proxy Mod Alen","/proxy-mod-alen-crack","🌐"],["Menu Mizze","/mizze-crack","🎮"],["Menu Nvp Crack Key","/menu-nvp-crack-key","🔑"],["Menu YSM Team Liên Quân","/menu-ysm-team-lien-quan","⚔️"],["Quản Trị","/admin","⚙️"]];input.addEventListener("input",()=>{const q=input.value.trim().toLocaleLowerCase("vi");box.innerHTML="";if(!q){box.classList.add("hidden");return}const found=items.filter(x=>x[0].toLocaleLowerCase("vi").includes(q));found.forEach(x=>{const a=document.createElement("a");a.href=x[1];a.textContent=x[2]+" "+x[0];box.append(a)});if(!found.length){const d=document.createElement("div");d.className="small";d.textContent="Không tìm thấy chức năng phù hợp.";box.append(d)}box.classList.remove("hidden")});document.addEventListener("click",e=>{if(e.target!==input&&!box.contains(e.target))box.classList.add("hidden")})})();
 
-/* ================= NHẠC ================= */
-const audio=$("#audio");let playlist=[],idx=0,started=false;
-function loadPlaylist(){
-  playlist=cfg.playlist.filter(t=>t.enabled!==false);idx=0;audio.volume=cfg.musicVolume;
-  $("#trackName").textContent=playlist[0]?playlist[0].name:"Không có bài nhạc";
-}
-async function playTrack(i){
-  if(!playlist.length)return;
-  idx=(i+playlist.length)%playlist.length;
-  audio.src=playlist[idx].src;$("#trackName").textContent=playlist[idx].name;
-  try{await audio.play();started=true}catch(e){toast("Không thể phát "+playlist[idx].name+". Kiểm tra file MP3.")}
-}
-$("#playBtn").onclick=async()=>{
-  if(audio.paused){started?await audio.play().catch(()=>{}):await playTrack(idx)}else audio.pause();
-};
-$("#nextBtn").onclick=()=>playTrack(idx+1);
-audio.addEventListener("ended",()=>playTrack(idx+1));
-audio.addEventListener("play",()=>$("#playBtn").textContent="Ⅱ");
-audio.addEventListener("pause",()=>$("#playBtn").textContent="▶");
+// Cài đặt và thông báo công khai.
+async function refreshPublic(){
+ try{
+  const r=await fetch("/public-settings",{cache:"no-store"});
+  const d=await r.json();
 
-/* ================= ROUTER ================= */
-function applySite(){
-  $("#siteTitle").textContent=cfg.siteName;document.title=cfg.siteName+" | PHONG WEB";
+  for(const key of ["location","deta","proxy","mizze","nvpkey","ysm"]){
+   const card=document.getElementById("card-"+key);
+   if(card)card.style.display=d[key]?"":"none";
+
+   const info=document.getElementById(key+"FileInfo");
+   const file=d.files&&d.files[key];
+
+   if(info&&file){
+    info.textContent=
+     "Tên file: "+(file.name||"Chưa cập nhật")+
+     (file.size?" | Dung lượng: "+file.size:"")+
+     " | Trạng thái: "+(file.status==="available"?"Sẵn sàng":"Tạm ngưng");
+   }
+  }
+
+  const announcement=document.getElementById("announcement");
+  if(d.announcement&&d.announcement.enabled&&d.announcement.message){
+   announcement.textContent=d.announcement.message;
+   announcement.classList.remove("hidden");
+  }
+
+  if(d.maintenance&&d.maintenance.enabled){
+   document.getElementById("normalHome").classList.add("hidden");
+   const box=document.getElementById("maintenanceBox");
+   box.textContent=d.maintenance.message||"Website đang bảo trì.";
+   box.classList.remove("hidden");
+  }
+ }catch(e){}
 }
-function render(){
-  const h=location.hash.replace(/^#/,"")||"/";
-  const parts=h.split("/").filter(Boolean);
-  const [a,b]=parts;
-  let view;
-  if(!a)view=pageHome();
-  else if(a==="admin")view=pageAdmin();
-  else if(TAGS[a]&&cfg.tags[a]!==false)view=pageTag(a);
-  else if(a==="tag"&&b)view=pageTag(b);
-  else if(a==="d"&&b)view=pageDestination(b);
-  else if(a==="return"&&b)view=pageReturn(b);
-  else if(a==="thanks"&&b)view=pageThanks(b);
-  else if(a==="success"&&b)view=pageSuccess(b);
-  else view=pageHome();
-  $("#app").replaceChildren(view);
+refreshPublic();
+
+// PHONG WEB V2.7.2: danh mục động, menu Tag, thẻ ảnh, số lượng và yêu thích.
+window.PHONG_CATALOG = [];
+function phongSlug(value){
+ return String(value||"").toLowerCase().trim().replace(/[^a-z0-9\-]+/g,"-").replace(/^-+|-+$/g,"");
+}
+function getFavorites(){
+ try{return JSON.parse(localStorage.getItem("phong_favorites")||"[]")}catch(e){return []}
+}
+function setFavorite(slug,active){
+ const list=getFavorites().filter(x=>x!==slug);
+ if(active)list.push(slug);
+ try{localStorage.setItem("phong_favorites",JSON.stringify(list))}catch(e){}
+}
+function createCatalogCard(item){
+ const a=document.createElement("a");
+ a.className="tag-item-card";
+ a.href=item.url||"#";
+ if(/^https:\/\//i.test(a.href)){a.target="_blank";a.rel="noopener noreferrer"}
+ if(item.image){
+  const img=document.createElement("img");img.src=item.image;img.alt=item.name||"";
+  img.loading="lazy";img.onerror=()=>img.remove();a.append(img);
+ }else{
+  const icon=document.createElement("span");icon.textContent=item.icon||"📦";a.append(icon);
+ }
+ const b=document.createElement("b");b.textContent=item.name||"Nội dung";a.append(b);
+ const small=document.createElement("small");small.textContent=item.description||"Mở nội dung";a.append(small);
+ const fav=document.createElement("button");fav.type="button";fav.className="favorite-button";
+ const slug=item.slug||phongSlug(item.name);const selected=getFavorites().includes(slug);
+ fav.classList.toggle("active",selected);fav.textContent=selected?"★ Đã lưu":"☆ Yêu thích";
+ fav.addEventListener("click",e=>{e.preventDefault();e.stopPropagation();const on=!fav.classList.contains("active");setFavorite(slug,on);fav.classList.toggle("active",on);fav.textContent=on?"★ Đã lưu":"☆ Yêu thích";});
+ a.append(fav);
+ return a;
+}
+function renderPublicCatalog(data){
+ const root=document.getElementById("allTagsDirectory");
+ const menuRoot=document.getElementById("dynamicTagMenu");
+ if(!root)return;
+ root.querySelectorAll("[data-generated-tag]").forEach(x=>x.remove());
+ if(menuRoot)menuRoot.replaceChildren();
+ const builtins=[
+  {slug:"freefire",name:"HACK FREE FIRE",icon:"🔥"},
+  {slug:"lienquan",name:"HACK LIÊN QUÂN",icon:"⚔️"},
+  {slug:"roblox",name:"HACK ROBLOX",icon:"🧱"}
+ ];
+ const custom=(data.custom_tags||[]).filter(t=>t&&t.enabled!==false);
+ const tags=[...builtins,...custom];
+ const content=(data.content_items||[]).filter(x=>x&&x.enabled!==false);
+ window.PHONG_CATALOG=content.map(x=>({...x,slug:x.slug||phongSlug(x.name)}));
+ for(const tag of tags){
+  const items=content.filter(x=>String(x.tag||"").toLowerCase()===String(tag.slug).toLowerCase());
+  let section=root.querySelector('.tag-group[data-tag="'+tag.slug+'"]');
+  if(!section){
+   section=document.createElement("section");section.className="tag-group";section.dataset.generatedTag="1";section.dataset.tag=tag.slug;
+   const head=document.createElement("div");head.className="tag-group-title";
+   const icon=document.createElement("span");icon.textContent=tag.icon||"🏷️";
+   const wrap=document.createElement("div");const h=document.createElement("h3");h.textContent=tag.name||tag.slug;
+   const sub=document.createElement("small");sub.textContent="Danh mục nội dung";wrap.append(h,sub);
+   const count=document.createElement("span");count.className="tag-count";count.textContent=items.length+" mục";
+   head.append(icon,wrap,count);section.append(head);
+   const grid=document.createElement("div");grid.className="tag-items-grid";section.append(grid);root.append(section);
+  }else{
+   let count=section.querySelector(".tag-count");
+   if(!count){count=document.createElement("span");count.className="tag-count";section.querySelector(".tag-group-title")?.append(count)}
+   count.textContent=items.length+" mục mới";
+  }
+  const grid=section.querySelector(".tag-items-grid");
+  if(grid){
+   items.forEach(item=>grid.append(createCatalogCard(item)));
+   if(items.length===0 && section.dataset.generatedTag==="1"){
+    const empty=document.createElement("div");empty.className="catalog-empty";empty.textContent="Chưa có nội dung trong danh mục này.";grid.append(empty);
+   }
+   const countLabel=section.querySelector(".tag-count");
+   if(countLabel)countLabel.textContent=grid.querySelectorAll(".tag-item-card").length+" mục";
+  }
+  if(menuRoot && tag.slug!=="home"){
+   const link=document.createElement("a");link.href="/?tag="+encodeURIComponent(tag.slug);
+   link.textContent=(tag.icon||"🏷️")+" "+(tag.name||tag.slug);
+   const badge=document.createElement("span");badge.className="tag-menu-count";badge.textContent=String(items.length);
+   link.append(badge);
+   link.addEventListener("click",e=>{
+    e.preventDefault();menu.classList.remove("show");
+    history.pushState({},"","/?tag="+encodeURIComponent(tag.slug));showPage();
+    setTimeout(()=>{const target=root.querySelector('[data-tag="'+tag.slug+'"]');target?.scrollIntoView({behavior:"smooth",block:"start"});},100);
+   });
+   menuRoot.append(link);
+  }
+ }
+}
+function setupDynamicSearch(){
+ const input=document.getElementById("homeSearch"),box=document.getElementById("searchResults");
+ if(!input||!box||input.dataset.v250==="1")return;
+ input.dataset.v250="1";
+ const base=[
+  {name:"Trang Chủ",url:"/",icon:"🏠"},{name:"Hack Free Fire",url:"/?category=freefire",icon:"🔥"},
+  {name:"Hack Liên Quân",url:"/?category=lienquan",icon:"⚔️"},{name:"Hack Roblox",url:"/?category=roblox",icon:"🧱"},
+  {name:"Định Vị",url:"/dinh-vi",icon:"📍"},{name:"Deta",url:"/menu",icon:"🔐"},
+  {name:"Proxy Mod Alen",url:"/proxy-mod-alen-crack",icon:"🌐"},{name:"Menu Mizze",url:"/mizze-crack",icon:"🎮"},{name:"Menu Nvp Crack Key",url:"/menu-nvp-crack-key",icon:"🔑"},{name:"Menu YSM Team Liên Quân",url:"/menu-ysm-team-lien-quan",icon:"⚔️"}
+ ];
+ input.addEventListener("input",()=>{
+  const q=input.value.trim().toLocaleLowerCase("vi");box.replaceChildren();
+  if(!q){box.classList.add("hidden");return}
+  const all=[...base,...(window.PHONG_CATALOG||[]).map(x=>({name:x.name,url:x.url,icon:x.icon||"📦",description:x.description}))];
+  const found=all.filter(x=>(x.name+" "+(x.description||"")).toLocaleLowerCase("vi").includes(q)).slice(0,20);
+  found.forEach(x=>{const a=document.createElement("a");a.href=x.url||"#";a.textContent=(x.icon||"🔎")+" "+x.name;box.append(a)});
+  if(!found.length){const d=document.createElement("div");d.className="catalog-empty";d.textContent="Không tìm thấy nội dung phù hợp.";box.append(d)}
+  box.classList.remove("hidden");
+ });
+ document.addEventListener("click",e=>{if(e.target!==input&&!box.contains(e.target))box.classList.add("hidden")});
+}
+async function loadPublicCatalogV250(){
+ try{
+  const r=await fetch("/public-settings",{cache:"no-store"});const d=await r.json();
+  if(r.ok){renderPublicCatalog(d);setupDynamicSearch()}
+ }catch(e){console.warn("Không tải được danh mục động:",e)}
+}
+loadPublicCatalogV250();
+
+// Tạo link.
+async function createShortLink(destination,button,status){
+ button.disabled=true;
+ const oldText=button.textContent;
+ button.textContent="ĐANG XỬ LÝ...";
+ status.className="status";
+ status.textContent="Đang kết nối API LINK4M...";
+ loading(true,"Đang tạo liên kết vượt...");
+
+ try{
+  const response=await fetch(
+   "/create-short-link?destination="+encodeURIComponent(destination),
+   {cache:"no-store"}
+  );
+  const data=await response.json();
+
+  if(!response.ok||!data.success){
+   throw new Error(data.message||"Không thể tạo link.");
+  }
+  if(!data.url)throw new Error("Link4M không trả về URL.");
+
+  status.className="status success";
+  status.textContent="Tạo link thành công! Đang chuyển đến Link4M...";
+  toast("Tạo link thành công!","good");
+  window.location.href=data.url;
+
+ }catch(error){
+  status.className="status error";
+  status.textContent="LỖI: "+error.message;
+  toast("Tạo link thất bại: "+error.message,"bad");
+  button.disabled=false;
+  button.textContent="🔓 THỬ LẠI";
+ }finally{
+  loading(false);
+  if(!button.disabled)button.textContent=oldText;
+ }
+}
+function setupCrossButton(key){
+ const button=document.getElementById(key+"CrossButton");
+ const status=document.getElementById(key+"Status");
+ button.addEventListener("click",()=>createShortLink(key,button,status));
+}
+["location","deta","proxy","mizze"].forEach(setupCrossButton);
+document.getElementById("nvpKeyCrossButton").addEventListener("click",async()=>{const b=document.getElementById("nvpKeyCrossButton"),st=document.getElementById("nvpKeyStatus");b.disabled=true;st.textContent="Đang tạo liên kết Link4M...";try{const r=await fetch("/create-short-link?destination=nvpkey&flow=nvpkey",{cache:"no-store"});const d=await r.json();if(!r.ok||!d.success)throw new Error(d.message||"Không tạo được link");window.location.href=d.url}catch(e){st.textContent=e.message;b.disabled=false}});
+document.getElementById("nvpThankImage").addEventListener("click",()=>document.getElementById("nvpThankAudio").play().catch(()=>{}));
+document.getElementById("nvpNextButton").addEventListener("click",async()=>{const token=new URLSearchParams(location.search).get("token");if(!token){toast("Không tìm thấy phiên vượt link.","bad");return}try{const r=await fetch("/check-session?token="+encodeURIComponent(token),{cache:"no-store"}),d=await r.json();if(!r.ok||!d.success||!d.returned)throw new Error("API chưa xác nhận vượt link thành công.");history.pushState({},"","/?nvpkey=success&token="+encodeURIComponent(token));showPage();window.scrollTo(0,0)}catch(e){toast(e.message,"bad")}});
+// V2.7.2: Menu YSM Team Liên Quân (cùng luồng với Menu Nvp Crack Key).
+document.getElementById("ysmCrossButton").addEventListener("click",async()=>{const b=document.getElementById("ysmCrossButton"),st=document.getElementById("ysmStatus");b.disabled=true;st.textContent="Đang tạo liên kết Link4M...";try{const r=await fetch("/create-short-link?destination=ysm&flow=ysm",{cache:"no-store"});const d=await r.json();if(!r.ok||!d.success)throw new Error(d.message||"Không tạo được link");window.location.href=d.url}catch(e){st.textContent=e.message;b.disabled=false}});
+document.getElementById("ysmThankImage").addEventListener("click",()=>document.getElementById("ysmThankAudio").play().catch(()=>{}));
+document.getElementById("ysmNextButton").addEventListener("click",async()=>{const token=new URLSearchParams(location.search).get("token");if(!token){toast("Không tìm thấy phiên vượt link.","bad");return}try{const r=await fetch("/check-session?token="+encodeURIComponent(token),{cache:"no-store"}),d=await r.json();if(!r.ok||!d.success||!d.returned)throw new Error("API chưa xác nhận vượt link thành công.");history.pushState({},"","/?ysm=success&token="+encodeURIComponent(token));showPage();window.scrollTo(0,0)}catch(e){toast(e.message,"bad")}});
+
+// Âm thanh cảm ơn.
+const thankAudio=document.getElementById("thankAudio");
+document.getElementById("thankAudioButton").addEventListener("click",async()=>{
+ const status=document.getElementById("thankStatus");
+ try{
+  if(thankAudio.paused){
+   await thankAudio.play();
+   status.className="status success";
+   status.textContent="🎵 Đang phát lời cảm ơn từ Phong...";
+  }else{
+   thankAudio.pause();
+   status.textContent="Đã tạm dừng âm thanh.";
+  }
+ }catch(e){
+  status.className="status error";
+  status.textContent="Không thể phát âm thanh. Kiểm tra file MP3.";
+ }
+});
+thankAudio.addEventListener("ended",()=>{
+ document.getElementById("thankStatus").textContent="💙 Cảm ơn bạn đã lắng nghe!";
+});
+
+// Xác nhận phiên.
+document.getElementById("continueButton").addEventListener("click",async()=>{
+ const q=new URLSearchParams(location.search);
+ const token=q.get("token");
+ const destination=q.get("destination");
+
+ if(!token||!destination||!destinationRoutes[destination]){
+  showFailure("Không tìm thấy thông tin phiên vượt link.",destination);
+  return;
+ }
+
+ const button=document.getElementById("continueButton");
+ button.disabled=true;
+ button.textContent="ĐANG KIỂM TRA...";
+ loading(true,"Đang xác nhận phiên vượt link...");
+
+ try{
+  const r=await fetch("/check-session?token="+encodeURIComponent(token),{
+   cache:"no-store"
+  });
+  const d=await r.json();
+
+  if(!r.ok||!d.success||!d.returned){
+   throw new Error(d.message||"Phiên chưa được xác nhận.");
+  }
+  if(d.destination!==destination){
+   throw new Error("Thông tin mục vượt link không khớp.");
+  }
+
+  history.pushState({},"",
+   "/?result=success&destination="+encodeURIComponent(destination)+
+   "&token="+encodeURIComponent(token)
+  );
+  showPage();
   window.scrollTo(0,0);
+ }catch(e){
+  showFailure(e.message,destination);
+ }finally{
+  loading(false);
+  button.disabled=false;
+  button.textContent="TIẾP THEO →";
+ }
+});
+
+function showFailure(message,destination){
+ hideAllPages();
+ pages.result.classList.add("active");
+ document.getElementById("resultIcon").textContent="❌";
+ document.getElementById("resultTitle").textContent="Vượt Link Không Thành Công";
+ document.getElementById("resultDescription").textContent=
+  "Phiên vượt link chưa được xác nhận hoặc đã hết hạn.";
+
+ const status=document.getElementById("resultStatus");
+ status.className="status error";
+ status.textContent=message||"Vui lòng thử vượt link mới.";
+
+ document.getElementById("resultAction").classList.add("hidden");
+ const retry=document.getElementById("retryButton");
+ retry.classList.remove("hidden");
+ retry.onclick=()=>navigate(destinationRoutes[destination]||"/");
 }
-window.addEventListener("hashchange",render);
-applySite();buildMenu();loadPlaylist();countVisit();render();
-loadSharedConfig().then(()=>{applySite();buildMenu();render();refreshGlobalStats()});
+
+async function checkResult(){
+ const q=new URLSearchParams(location.search);
+ const result=q.get("result");
+ const destination=q.get("destination");
+ const token=q.get("token");
+
+ const action=document.getElementById("resultAction");
+ const retry=document.getElementById("retryButton");
+ action.classList.add("hidden");
+ retry.classList.add("hidden");
+ document.getElementById("resultStatus").textContent="";
+
+ if(result==="failed"){
+  showFailure("Không nhận được callback hợp lệ từ Link4M.",destination);
+  return;
+ }
+ if(result!=="success"||!token||!downloadRoutes[destination]){
+  showFailure("Không tìm thấy thông tin phiên vượt link.",destination);
+  return;
+ }
+
+ document.getElementById("resultIcon").textContent="⏳";
+ document.getElementById("resultTitle").textContent="ĐANG KIỂM TRA";
+ document.getElementById("resultDescription").textContent=
+  "Đang kiểm tra phiên quay lại từ Link4M...";
+
+ try{
+  const r=await fetch("/check-session?token="+encodeURIComponent(token),{
+   cache:"no-store"
+  });
+  const d=await r.json();
+
+  if(!r.ok||!d.success||!d.returned){
+   throw new Error(d.message||"Phiên không hợp lệ.");
+  }
+  if(d.destination!==destination){
+   throw new Error("Thông tin mục vượt link không khớp.");
+  }
+
+  document.getElementById("resultIcon").textContent="✅";
+  document.getElementById("resultTitle").textContent="Vượt Link Thành Công";
+  document.getElementById("resultDescription").textContent=
+   "Bạn đã quay lại PHONG WEB. Nhấn LẤY FILE để mở MediaFire.";
+
+  const status=document.getElementById("resultStatus");
+  status.className="status success";
+  status.textContent="Đã xác nhận phiên Link4M.";
+
+  action.href=downloadRoutes[destination]+"?token="+encodeURIComponent(token);
+  action.classList.remove("hidden");
+ }catch(e){
+  showFailure(e.message,destination);
+ }
+}
+
+// Menu.
+const hamburger=document.getElementById("hamburgerButton");
+const menu=document.getElementById("sideMenu");
+hamburger.addEventListener("click",e=>{
+ e.stopPropagation();menu.classList.toggle("show");
+});
+// Bổ sung Tag do Admin tạo vào menu 3 gạch, kèm số mục con.
+(async()=>{try{const r=await fetch("/public-settings",{cache:"no-store"}),d=await r.json();for(const tag of (d.custom_tags||[])){if(tag.enabled===false)continue;const count=(d.content_items||[]).filter(x=>x.tag===tag.slug&&x.enabled!==false).length;const a=document.createElement("a");a.href="/?custom_tag="+encodeURIComponent(tag.slug);a.textContent=(tag.icon||"🏷️")+" "+tag.name+" ("+count+")";a.onclick=e=>{e.preventDefault();menu.classList.remove("show");navigateCategory("home");const section=[...document.querySelectorAll(".tag-group")].find(x=>x.dataset.customTag===tag.slug);if(section)section.scrollIntoView({behavior:"smooth"})};menu.insertBefore(a,menu.querySelector('a[href="/admin"]'))}}catch(e){}})();
+document.getElementById("homeMenuButton").addEventListener("click",e=>{
+ e.preventDefault();navigateCategory("home");
+});
+document.getElementById("freeFireMenuButton").addEventListener("click",e=>{
+ e.preventDefault();navigateCategory("freefire");
+});
+document.getElementById("lienQuanMenuButton").addEventListener("click",e=>{
+ e.preventDefault();navigateCategory("lienquan");
+});
+document.getElementById("robloxMenuButton").addEventListener("click",e=>{
+ e.preventDefault();navigateCategory("roblox");
+});
+document.addEventListener("click",e=>{
+ if(!menu.contains(e.target)&&!hamburger.contains(e.target)){
+  menu.classList.remove("show");
+ }
+});
+
+// Trình phát nhạc nền: bài cũ + Nhạc1 + Nhạc2, tự chuyển bài và lặp toàn bộ.
+const music=document.getElementById("backgroundMusic");
+const musicButton=document.getElementById("musicButton");
+const musicPlayer=document.getElementById("musicPlayer");
+const musicIcon=document.getElementById("musicIcon");
+let musicPlaylist=[
+ {name:"Nhạc nền",src:"/music.mp3",enabled:true},
+ {name:"Nhạc1",src:"/Nhac1.mp3",enabled:true},
+ {name:"Nhạc2",src:"/Nhac2.mp3",enabled:true}
+];
+let currentMusicIndex=0;
+let musicStarted=false;
+
+function setMusicPlaying(playing){
+ musicIcon.textContent=playing?"Ⅱ":"▶";
+ musicPlayer.classList.toggle("playing",playing);
+ musicButton.setAttribute("aria-label",playing?"Tạm dừng nhạc":"Phát nhạc");
+}
+
+async function playPlaylistTrack(index){
+ currentMusicIndex=(index+musicPlaylist.length)%musicPlaylist.length;
+ music.src=musicPlaylist[currentMusicIndex].src;
+ updateTrackName();
+ music.load();
+ try{
+  await music.play();
+  musicStarted=true;
+  setMusicPlaying(true);
+ }catch(error){
+  setMusicPlaying(false);
+  toast("Không thể phát "+musicPlaylist[currentMusicIndex].name+
+        ". Hãy kiểm tra file MP3 đã được tải lên máy chủ.","bad");
+ }
+}
+
+musicButton.addEventListener("click",async()=>{
+ if(music.paused){
+  if(!musicStarted){
+   await playPlaylistTrack(currentMusicIndex);
+  }else{
+   try{
+    await music.play();
+    setMusicPlaying(true);
+   }catch(error){
+    setMusicPlaying(false);
+    toast("Không thể tiếp tục phát nhạc.","bad");
+   }
+  }
+ }else{
+  music.pause();
+  setMusicPlaying(false);
+ }
+});
+
+// Tự động phát bài kế tiếp; hết bài cuối quay lại bài đầu (lặp tất cả).
+music.addEventListener("ended",()=>{
+ playPlaylistTrack((currentMusicIndex+1)%musicPlaylist.length);
+});
+music.addEventListener("pause",()=>{
+ if(music.ended===false)setMusicPlaying(false);
+});
+music.addEventListener("play",()=>setMusicPlaying(true));
+const musicMinimize=document.getElementById("musicMinimize"),musicRestore=document.getElementById("musicRestore");
+musicMinimize.addEventListener("click",e=>{e.stopPropagation();musicPlayer.classList.add("minimized");musicRestore.classList.remove("hidden")});
+musicRestore.addEventListener("click",()=>{musicPlayer.classList.remove("minimized");musicRestore.classList.add("hidden")});
+(function(){let active=false,sx=0,sy=0,l=0,t=0;try{const v=JSON.parse(localStorage.getItem("phong_music_position")||"null");if(v){musicPlayer.style.left=v.left+"px";musicPlayer.style.top=v.top+"px";musicPlayer.style.right="auto";musicPlayer.style.bottom="auto"}}catch(e){}musicPlayer.addEventListener("pointerdown",e=>{if(e.target.closest("button"))return;const r=musicPlayer.getBoundingClientRect();active=true;sx=e.clientX;sy=e.clientY;l=r.left;t=r.top;musicPlayer.classList.add("dragging")});musicPlayer.addEventListener("pointermove",e=>{if(!active)return;const x=Math.max(0,Math.min(innerWidth-musicPlayer.offsetWidth,l+e.clientX-sx)),y=Math.max(0,Math.min(innerHeight-musicPlayer.offsetHeight,t+e.clientY-sy));musicPlayer.style.left=x+"px";musicPlayer.style.top=y+"px";musicPlayer.style.right="auto";musicPlayer.style.bottom="auto"});function end(){if(!active)return;active=false;musicPlayer.classList.remove("dragging");const r=musicPlayer.getBoundingClientRect();try{localStorage.setItem("phong_music_position",JSON.stringify({left:r.left,top:r.top}))}catch(e){}}musicPlayer.addEventListener("pointerup",end);musicPlayer.addEventListener("pointercancel",end)})();
+
+showPage();
 </script>
 </body>
 </html>

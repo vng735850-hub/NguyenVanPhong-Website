@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PHONG WEB V2.7.2 ADMIN</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;padding:15px;background:#071022;color:white;font-family:Arial,sans-serif}
+main{max-width:1050px;margin:20px auto}
+.panel{margin:15px 0;padding:18px;background:#0d1d3a;border:1px solid #299cff;border-radius:14px;box-shadow:0 0 18px #073c70}
+h1,h2,h3{color:#70c5ff}
+input,select,textarea{
+ width:100%;padding:11px;margin:7px 0;border-radius:8px;
+ border:1px solid #398ddd;background:#07152d;color:white
+}
+textarea{min-height:85px;resize:vertical}
+button{
+ padding:11px 16px;border:0;border-radius:8px;color:white;
+ background:#087ce5;font-weight:bold;cursor:pointer;margin:4px 3px
+}
+button.danger{background:#b52c42}
+button.good{background:#078653}
+button.warning{background:#a56b08}
+label{display:block;margin:10px 0}
+.small{color:#b9d7f7;font-size:13px;line-height:1.7}
+.hidden{display:none!important}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.row>*{flex:1}
+#message{margin:12px 0;color:#74ffc0;overflow-wrap:anywhere}
+a{color:#7bcaff}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.stat-card{padding:14px;background:#07152d;border:1px solid #398ddd;border-radius:10px;line-height:1.8}
+.stat-card b{display:block;color:#fff;font-size:25px}
+.stat-card span{color:#b9d7f7;font-size:13px}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin:15px 0}
+.tabs button{background:#18375e}
+.tabs button.active{background:#087ce5}
+.table-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:650px;font-size:13px}
+td,th{padding:9px;border-bottom:1px solid #29466b;text-align:left}
+th{color:#80caff}
+canvas.chart{width:100%;height:230px;background:#07152d;border-radius:10px}
+.item{padding:12px;margin:10px 0;border:1px solid #285b91;border-radius:10px}
+@media(max-width:650px){
+ body{padding:8px}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .panel{padding:12px}
+}
+@media(max-width:390px){.grid{grid-template-columns:1fr}}
+/* V2.7.2: vuông góc */
+*,*::before,*::after{border-radius:0!important}
+</style>
+</head>
+<body>
+<main>
+<h1>⚙️ PHONG WEB V2.7.2 - ADMIN</h1>
+<p class="small">Quản lý website, thống kê, lịch sử và bảo mật.</p>
+
+<section class="panel" id="loginPanel">
+<h2>🔐 ĐĂNG NHẬP QUẢN TRỊ</h2>
+<input id="password" type="password" placeholder="Nhập mật khẩu quản trị">
+<button onclick="login()">ĐĂNG NHẬP</button>
+<div id="loginMessage" class="small"></div>
+</section>
+
+<div id="dashboard" class="hidden">
+<div class="tabs">
+ <button class="active" onclick="tab('overview',this)">📊 Tổng quan</button>
+ <button onclick="tab('files',this)">📁 Quản lý file</button>
+ <button onclick="tab('history',this)">📜 Lịch sử</button>
+ <button onclick="tab('notice',this)">📢 Thông báo</button>
+ <button onclick="tab('site',this)">🎵 Nhạc & Giao diện</button>
+ <button onclick="tab('tags',this)">🏷️ Quản lý Tag</button>
+ <button onclick="tab('content',this)">🧩 Nội dung web</button>
+ <button onclick="tab('security',this)">🔐 Bảo mật</button>
+</div>
+
+<section class="tabpage" id="overview">
+ <div class="panel">
+  <h2>📊 THỐNG KÊ WEBSITE</h2>
+  <div class="grid">
+   <div class="stat-card">🟢 Online<b id="online">...</b><span>Đang truy cập</span></div>
+   <div class="stat-card">👁 Tổng truy cập<b id="total">...</b><span>Khách duy nhất</span></div>
+   <div class="stat-card">🤖 Android<b id="android">...</b><span>Thiết bị Android</span></div>
+   <div class="stat-card">🍎 iPhone<b id="iphone">...</b><span>Thiết bị iPhone</span></div>
+   <div class="stat-card">✅ Thành công<b id="success">...</b><span>Vượt link</span></div>
+   <div class="stat-card">❌ Thất bại<b id="failed">...</b><span>Vượt link</span></div>
+   <div class="stat-card">📥 Lượt lấy file<b id="downloads">...</b><span>Tổng cộng</span></div>
+   <div class="stat-card">🏆 Phổ biến<b id="popular">...</b><span>Mục được lấy nhiều</span></div>
+  </div>
+  <button onclick="loadStats()">LÀM MỚI</button><button onclick="exportCSV()">⬇ XUẤT CSV</button>
+ </div>
+
+ <div class="panel">
+  <h2>📈 BIỂU ĐỒ LƯỢT TRUY CẬP</h2>
+  <select id="chartDays" onchange="loadChart()">
+   <option value="7">7 ngày gần nhất</option>
+   <option value="30">30 ngày gần nhất</option>
+  </select>
+  <canvas id="chart" class="chart" width="900" height="260"></canvas>
+ </div>
+</section>
+
+<section class="tabpage hidden" id="files">
+ <div class="panel">
+  <h2>🗂️ QUẢN LÝ CÁC MỤC TẢI FILE</h2>
+  <p class="small">Bật/tắt, đổi link nút LẤY FILE của tất cả các mục (MediaFire, Zufile hoặc link HTTPS khác) và cập nhật thông tin file.</p>
+  <div id="items"></div>
+  <button class="good" onclick="saveSettings()">LƯU THAY ĐỔI</button>
+ </div>
+</section>
+
+<section class="tabpage hidden" id="history">
+ <div class="panel">
+  <h2>📜 LỊCH SỬ HOẠT ĐỘNG</h2>
+  <div class="row">
+   <input id="historySearch" placeholder="Tìm theo IP, tên mục, nội dung...">
+   <select id="historyEvent">
+    <option value="">Tất cả sự kiện</option>
+    <option value="success">Vượt link thành công</option>
+    <option value="failed">Vượt link thất bại</option>
+    <option value="download">Lấy file</option>
+    <option value="create">Tạo link</option>
+   </select>
+   <button onclick="loadHistory()">TÌM KIẾM</button>
+  </div>
+  <div class="table-wrap">
+   <table>
+    <thead><tr><th>Thời gian</th><th>Sự kiện</th><th>Mục</th><th>Chi tiết</th><th>IP</th></tr></thead>
+    <tbody id="historyRows"></tbody>
+   </table>
+  </div>
+ </div>
+</section>
+
+<section class="tabpage hidden" id="notice">
+ <div class="panel">
+  <h2>📢 THÔNG BÁO TRANG CHỦ</h2>
+  <label><input type="checkbox" id="announcementEnabled"> Hiển thị thông báo</label>
+  <textarea id="announcementMessage" placeholder="Nội dung thông báo..."></textarea>
+  <button class="good" onclick="saveAnnouncement()">LƯU THÔNG BÁO</button>
+ </div>
+ <div class="panel">
+  <h2>🛠️ CHẾ ĐỘ BẢO TRÌ</h2>
+  <label><input type="checkbox" id="maintenanceEnabled"> Bật chế độ bảo trì</label>
+  <textarea id="maintenanceMessage" placeholder="Thông báo bảo trì..."></textarea>
+  <button class="warning" onclick="saveMaintenance()">LƯU BẢO TRÌ</button>
+ </div>
+</section>
+
+<section class="tabpage hidden" id="site">
+ <div class="panel"><h2>🏷️ TÊN WEBSITE & QUẢN LÝ TAG</h2>
+  <label>Tên website<input id="siteName" maxlength="80"></label>
+  <div class="row"><label><input type="checkbox" id="tagHome"> Trang Chủ</label><label><input type="checkbox" id="tagFreefire"> Hack Free Fire</label></div>
+  <div class="row"><label><input type="checkbox" id="tagLienquan"> Hack Liên Quân</label><label><input type="checkbox" id="tagRoblox"> Hack Roblox</label></div>
+  <button class="good" onclick="saveSiteConfig()">LƯU TÊN & TAG</button>
+ </div>
+ <div class="panel"><h2>🎵 QUẢN LÝ NHẠC</h2><p class="small">Nhập tên và đường dẫn MP3 nội bộ hoặc URL HTTPS. Tối đa 50 bài.</p>
+  <label>Âm lượng mặc định: <input id="musicVolume" type="range" min="0" max="100" value="70" oninput="document.getElementById('musicVolumeValue').textContent=this.value+'%'"></label><span id="musicVolumeValue" class="small">70%</span>
+  <div id="musicItems"></div><div class="row"><input id="newMusicName" placeholder="Tên bài nhạc"><input id="newMusicSrc" placeholder="/music.mp3 hoặc URL HTTPS"><button onclick="addMusicTrack()">THÊM BÀI</button></div>
+  <button class="good" onclick="saveSiteConfig()">LƯU DANH SÁCH NHẠC</button></div>
+</section>
+<section class="tabpage hidden" id="tags">
+ <div class="panel"><h2>🏷️ QUẢN LÝ DANH MỤC TAG</h2><p class="small">Kéo thả để đổi thứ tự. Có thể bật/tắt, đổi tên hoặc xóa Tag.</p>
+ <div id="tagItems"></div><div class="row"><input id="newTagName" placeholder="Tên Tag"><input id="newTagSlug" placeholder="Đường dẫn slug (vd: cong-cu)"><input id="newTagIcon" placeholder="Icon" value="🏷️"><button onclick="addTag()">THÊM TAG</button></div><button class="good" onclick="saveTags()">LƯU DANH MỤC</button></div>
+</section>
+<section class="tabpage hidden" id="content">
+ <div class="panel"><h2>🧩 QUẢN LÝ NỘI DUNG WEBSITE</h2><p class="small">Thêm hoặc sửa mục tải. URL tải phải là HTTP/HTTPS; ảnh có thể là đường dẫn nội bộ hoặc HTTPS.</p>
+ <div id="contentItems"></div><div class="row"><input id="newContentName" placeholder="Tên mục"><input id="newContentSlug" placeholder="Slug"><input id="newContentTag" placeholder="Tag/slug Tag"></div><textarea id="newContentDesc" placeholder="Mô tả"></textarea><div class="row"><input id="newContentImage" placeholder="Ảnh đại diện /logo.png"><input id="newContentUrl" placeholder="Đường dẫn tải HTTPS"></div><button onclick="addContent()">THÊM MỤC</button><button class="good" onclick="saveContent()">LƯU NỘI DUNG</button></div>
+</section>
+<section class="tabpage hidden" id="security">
+ <div class="panel">
+  <h2>🔑 ĐỔI MẬT KHẨU ADMIN</h2>
+  <input type="password" id="oldPassword" placeholder="Mật khẩu hiện tại">
+  <input type="password" id="newPassword" placeholder="Mật khẩu mới (ít nhất 8 ký tự)">
+  <input type="password" id="confirmPassword" placeholder="Nhập lại mật khẩu mới">
+  <button class="good" onclick="changePassword()">ĐỔI MẬT KHẨU</button>
+ </div>
+ <div class="panel">
+  <h2>🧹 QUẢN LÝ DỮ LIỆU THỐNG KÊ</h2>
+  <p class="small">Xóa lịch sử và bộ đếm thống kê. Thao tác này không xóa URL hoặc cấu hình file.</p>
+  <button class="danger" onclick="resetStats()">XÓA DỮ LIỆU THỐNG KÊ</button>
+ </div>
+ <div class="panel">
+  <h2>🔐 NHẬT KÝ ĐĂNG NHẬP ADMIN</h2>
+  <div class="table-wrap">
+   <table><thead><tr><th>Thời gian</th><th>Hoạt động</th><th>IP</th><th>Chi tiết</th></tr></thead>
+   <tbody id="adminLogRows"></tbody></table>
+  </div>
+  <button onclick="loadAdminLogs()">LÀM MỚI NHẬT KÝ</button>
+ </div>
+ <div class="panel">
+  <h2>⏱️ PHIÊN QUẢN TRỊ</h2>
+  <p class="small">Phiên tự hết hạn sau 30 phút không hoạt động hoặc tối đa 8 giờ. Tối đa 3 phiên Admin cùng lúc.</p>
+  <button class="warning" onclick="revokeOtherSessions()">🚫 THU HỒI PHIÊN KHÁC</button>
+  <button class="danger" onclick="logout()">ĐĂNG XUẤT</button>
+ </div>
+ <div class="panel">
+  <h2>🗄️ SAO LƯU & KHÔI PHỤC CẤU HÌNH — V2.7.2</h2>
+  <p class="small">Tải bản sao lưu các thiết lập website, danh mục, nội dung, nhạc và thông báo. Khi khôi phục, dữ liệu thống kê, lịch sử và nhật ký bảo mật sẽ được giữ nguyên.</p>
+  <div class="row">
+   <button class="good" onclick="downloadBackup()">⬇ TẢI BACKUP JSON</button>
+   <input type="file" id="backupFile" accept=".json,application/json">
+   <button class="warning" onclick="restoreBackup()">↻ KHÔI PHỤC BACKUP</button>
+  </div>
+  <p class="small">Chỉ chọn file JSON được xuất từ PHONG WEB. Hãy tải backup hiện tại trước khi khôi phục.</p>
+  <div id="backupStatus" class="small" aria-live="polite"></div>
+ </div>
+ <div class="panel">
+  <h2>🧭 KIỂM TRA CẤU HÌNH</h2>
+  <p class="small">Kiểm tra nhanh cấu trúc dữ liệu website và số lượng nội dung đang quản lý.</p>
+  <button onclick="runConfigCheck()">🔎 KIỂM TRA NGAY</button>
+  <div id="configCheckResult" class="small" aria-live="polite"></div>
+ </div>
+</section>
+</div>
+
+<div id="message"></div>
+<p><a href="/">← Quay lại website</a></p>
+</main>
+
+<script>
+let config={};
+let csrfToken="";
+let musicAdminList=[];
+let adminTimer=null;
+
+function message(text,bad=false){
+ const el=document.getElementById("message");
+ el.textContent=text;
+ el.style.color=bad?"#ff8585":"#74ffc0";
+}
+
+function tab(name,button){
+ document.querySelectorAll(".tabpage").forEach(x=>x.classList.add("hidden"));
+ document.getElementById(name).classList.remove("hidden");
+ document.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("active"));
+ button.classList.add("active");
+}
+
+async function api(path,body,method){
+ const options={method:method||(body?"POST":"GET"),headers:{}};
+
+ if(body){
+  options.headers["Content-Type"]="application/json";
+  options.headers["X-CSRF-Token"]=csrfToken;
+  options.body=JSON.stringify(body);
+ }
+
+ const r=await fetch(path,options);
+ const d=await r.json();
+
+ if(r.status===401){
+  logoutLocal();
+  throw new Error("Phiên quản trị hết hạn. Vui lòng đăng nhập lại.");
+ }
+ if(!r.ok||!d.success){
+  throw new Error(d.message||"Có lỗi xảy ra.");
+ }
+ return d;
+}
+
+async function login(){
+ const msg=document.getElementById("loginMessage");
+ try{
+  const r=await fetch("/admin/login",{
+   method:"POST",
+   headers:{"Content-Type":"application/json"},
+   body:JSON.stringify({password:document.getElementById("password").value})
+  });
+  const d=await r.json();
+  if(!r.ok||!d.success)throw new Error(d.message||"Đăng nhập thất bại.");
+
+  await startDashboard();
+ }catch(e){
+  msg.textContent=e.message;
+ }
+}
+
+async function startDashboard(){
+ const d=await api("/admin/csrf");
+ csrfToken=d.csrf;
+ document.getElementById("loginPanel").classList.add("hidden");
+ document.getElementById("dashboard").classList.remove("hidden");
+ await loadAll();
+
+ clearInterval(adminTimer);
+ adminTimer=setInterval(async()=>{
+  try{await api("/admin/me");}
+  catch(e){logoutLocal();}
+ },60000);
+}
+
+function logoutLocal(){
+ clearInterval(adminTimer);
+ csrfToken="";
+ document.getElementById("dashboard").classList.add("hidden");
+ document.getElementById("loginPanel").classList.remove("hidden");
+}
+
+async function loadAll(){
+ await Promise.all([
+  loadStats(),loadSettings(),loadNotice(),
+  loadHistory(),loadAdminLogs(),loadChart(),loadSiteConfig(),loadTags(),loadContent()
+ ]);
+}
+
+async function loadSiteConfig(){try{const d=await api("/admin/site-config");document.getElementById("siteName").value=d.site_name||"";document.getElementById("tagHome").checked=!!d.tags.home;document.getElementById("tagFreefire").checked=!!d.tags.freefire;document.getElementById("tagLienquan").checked=!!d.tags.lienquan;document.getElementById("tagRoblox").checked=!!d.tags.roblox;musicAdminList=Array.isArray(d.music_playlist)?d.music_playlist:[];document.getElementById("musicVolume").value=Math.round((d.music_volume??.7)*100);document.getElementById("musicVolumeValue").textContent=document.getElementById("musicVolume").value+"%";renderMusicItems()}catch(e){message(e.message,true)}}
+function renderMusicItems(){const root=document.getElementById("musicItems");root.innerHTML="";musicAdminList.forEach((track,i)=>{const box=document.createElement("div");box.className="item";box.draggable=true;box.dataset.index=i;box.ondragstart=e=>{e.dataTransfer.setData("text/plain",String(i));box.style.opacity=".5"};box.ondragend=()=>box.style.opacity="1";box.ondragover=e=>e.preventDefault();box.ondrop=e=>{e.preventDefault();const from=Number(e.dataTransfer.getData("text/plain"));const [moved]=musicAdminList.splice(from,1);musicAdminList.splice(i,0,moved);renderMusicItems()};const heading=document.createElement("b");heading.textContent="☰ Bài "+(i+1)+" – Kéo để sắp xếp";const name=document.createElement("input");name.value=track.name||"";name.placeholder="Tên bài";name.oninput=()=>musicAdminList[i].name=name.value;const src=document.createElement("input");src.value=track.src||"";src.placeholder="Đường dẫn MP3";src.oninput=()=>musicAdminList[i].src=src.value;const enabled=document.createElement("label");const check=document.createElement("input");check.type="checkbox";check.checked=track.enabled!==false;check.onchange=()=>musicAdminList[i].enabled=check.checked;enabled.append(check,document.createTextNode(" Bật bài nhạc"));const preview=document.createElement("button");preview.textContent="▶ PHÁT THỬ";preview.onclick=()=>{const a=new Audio(src.value);a.volume=Number(document.getElementById("musicVolume").value)/100;a.play().catch(()=>message("Không phát được file nhạc. Kiểm tra URL.",true))};const del=document.createElement("button");del.className="danger";del.textContent="XÓA";del.onclick=()=>{musicAdminList.splice(i,1);renderMusicItems()};box.append(heading,name,src,enabled,preview,del);root.append(box)})}
+function addMusicTrack(){const name=document.getElementById("newMusicName").value.trim(),src=document.getElementById("newMusicSrc").value.trim();if(!name||!src){message("Hãy nhập tên và đường dẫn bài nhạc.",true);return}if(musicAdminList.length>=50){message("Tối đa 50 bài nhạc.",true);return}musicAdminList.push({name,src,enabled:true});document.getElementById("newMusicName").value="";document.getElementById("newMusicSrc").value="";renderMusicItems()}
+async function saveSiteConfig(){try{const payload={site_name:document.getElementById("siteName").value.trim(),tags:{home:document.getElementById("tagHome").checked,freefire:document.getElementById("tagFreefire").checked,lienquan:document.getElementById("tagLienquan").checked,roblox:document.getElementById("tagRoblox").checked},music_playlist:musicAdminList,music_volume:Number(document.getElementById("musicVolume").value)/100};const d=await api("/admin/site-config",payload);message(d.message||"Đã lưu.");await loadSiteConfig()}catch(e){message(e.message,true)}}
+
+async function loadStats(){
+ const d=await api("/admin/stats");
+ for(const key of ["online","total","android","iphone","success","failed","downloads"]){
+  document.getElementById(key).textContent=
+   Number(d[key]||0).toLocaleString("vi-VN");
+ }
+ document.getElementById("popular").textContent=d.popular_name||"Chưa có dữ liệu";
+}
+
+async function loadChart(){
+ const days=Number(document.getElementById("chartDays").value||7);
+ const d=await api("/admin/daily?days="+days,null,"GET");
+ drawChart(d.items||[]);
+}
+
+function drawChart(items){
+ const canvas=document.getElementById("chart");
+ const ctx=canvas.getContext("2d");
+ const w=canvas.width,h=canvas.height;
+ ctx.clearRect(0,0,w,h);
+
+ const max=Math.max(1,...items.map(x=>Number(x.visits||0)));
+ const left=45,right=15,top=20,bottom=45;
+ const graphW=w-left-right,graphH=h-top-bottom;
+
+ ctx.strokeStyle="#29466b";
+ ctx.fillStyle="#b9d7f7";
+ ctx.font="12px Arial";
+
+ for(let i=0;i<=4;i++){
+  const y=top+graphH*i/4;
+  ctx.beginPath();ctx.moveTo(left,y);ctx.lineTo(w-right,y);ctx.stroke();
+  ctx.fillText(String(Math.round(max*(4-i)/4)),5,y+4);
+ }
+
+ const step=graphW/Math.max(1,items.length);
+ ctx.strokeStyle="#27aaff";ctx.lineWidth=3;ctx.beginPath();
+
+ items.forEach((item,i)=>{
+  const x=left+step*(i+.5);
+  const y=top+graphH-(Number(item.visits||0)/max)*graphH;
+  if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+  ctx.fillStyle="#8bd5ff";
+  ctx.fillText(String(item.visits||0),x-7,y-9);
+  if(items.length<=10||i%5===0||i===items.length-1){
+   ctx.fillText(String(item.date||"").slice(5),x-17,h-17);
+  }
+ });
+ ctx.stroke();
+}
+
+async function loadSettings(){
+ const d=await api("/admin/settings");
+ config=d.items;
+ const files=d.files||{};
+ const root=document.getElementById("items");
+ root.innerHTML="";
+
+ for(const [key,item] of Object.entries(config)){
+  const file=files[key]||{};
+  const box=document.createElement("div");
+  box.className="item";
+
+  const title=document.createElement("h3");
+  title.textContent=item.name;
+
+  const enabled=document.createElement("input");
+  enabled.type="checkbox";
+  enabled.checked=item.enabled;
+  enabled.id="enabled-"+key;
+
+  const label=document.createElement("label");
+  label.textContent="Hiển thị mục này";
+  label.prepend(enabled);
+
+  const url=document.createElement("input");
+  url.type="url";url.id="url-"+key;
+  url.value=item.url;url.placeholder="https://www.mediafire.com/... hoặc https://zufile.com/...";
+
+  const fileName=document.createElement("input");
+  fileName.id="file-name-"+key;
+  fileName.value=file.name||"";
+  fileName.placeholder="Tên file";
+
+  const size=document.createElement("input");
+  size.id="file-size-"+key;
+  size.value=file.size||"";
+  size.placeholder="Dung lượng (nếu biết, ví dụ 25 MB)";
+
+  const status=document.createElement("select");
+  status.id="file-status-"+key;
+  for(const [value,text] of [["available","Sẵn sàng"],["unavailable","Tạm ngưng"]]){
+   const option=document.createElement("option");
+   option.value=value;option.textContent=text;
+   status.append(option);
+  }
+  status.value=file.status||"available";
+
+  const image=document.createElement("input");
+  image.id="file-image-"+key;
+  image.value=file.image||"/logo.png";
+  image.placeholder="Ảnh đại diện: /logo.png hoặc URL HTTPS";
+
+  box.append(title,label);
+  const l1=document.createElement("label");l1.textContent="Link nút LẤY FILE (đổi được)";l1.append(url);
+  const l2=document.createElement("label");l2.textContent="Tên file";l2.append(fileName);
+  const l3=document.createElement("label");l3.textContent="Dung lượng";l3.append(size);
+  const l4=document.createElement("label");l4.textContent="Trạng thái";l4.append(status);
+  const l5=document.createElement("label");l5.textContent="Ảnh đại diện";l5.append(image);
+
+  box.append(l1,l2,l3,l4,l5);
+  const count=document.createElement("p");
+  count.className="small";
+  count.textContent="Lượt lấy file: "+Number(file.downloads||0);
+  box.append(count);
+  root.append(box);
+ }
+}
+
+async function saveSettings(){
+ try{
+  const items={},files={};
+
+  for(const key of Object.keys(config)){
+   items[key]={
+    enabled:document.getElementById("enabled-"+key).checked,
+    url:document.getElementById("url-"+key).value.trim()
+   };
+   files[key]={
+    name:document.getElementById("file-name-"+key).value.trim(),
+    size:document.getElementById("file-size-"+key).value.trim(),
+    status:document.getElementById("file-status-"+key).value,
+    image:document.getElementById("file-image-"+key).value.trim()
+   };
+  }
+
+  await api("/admin/settings",{items,files});
+  message("Đã lưu thiết lập và thông tin file.");
+  await loadSettings();
+ }catch(e){message(e.message,true);}
+}
+
+async function loadHistory(){
+ try{
+  const search=encodeURIComponent(document.getElementById("historySearch").value||"");
+  const event=encodeURIComponent(document.getElementById("historyEvent").value||"");
+  const d=await api("/admin/history?q="+search+"&event="+event,null,"GET");
+  const root=document.getElementById("historyRows");
+  root.innerHTML="";
+
+  for(const item of d.items||[]){
+   const tr=document.createElement("tr");
+   for(const value of [item.time,item.event,item.name,item.detail,item.ip]){
+    const td=document.createElement("td");
+    td.textContent=value||"";
+    tr.append(td);
+   }
+   root.append(tr);
+  }
+ }catch(e){message(e.message,true);}
+}
+
+async function loadNotice(){
+ const d=await api("/admin/notice");
+ document.getElementById("announcementEnabled").checked=d.announcement.enabled;
+ document.getElementById("announcementMessage").value=d.announcement.message||"";
+ document.getElementById("maintenanceEnabled").checked=d.maintenance.enabled;
+ document.getElementById("maintenanceMessage").value=d.maintenance.message||"";
+}
+
+async function saveAnnouncement(){
+ try{
+  await api("/admin/notice",{
+   announcement:{
+    enabled:document.getElementById("announcementEnabled").checked,
+    message:document.getElementById("announcementMessage").value
+   }
+  });
+  message("Đã cập nhật thông báo trang chủ.");
+ }catch(e){message(e.message,true);}
+}
+
+async function saveMaintenance(){
+ try{
+  await api("/admin/notice",{
+   maintenance:{
+    enabled:document.getElementById("maintenanceEnabled").checked,
+    message:document.getElementById("maintenanceMessage").value
+   }
+  });
+  message("Đã cập nhật chế độ bảo trì.");
+ }catch(e){message(e.message,true);}
+}
+
+async function changePassword(){
+ try{
+  const oldPassword=document.getElementById("oldPassword").value;
+  const newPassword=document.getElementById("newPassword").value;
+  const confirmPassword=document.getElementById("confirmPassword").value;
+
+  if(newPassword.length<8)throw new Error("Mật khẩu mới cần ít nhất 8 ký tự.");
+  if(newPassword!==confirmPassword)throw new Error("Hai mật khẩu mới không khớp.");
+
+  await api("/admin/change-password",{oldPassword,newPassword});
+  message("Đổi mật khẩu thành công. Phiên hiện tại sẽ kết thúc.");
+  setTimeout(logout,1200);
+ }catch(e){message(e.message,true);}
+}
+
+async function resetStats(){
+ if(!confirm("Bạn chắc chắn muốn xóa dữ liệu thống kê và lịch sử?"))return;
+ try{
+  await api("/admin/reset-stats",{confirm:true});
+  message("Đã xóa dữ liệu thống kê.");
+  await loadAll();
+ }catch(e){message(e.message,true);}
+}
+
+async function loadAdminLogs(){
+ try{
+  const d=await api("/admin/logs");
+  const root=document.getElementById("adminLogRows");
+  root.innerHTML="";
+  for(const item of d.items||[]){
+   const tr=document.createElement("tr");
+   for(const value of [item.time,item.action,item.ip,item.detail]){
+    const td=document.createElement("td");td.textContent=value||"";tr.append(td);
+   }
+   root.append(tr);
+  }
+ }catch(e){message(e.message,true);}
+}
+
+async function revokeOtherSessions(){
+ if(!confirm("Thu hồi tất cả phiên Admin khác? Phiên hiện tại vẫn được giữ."))return;
+ try{const d=await api("/admin/revoke-sessions",{});message(d.message||"Đã thu hồi các phiên khác.");}
+ catch(e){message(e.message,true);}
+}
+async function logout(){
+ try{await api("/admin/logout",{});}catch(e){}
+ logoutLocal();
+ location.reload();
+}
+
+async function checkAdmin(){
+ try{
+  const d=await api("/admin/me");
+  if(d.success)await startDashboard();
+ }catch(e){}
+}
+
+
+let tagAdminList=[],contentAdminList=[];
+async function loadTags(){try{const d=await api("/admin/tags");tagAdminList=d.items||[];renderTags()}catch(e){message(e.message,true)}}
+function renderTags(){const root=document.getElementById("tagItems");root.innerHTML="";tagAdminList.forEach((t,i)=>{const box=document.createElement("div");box.className="item";box.draggable=true;box.ondragstart=e=>e.dataTransfer.setData("text/plain",String(i));box.ondragover=e=>e.preventDefault();box.ondrop=e=>{e.preventDefault();const n=Number(e.dataTransfer.getData("text/plain"));const [v]=tagAdminList.splice(n,1);tagAdminList.splice(i,0,v);renderTags()};const row=document.createElement("div");row.className="row";const icon=document.createElement("input");icon.value=t.icon||"🏷️";icon.oninput=()=>t.icon=icon.value;const name=document.createElement("input");name.value=t.name;name.oninput=()=>t.name=name.value;const slug=document.createElement("input");slug.value=t.slug;slug.oninput=()=>t.slug=slug.value;const enabled=document.createElement("input");enabled.type="checkbox";enabled.checked=t.enabled!==false;enabled.onchange=()=>t.enabled=enabled.checked;const del=document.createElement("button");del.className="danger";del.textContent="XÓA";del.onclick=()=>{tagAdminList.splice(i,1);renderTags()};row.append(icon,name,slug,enabled,del);box.append(row);root.append(box)})}
+function addTag(){const name=document.getElementById("newTagName").value.trim(),slug=document.getElementById("newTagSlug").value.trim().toLowerCase(),icon=document.getElementById("newTagIcon").value.trim()||"🏷️";if(!name||!slug){message("Nhập tên và slug Tag.",true);return}tagAdminList.push({name,slug,icon,enabled:true});renderTags();document.getElementById("newTagName").value="";document.getElementById("newTagSlug").value=""}
+async function saveTags(){try{const d=await api("/admin/tags",{items:tagAdminList});message(d.message);await loadTags()}catch(e){message(e.message,true)}}
+async function loadContent(){try{const d=await api("/admin/content");contentAdminList=d.items||[];renderContent()}catch(e){message(e.message,true)}}
+function renderContent(){const root=document.getElementById("contentItems");root.innerHTML="";contentAdminList.forEach((v,i)=>{const box=document.createElement("div");box.className="item";box.draggable=true;box.ondragstart=e=>e.dataTransfer.setData("text/plain",String(i));box.ondragover=e=>e.preventDefault();box.ondrop=e=>{e.preventDefault();const n=Number(e.dataTransfer.getData("text/plain"));const [m]=contentAdminList.splice(n,1);contentAdminList.splice(i,0,m);renderContent()};const drag=document.createElement("b");drag.textContent="☰ Mục "+(i+1)+" – Kéo để sắp xếp";box.append(drag);const fields=["name","slug","tag","description","image","url"];fields.forEach(k=>{const el=document.createElement(k==="description"?"textarea":"input");el.value=v[k]||"";el.placeholder=k;el.oninput=()=>v[k]=el.value;box.append(el)});const enabled=document.createElement("input");enabled.type="checkbox";enabled.checked=v.enabled!==false;enabled.onchange=()=>v.enabled=enabled.checked;const label=document.createElement("label");label.append(enabled,document.createTextNode(" Hiển thị mục này"));const del=document.createElement("button");del.className="danger";del.textContent="XÓA MỤC";del.onclick=()=>{contentAdminList.splice(i,1);renderContent()};box.append(label,del);root.append(box)})}
+function addContent(){const v={name:document.getElementById("newContentName").value.trim(),slug:document.getElementById("newContentSlug").value.trim().toLowerCase(),tag:document.getElementById("newContentTag").value.trim().toLowerCase(),description:document.getElementById("newContentDesc").value.trim(),image:document.getElementById("newContentImage").value.trim()||"/logo.png",url:document.getElementById("newContentUrl").value.trim(),enabled:true};if(!v.name||!v.slug||!v.url){message("Nhập tên, slug và đường dẫn tải.",true);return}contentAdminList.push(v);renderContent();["newContentName","newContentSlug","newContentTag","newContentDesc","newContentImage","newContentUrl"].forEach(id=>document.getElementById(id).value="")}
+async function saveContent(){try{const d=await api("/admin/content",{items:contentAdminList});message(d.message);await loadContent()}catch(e){message(e.message,true)}}
+function exportCSV(){location.href="/admin/export.csv"}
+async function downloadBackup(){
+ const status=document.getElementById("backupStatus");
+ try{
+  status.textContent="Đang tạo bản sao lưu...";
+  const response=await fetch("/admin/backup.json",{cache:"no-store",credentials:"same-origin"});
+  if(!response.ok){let d={};try{d=await response.json()}catch(e){}throw new Error(d.message||"Không thể tải backup.");}
+  const blob=await response.blob(),url=URL.createObjectURL(blob),a=document.createElement("a");
+  a.href=url;a.download="phong-web-backup-"+new Date().toISOString().slice(0,10)+".json";
+  document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
+  status.textContent="Đã tải bản sao lưu cấu hình.";
+ }catch(e){status.textContent=e.message;message(e.message,true);}
+}
+async function restoreBackup(){
+ const input=document.getElementById("backupFile"),status=document.getElementById("backupStatus"),file=input.files&&input.files[0];
+ if(!file){message("Hãy chọn file backup JSON trước.",true);return;}
+ if(file.size>2*1024*1024){message("File backup vượt quá giới hạn 2 MB.",true);return;}
+ if(!confirm("Khôi phục cấu hình từ file đã chọn? Các thiết lập hiện tại sẽ được thay thế. Thống kê và lịch sử được giữ nguyên."))return;
+ try{
+  const raw=await file.text(),payload=JSON.parse(raw);
+  if(payload.format!=="PHONG_WEB_BACKUP"||(payload.version!=="2.6.0"&&payload.version!=="2.7.0"&&payload.version!=="2.7.1"&&payload.version!=="2.7.2")||!payload.config)throw new Error("File backup không đúng định dạng PHONG WEB V2.7.2.");
+  const result=await api("/admin/restore-backup",payload);
+  status.textContent=result.message||"Khôi phục thành công.";
+  input.value="";
+  await Promise.all([loadSettings(),loadSiteConfig(),loadTags(),loadContent(),loadNotice()]);
+  message("Đã khôi phục cấu hình. Thống kê và lịch sử không bị thay đổi.");
+ }catch(e){status.textContent=e.message;message(e.message,true);}
+}
+async function runConfigCheck(){
+ const root=document.getElementById("configCheckResult");
+ try{
+  const [a,b,c,d]=await Promise.all([api("/admin/settings"),api("/admin/site-config"),api("/admin/tags"),api("/admin/content")]);
+  const destinations=Object.keys(a.items||{}).length,tags=(c.items||[]).length,contents=(d.items||[]).length,tracks=(b.music_playlist||[]).length;
+  root.textContent="✓ Kết nối Admin OK · "+destinations+" mục tải · "+tags+" Tag · "+contents+" nội dung · "+tracks+" bài nhạc.";
+ }catch(e){root.textContent="✕ Kiểm tra thất bại: "+e.message;}
+}
+
+checkAdmin();
+</script>
+</body>
+</html>
