@@ -17,6 +17,10 @@ fs.mkdirSync(DATA_DIR,{recursive:true});
 const empty={config:null,stats:{visits:0,success:0,failed:0,downloads:0,daily:{},items:{}},shortlinks:{}};
 let db=empty;
 try{db={...empty,...JSON.parse(fs.readFileSync(DB_FILE,'utf8'))};}catch{}
+if(!db.config){
+  try{db.config=JSON.parse(fs.readFileSync(path.join(__dirname,'config-seed.json'),'utf8'));}
+  catch(e){console.warn('No config-seed.json found; admin must sync config before creating links.');}
+}
 if(!db.adminPasswordHash && ADMIN_PASSWORD){const salt=crypto.randomBytes(16).toString('hex');const hash=crypto.scryptSync(ADMIN_PASSWORD,salt,64).toString('hex');db.adminPasswordHash={salt,hash};}
 function persist(){const tmp=DB_FILE+'.tmp';fs.writeFileSync(tmp,JSON.stringify(db,null,2));fs.renameSync(tmp,DB_FILE)}
 function sign(payload){const body=Buffer.from(JSON.stringify(payload)).toString('base64url');const sig=crypto.createHmac('sha256',JWT_SECRET).update(body).digest('base64url');return body+'.'+sig}
@@ -39,8 +43,15 @@ app.post('/api/link4m/create',async(req,res)=>{
     const cached=db.shortlinks[key];if(cached&&cached.target===target)return res.json({shortenedUrl:cached.url,cached:true});
     const endpoint=new URL('https://link4m.co/api-shorten/v2');endpoint.searchParams.set('api',API_TOKEN);endpoint.searchParams.set('url',target);
     const response=await fetch(endpoint,{signal:AbortSignal.timeout(15000)});if(!response.ok)throw new Error('Link4M HTTP '+response.status);
-    const result=await response.json();if(result.status!=='success'||!/^https:\/\/link4m\.com\//i.test(result.shortenedUrl||''))return res.status(502).json({error:result.message||'Link4M không tạo được link'});
-    db.shortlinks[key]={target,url:result.shortenedUrl,createdAt:new Date().toISOString()};persist();res.json({shortenedUrl:result.shortenedUrl});
+    const result=await response.json();
+    const candidate=result?.shortenedUrl||result?.short_url||result?.shortUrl||result?.data?.shortenedUrl||result?.data?.url||result?.result?.url||'';
+    let shortUrl='';
+    try{
+      const u=new URL(/^https?:\/\//i.test(candidate)?candidate:'https://'+candidate);
+      if(u.protocol==='https:'&&/(^|\.)link4m\.(com|co)$/i.test(u.hostname))shortUrl=u.href;
+    }catch{}
+    if(!shortUrl){console.error('Link4M unexpected response:',JSON.stringify(result).slice(0,1200));return res.status(502).json({error:result?.message||result?.error||'Link4M không trả về URL rút gọn hợp lệ'});}
+    db.shortlinks[key]={target,url:shortUrl,createdAt:new Date().toISOString()};persist();res.json({shortenedUrl:shortUrl});
   }catch(e){console.error('Link4M error',e);res.status(502).json({error:'Không kết nối được Link4M. Vui lòng thử lại.'})}
 });
 app.post('/api/admin/login',(req,res)=>{const pass=String(req.body?.password||'');const stored=db.adminPasswordHash;if(!stored)return res.status(503).json({error:'Chưa cấu hình ADMIN_PASSWORD trên Render'});const hash=crypto.scryptSync(pass,stored.salt,64);if(!crypto.timingSafeEqual(hash,Buffer.from(stored.hash,'hex')))return res.status(401).json({error:'Mật khẩu quản trị không chính xác'});res.json({token:sign({exp:Date.now()+8*60*60*1000,role:'admin'})})});
